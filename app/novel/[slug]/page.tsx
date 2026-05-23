@@ -1,5 +1,6 @@
 import { listNovels } from '@/lib/vps'
 import Chat from './Chat'
+import CoverImage from './CoverImage'
 import Link from 'next/link'
 
 interface Props {
@@ -45,15 +46,7 @@ export default async function NovelPage({ params }: Props) {
         {/* Novel info sidebar */}
         {novel && (
           <aside className="hidden w-64 shrink-0 overflow-y-auto border-r border-zinc-800 bg-zinc-900 p-4 lg:block">
-            {novel.cover_url && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={novel.cover_url}
-                alt={novel.title}
-                className="mb-4 w-full rounded-lg object-cover"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-              />
-            )}
+            <CoverImage src={novel.cover_url} alt={novel.title} />
             <h2 className="text-sm font-semibold text-zinc-100">{novel.title}</h2>
             <p className="mt-0.5 text-xs text-zinc-400">{novel.author}</p>
             {novel.genres.length > 0 && (
