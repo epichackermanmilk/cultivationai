@@ -18,7 +18,7 @@ from pathlib import Path
 
 DRY_RUN = "--dry-run" in sys.argv
 
-NOVELS_DIR = Path(__file__).parent / "output" / "novels"
+NOVELS_DIR = Path(__file__).parent.parent / "output" / "novels"
 
 
 def normalise(title: str) -> str:
