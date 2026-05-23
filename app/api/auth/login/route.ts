@@ -21,11 +21,15 @@ export async function POST(req: Request) {
   const parsed = await parseJsonBody(req, 1024)
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 })
 
-  const { email, password } = parsed.data as { email?: unknown; password?: unknown }
-  if (!isValidEmail(email))
+  const { email: emailRaw, password: passwordRaw } = parsed.data as { email?: unknown; password?: unknown }
+  if (!isValidEmail(emailRaw))
     return NextResponse.json({ error: 'Invalid email address' }, { status: 400 })
-  if (!isValidPassword(password))
+  if (!isValidPassword(passwordRaw))
     return NextResponse.json({ error: 'Password must be 8–128 characters' }, { status: 400 })
+
+  // Safe after validation — both are confirmed non-empty strings
+  const email    = emailRaw    as string
+  const password = passwordRaw as string
 
   const { data, error } = await admin().auth.signInWithPassword({ email, password })
   if (error || !data?.session)
