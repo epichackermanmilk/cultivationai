@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = process.env.SUPABASE_URL!
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY!
 const COOKIE      = 'nc_session'
 const COOKIE_OPTS = { httpOnly: true, maxAge: 60 * 60 * 24 * 7, path: '/', sameSite: 'lax' } as const
+
+function admin() {
+  return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+}
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}))
@@ -11,19 +16,14 @@ export async function POST(req: Request) {
   if (!email || !password)
     return NextResponse.json({ error: 'Email and password are required' }, { status: 400 })
 
-  const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY },
-    body:    JSON.stringify({ email, password }),
-  })
-  const d = await r.json()
-  if (!r.ok)
+  const { data, error } = await admin().auth.signInWithPassword({ email, password })
+  if (error || !data?.session)
     return NextResponse.json(
-      { error: d.error_description || d.msg || 'Invalid email or password' },
+      { error: error?.message ?? 'Invalid email or password' },
       { status: 401 },
     )
 
-  const res = NextResponse.json({ email: d.user?.email ?? email })
-  res.cookies.set(COOKIE, d.access_token, COOKIE_OPTS)
+  const res = NextResponse.json({ email: data.user?.email ?? email })
+  res.cookies.set(COOKIE, data.session.access_token, COOKIE_OPTS)
   return res
 }

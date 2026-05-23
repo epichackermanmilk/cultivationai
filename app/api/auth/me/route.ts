@@ -1,33 +1,34 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { getSupabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = process.env.SUPABASE_URL!
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY!
+function admin() {
+  return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+}
 
 export async function GET() {
   const token = (await cookies()).get('nc_session')?.value
   if (!token) return NextResponse.json({ user: null })
 
-  // Validate the token with Supabase
-  const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` },
-  })
-  if (!r.ok) return NextResponse.json({ user: null })
-  const userData = await r.json()
+  const sb = admin()
 
-  // Pull token balance from profiles table
-  const sb = getSupabase()
+  // Validate token
+  const { data: { user }, error } = await sb.auth.getUser(token)
+  if (error || !user) return NextResponse.json({ user: null })
+
+  // Pull token balance
   const { data: profile } = await sb
     .from('profiles')
     .select('tokens')
-    .eq('id', userData.id)
+    .eq('id', user.id)
     .maybeSingle()
 
   return NextResponse.json({
     user: {
-      id:     userData.id,
-      email:  userData.email,
+      id:     user.id,
+      email:  user.email,
       tokens: profile?.tokens ?? 0,
     },
   })
