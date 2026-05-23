@@ -22,7 +22,7 @@ module.exports = {
     // Checks webapp + fastapi every 60s, auto-restarts down processes
     {
       name: 'monitor',
-      script: '/root/cultivation-scraper/cultivation-scraper/monitor_vps.py',
+      script: '/root/cultivation-scraper/monitor_vps.py',
       interpreter: 'python3',
       autorestart: true,
       watch: false,
