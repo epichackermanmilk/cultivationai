@@ -7,6 +7,7 @@ import TokenWidget    from '@/components/TokenWidget'
 import BookmarkButton from '@/components/BookmarkButton'
 import RecentSection  from '@/components/RecentSection'
 import FeedbackWidget from '@/components/FeedbackWidget'
+import Footer         from '@/components/Footer'
 
 interface Novel {
   slug: string
@@ -378,6 +379,7 @@ export default function Home() {
           </>
         )}
       </main>
+      <Footer />
       <FeedbackWidget />
     </div>
   )

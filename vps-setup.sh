@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
 # ============================================================
-# CultivationAI — VPS Setup Script
+# NovelCodex — VPS Setup Script
 # Run as root on the VPS after cloning the webapp repo.
 # Usage: bash vps-setup.sh
+#
+# IMPORTANT: Before running, create .env.local with your keys:
+#   cp .env.example .env.local
+#   nano .env.local
 # ============================================================
 set -euo pipefail
 
 WEBAPP_DIR="/root/cultivation-scraper/webapp"
-REPO_URL="${1:-}"   # pass GitHub URL as first arg if cloning fresh
+REPO_URL="${1:-}"
 
 # ── 1. Node.js 20 LTS ────────────────────────────────────────
 if ! command -v node &>/dev/null; then
@@ -37,15 +41,17 @@ fi
 # ── 4. .env.local ─────────────────────────────────────────────
 ENV_FILE="$WEBAPP_DIR/.env.local"
 if [ ! -f "$ENV_FILE" ]; then
-  echo ">>> Creating .env.local..."
-  cat > "$ENV_FILE" <<'ENVEOF'
-VPS_API_URL=http://localhost:8000
-VPS_API_KEY=VPS_KEY_REDACTED
-OPENAI_API_KEY=OPENAI_KEY_REDACTED
-SUPABASE_URL=https://npystdzbcfbmedonojiw.supabase.co
-SUPABASE_SERVICE_KEY=SUPABASE_KEY_REDACTED
-ENVEOF
-  echo ">>> .env.local written."
+  if [ -f "$WEBAPP_DIR/.env.example" ]; then
+    cp "$WEBAPP_DIR/.env.example" "$ENV_FILE"
+    echo ">>> Copied .env.example → .env.local"
+    echo ">>> IMPORTANT: Edit .env.local and add your real API keys before continuing."
+    echo ">>> Run: nano $ENV_FILE"
+    exit 1
+  else
+    echo "ERROR: .env.local not found and no .env.example to copy."
+    echo "Create $ENV_FILE with your environment variables and re-run."
+    exit 1
+  fi
 fi
 
 # ── 5. Install deps & build ───────────────────────────────────
@@ -71,6 +77,15 @@ server {
     listen [::]:80 default_server;
     server_name _;
 
+    # Security headers
+    add_header X-Content-Type-Options  nosniff always;
+    add_header X-Frame-Options         DENY    always;
+    add_header Referrer-Policy         strict-origin-when-cross-origin always;
+
+    # Rate limit: 20 req/s per IP, burst 50
+    limit_req_zone $binary_remote_addr zone=general:10m rate=20r/s;
+    limit_req zone=general burst=50 nodelay;
+
     # Next.js webapp
     location / {
         proxy_pass         http://127.0.0.1:3000;
@@ -83,6 +98,7 @@ server {
         proxy_set_header   X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
         proxy_read_timeout 120s;
+        client_max_body_size 10k;
     }
 }
 NGINXEOF
@@ -91,7 +107,7 @@ nginx -t && systemctl reload nginx
 
 echo ""
 echo "============================================================"
-echo " CultivationAI is live at http://$(curl -s ifconfig.me)/"
+echo " NovelCodex is live at http://$(curl -s ifconfig.me)/"
 echo " PM2 status: pm2 status"
 echo " Logs:       pm2 logs cultivationai"
 echo "============================================================"

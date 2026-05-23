@@ -7,10 +7,10 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 export async function GET(req: Request) {
-  // Simple protection — caller must pass ?key=<VPS_API_KEY>
-  const url    = new URL(req.url)
-  const secret = url.searchParams.get('key')
-  if (secret !== process.env.VPS_API_KEY)
+  // Protected by Authorization header to avoid key appearing in server logs
+  const auth   = req.headers.get('authorization') ?? ''
+  const secret = auth.startsWith('Bearer ') ? auth.slice(7) : ''
+  if (!secret || secret !== process.env.VPS_API_KEY)
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!, {

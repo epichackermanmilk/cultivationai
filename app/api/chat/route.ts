@@ -1,25 +1,50 @@
 import OpenAI from 'openai'
 import { matchChunks } from '@/lib/supabase'
+import { parseJsonBody, sanitizeText } from '@/lib/sanitize'
+import { NextResponse } from 'next/server'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 export async function POST(req: Request) {
-  const { slug, title, author, message, history = [] } = await req.json()
+  // ── Parse & validate ───────────────────────────────────────────────────────
+  const parsed = await parseJsonBody(req, 8_192)
+  if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 })
 
-  // 1. Embed the user query
+  const body    = parsed.data as Record<string, unknown>
+  const slug    = sanitizeText(body.slug,    100)
+  const title   = sanitizeText(body.title,   200)
+  const author  = sanitizeText(body.author,  200)
+  const message = sanitizeText(body.message, 1000)
+
+  if (!slug || !message) {
+    return NextResponse.json({ error: 'slug and message are required' }, { status: 400 })
+  }
+
+  // Sanitize and limit history
+  const rawHistory = Array.isArray(body.history) ? body.history.slice(-8) : []
+  const history: OpenAI.Chat.ChatCompletionMessageParam[] = rawHistory
+    .filter((m): m is { role: string; content: string } =>
+      typeof m === 'object' && m !== null &&
+      (m.role === 'user' || m.role === 'assistant') &&
+      typeof m.content === 'string'
+    )
+    .map(m => ({
+      role:    m.role as 'user' | 'assistant',
+      content: sanitizeText(m.content, 2000),
+    }))
+
+  // ── Embed & retrieve ───────────────────────────────────────────────────────
   const embRes = await openai.embeddings.create({
     model: 'text-embedding-3-small',
     input: message,
   })
   const queryEmbedding = embRes.data[0].embedding
-
-  // 2. Retrieve relevant chunks from Supabase
   const chunks = await matchChunks(queryEmbedding, slug, 6)
 
   if (chunks.length === 0) {
     return new Response(
       "I don't have enough information from this novel to answer that question. Try asking about specific characters, events, or plot points.",
-      { headers: { 'Content-Type': 'text/plain' } }
+      { headers: { 'Content-Type': 'text/plain' } },
     )
   }
 
@@ -27,7 +52,7 @@ export async function POST(req: Request) {
     .map(c => `[Ch.${c.chapter_number} — ${c.chapter_title}]\n${c.text}`)
     .join('\n\n---\n\n')
 
-  // 3. Stream a response
+  // ── Stream ─────────────────────────────────────────────────────────────────
   const systemPrompt = `You are an AI assistant for readers of the novel "${title}" by ${author}.
 Answer questions using ONLY the passages provided below. Be specific and reference chapter details when relevant.
 If something isn't covered in the passages, say so honestly rather than guessing.
@@ -35,18 +60,16 @@ If something isn't covered in the passages, say so honestly rather than guessing
 Relevant passages:
 ${context}`
 
-  const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-    { role: 'system', content: systemPrompt },
-    ...history.slice(-8),
-    { role: 'user', content: message },
-  ]
-
   const stream = await openai.chat.completions.create({
     model:       'gpt-4o-mini',
     stream:      true,
     max_tokens:  800,
     temperature: 0.3,
-    messages,
+    messages:    [
+      { role: 'system', content: systemPrompt },
+      ...history,
+      { role: 'user',   content: message },
+    ],
   })
 
   const encoder = new TextEncoder()
