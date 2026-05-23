@@ -5,6 +5,13 @@ const VPS_BASE = process.env.VPS_API_URL
 const VPS_KEY  = process.env.VPS_API_KEY
 const vpsHeaders = { 'X-Api-Key': VPS_KEY!, 'Content-Type': 'application/json' }
 
+// Only allow safe slug characters (alphanumeric + hyphen, 1-120 chars)
+const SLUG_RE = /^[a-z0-9-]{1,120}$/
+
+function validateSlug(slug: string): boolean {
+  return SLUG_RE.test(slug)
+}
+
 async function vpsPost(path: string) {
   if (!VPS_BASE) throw new Error('No VPS_API_URL')
   const res = await fetch(`${VPS_BASE}${path}`, { method: 'POST', headers: vpsHeaders })
@@ -19,6 +26,8 @@ async function vpsGet(path: string) {
 
 export async function POST(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
+  if (!validateSlug(slug))
+    return NextResponse.json({ error: 'Invalid slug' }, { status: 400 })
   try {
     const result = await vpsPost(`/embed/${slug}`)
     return NextResponse.json(result)
@@ -29,6 +38,8 @@ export async function POST(_req: Request, { params }: { params: Promise<{ slug: 
 
 export async function GET(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
+  if (!validateSlug(slug))
+    return NextResponse.json({ error: 'Invalid slug' }, { status: 400 })
   try {
     // Ground truth: check Supabase
     const embedded = await isNovelEmbedded(slug)

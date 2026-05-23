@@ -37,8 +37,16 @@ export async function POST(req: Request) {
     email_confirm:  true,
     user_metadata:  { tokens: WELCOME_TOKENS },
   })
-  if (createErr)
-    return NextResponse.json({ error: createErr.message }, { status: 400 })
+  if (createErr) {
+    // Return a friendly message for duplicate emails without leaking internals
+    const isDuplicate = createErr.message.toLowerCase().includes('already registered')
+                     || createErr.message.toLowerCase().includes('already exists')
+                     || createErr.code === '23505'
+    return NextResponse.json(
+      { error: isDuplicate ? 'An account with this email already exists.' : 'Could not create account. Please try again.' },
+      { status: 409 },
+    )
+  }
 
   // Sign in to get a session token the client can use
   const { data: session, error: signInErr } = await sb.auth.signInWithPassword({ email, password })
