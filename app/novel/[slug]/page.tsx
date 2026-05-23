@@ -1,9 +1,11 @@
 import { listNovels } from '@/lib/vps'
 import Chat from './Chat'
 import CoverImage from './CoverImage'
+import VisitTracker from './VisitTracker'
 import Link from 'next/link'
-import ThemeToggle from '@/components/ThemeToggle'
-import TokenWidget from '@/components/TokenWidget'
+import ThemeToggle    from '@/components/ThemeToggle'
+import TokenWidget    from '@/components/TokenWidget'
+import FeedbackWidget from '@/components/FeedbackWidget'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -89,6 +91,19 @@ export default async function NovelPage({ params }: Props) {
         {/* Chat */}
         <Chat slug={slug} title={title} author={author} />
       </div>
+
+      {/* Track this visit for "recently viewed" on homepage */}
+      {novel && (
+        <VisitTracker novel={{
+          slug,
+          title:          novel.title,
+          author:         novel.author,
+          cover_url:      novel.cover_url,
+          genres:         novel.genres,
+          total_chapters: novel.total_chapters,
+        }} />
+      )}
+      <FeedbackWidget />
     </div>
   )
 }

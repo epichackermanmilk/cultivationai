@@ -246,6 +246,27 @@ export default function Chat({ slug, title, author }: Props) {
 
       {/* Input */}
       <div className="shrink-0 border-t border-[var(--nc-border)] p-3" style={{ background: 'var(--nc-bg)' }}>
+        {/* Export */}
+        {messages.length > 0 && (
+          <div className="mb-2 flex justify-end">
+            <button
+              onClick={() => {
+                const txt = messages.map(m => `${m.role === 'user' ? 'You' : title}: ${m.content}`).join('\n\n')
+                const a = document.createElement('a')
+                a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain' }))
+                a.download = `${title.replace(/\s+/g, '_')}_chat.txt`
+                a.click()
+              }}
+              className="flex items-center gap-1 text-xs transition"
+              style={{ color: 'var(--nc-text2)' }}
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export chat
+            </button>
+          </div>
+        )}
         <div className="flex items-end gap-2">
           <textarea
             ref={inputRef}

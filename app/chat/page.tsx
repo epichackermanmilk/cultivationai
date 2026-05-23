@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
-import ThemeToggle from '@/components/ThemeToggle'
-import TokenWidget from '@/components/TokenWidget'
+import ThemeToggle    from '@/components/ThemeToggle'
+import TokenWidget    from '@/components/TokenWidget'
+import FeedbackWidget from '@/components/FeedbackWidget'
 
 interface Novel {
   slug: string
@@ -264,6 +265,29 @@ export default function ChatPage() {
 
           {/* Input */}
           <div className="shrink-0 border-t border-[var(--nc-border)] p-3" style={{ background: 'var(--nc-bg)' }}>
+            {/* Export */}
+            {messages.length > 0 && (
+              <div className="mb-2 flex justify-end">
+                <button
+                  onClick={() => {
+                    const lines = messages.map(m =>
+                      `${m.role === 'user' ? 'You' : 'NovelCodex'}: ${m.content}`
+                    ).join('\n\n')
+                    const a = document.createElement('a')
+                    a.href = URL.createObjectURL(new Blob([lines], { type: 'text/plain' }))
+                    a.download = 'novelcodex_chat.txt'
+                    a.click()
+                  }}
+                  className="flex items-center gap-1 text-xs transition"
+                  style={{ color: 'var(--nc-text2)' }}
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Export chat
+                </button>
+              </div>
+            )}
             {selected.size === 0 && (
               <p className="mb-2 text-center text-xs text-amber-600/80">
                 ← Select at least one novel to start chatting
@@ -296,6 +320,7 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
+      <FeedbackWidget />
     </div>
   )
 }

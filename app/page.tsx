@@ -2,8 +2,11 @@
 
 import { useEffect, useState, useMemo, useRef } from 'react'
 import Link from 'next/link'
-import ThemeToggle from '@/components/ThemeToggle'
-import TokenWidget from '@/components/TokenWidget'
+import ThemeToggle    from '@/components/ThemeToggle'
+import TokenWidget    from '@/components/TokenWidget'
+import BookmarkButton from '@/components/BookmarkButton'
+import RecentSection  from '@/components/RecentSection'
+import FeedbackWidget from '@/components/FeedbackWidget'
 
 interface Novel {
   slug: string
@@ -348,6 +351,8 @@ export default function Home() {
           </div>
         </div>
 
+        <RecentSection />
+
         {loading ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {Array.from({ length: 24 }).map((_, i) => (
@@ -373,6 +378,7 @@ export default function Home() {
           </>
         )}
       </main>
+      <FeedbackWidget />
     </div>
   )
 }
@@ -382,9 +388,12 @@ function NovelCard({ novel }: { novel: Novel }) {
 
   return (
     <Link href={`/novel/${novel.slug}`} className="group">
-      <div className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/80 backdrop-blur-sm transition-all duration-200 hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-900/20">
+      <div
+        className="overflow-hidden rounded-lg border transition-all duration-200 hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-900/20"
+        style={{ borderColor: 'var(--nc-border)', background: 'var(--nc-bg2)' }}
+      >
         {/* Cover */}
-        <div className="relative aspect-[3/4] bg-zinc-800 overflow-hidden">
+        <div className="relative aspect-[3/4] overflow-hidden" style={{ background: 'var(--nc-bg3)' }}>
           {novel.cover_url && !imgErr ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -394,8 +403,8 @@ function NovelCard({ novel }: { novel: Novel }) {
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900 p-3">
-              <span className="text-center text-xs text-zinc-400 font-medium leading-tight">
+            <div className="flex h-full w-full items-center justify-center p-3" style={{ background: 'var(--nc-bg3)' }}>
+              <span className="text-center text-xs font-medium leading-tight" style={{ color: 'var(--nc-text2)' }}>
                 {novel.title}
               </span>
             </div>
@@ -404,14 +413,19 @@ function NovelCard({ novel }: { novel: Novel }) {
           <span className="absolute bottom-1.5 right-2 text-xs font-medium text-zinc-300">
             {novel.total_chapters.toLocaleString()} ch
           </span>
+          {/* Bookmark heart — top-right of cover */}
+          <BookmarkButton
+            novel={novel}
+            className="absolute right-1.5 top-1.5 h-6 w-6 rounded-full bg-black/40 backdrop-blur-sm hover:bg-black/60"
+          />
         </div>
-        {/* Info — fixed height so all cards in a row are uniform */}
+        {/* Info */}
         <div className="flex h-[5.5rem] flex-col justify-start p-2">
-          <p className="line-clamp-2 text-xs font-semibold leading-tight text-zinc-100 group-hover:text-amber-400 transition-colors">
+          <p className="line-clamp-2 text-xs font-semibold leading-tight group-hover:text-amber-400 transition-colors" style={{ color: 'var(--nc-text)' }}>
             {novel.title}
           </p>
           {novel.author && (
-            <p className="mt-0.5 truncate text-xs text-zinc-500">{novel.author}</p>
+            <p className="mt-0.5 truncate text-xs" style={{ color: 'var(--nc-muted)' }}>{novel.author}</p>
           )}
           {novel.genres.length > 0 && (
             <p className="mt-1 truncate text-xs text-amber-600/80">{novel.genres[0]}</p>
