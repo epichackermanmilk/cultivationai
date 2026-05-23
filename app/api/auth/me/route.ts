@@ -13,23 +13,21 @@ export async function GET() {
   if (!token) return NextResponse.json({ user: null })
 
   const sb = admin()
-
-  // Validate token
   const { data: { user }, error } = await sb.auth.getUser(token)
   if (error || !user) return NextResponse.json({ user: null })
 
-  // Pull token balance
-  const { data: profile } = await sb
-    .from('profiles')
-    .select('tokens')
-    .eq('id', user.id)
-    .maybeSingle()
+  // Prefer profiles table; fall back to user_metadata
+  let tokens = user.user_metadata?.tokens as number | undefined
+  try {
+    const { data: profile } = await sb
+      .from('profiles')
+      .select('tokens')
+      .eq('id', user.id)
+      .maybeSingle()
+    if (profile?.tokens !== undefined) tokens = profile.tokens
+  } catch { /* profiles table optional */ }
 
   return NextResponse.json({
-    user: {
-      id:     user.id,
-      email:  user.email,
-      tokens: profile?.tokens ?? 0,
-    },
+    user: { id: user.id, email: user.email, tokens: tokens ?? 0 },
   })
 }
