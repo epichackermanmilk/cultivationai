@@ -119,8 +119,8 @@ function NovelCard({ novel }: { novel: Novel }) {
             {novel.total_chapters.toLocaleString()} ch
           </span>
         </div>
-        {/* Info */}
-        <div className="p-2">
+        {/* Info — fixed height so all cards in a row are uniform */}
+        <div className="flex h-[5.5rem] flex-col justify-start p-2">
           <p className="line-clamp-2 text-xs font-semibold leading-tight text-zinc-100 group-hover:text-amber-400 transition-colors">
             {novel.title}
           </p>
