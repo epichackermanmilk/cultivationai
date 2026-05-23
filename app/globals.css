@@ -5,7 +5,39 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* ── Scrollbar ───────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #18181b; }
-::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #52525b; }
+::-webkit-scrollbar-track { background: var(--nc-bg2); }
+::-webkit-scrollbar-thumb { background: var(--nc-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--nc-muted); }
+
+/* ── Theme tokens (dark default) ─────────────────────────────────────────── */
+:root {
+  --nc-bg:     #09090b;   /* zinc-950  */
+  --nc-bg2:    #18181b;   /* zinc-900  */
+  --nc-bg3:    #27272a;   /* zinc-800  */
+  --nc-border: #3f3f46;   /* zinc-700  */
+  --nc-muted:  #71717a;   /* zinc-500  */
+  --nc-text:   #f4f4f5;   /* zinc-100  */
+  --nc-text2:  #a1a1aa;   /* zinc-400  */
+  --nc-amber:  #f59e0b;   /* amber-500 */
+  --nc-amber2: #fbbf24;   /* amber-400 */
+}
+
+html.light {
+  --nc-bg:     #fafaf9;   /* stone-50  */
+  --nc-bg2:    #ffffff;
+  --nc-bg3:    #f5f5f4;   /* stone-100 */
+  --nc-border: #d6d3d1;   /* stone-300 */
+  --nc-muted:  #78716c;   /* stone-500 */
+  --nc-text:   #1c1917;   /* stone-900 */
+  --nc-text2:  #57534e;   /* stone-600 */
+  --nc-amber:  #d97706;   /* amber-600 */
+  --nc-amber2: #b45309;   /* amber-700 */
+}
+
+body {
+  background-color: var(--nc-bg);
+  color: var(--nc-text);
+  transition: background-color 0.2s, color 0.2s;
+}

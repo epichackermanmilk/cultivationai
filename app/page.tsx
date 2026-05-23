@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo, useRef } from 'react'
 import Link from 'next/link'
+import ThemeToggle from '@/components/ThemeToggle'
 
 interface Novel {
   slug: string
@@ -111,7 +112,7 @@ function FilterPanel({
   const reset = () => { setLocal(DEFAULT_FILTERS); onChange(DEFAULT_FILTERS) }
 
   return (
-    <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-xl border border-zinc-700 bg-zinc-900 p-4 shadow-2xl shadow-black/60">
+    <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-xl border border-[var(--nc-border)] p-4 shadow-2xl shadow-black/60" style={{ background: 'var(--nc-bg2)' }}>
       {/* Sort */}
       <section className="mb-4">
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-400">Chapter Count</h3>
@@ -282,11 +283,11 @@ export default function Home() {
   )
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
       <ParticleCanvas />
 
       {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-zinc-800 bg-zinc-950/90 backdrop-blur">
+      <header className="sticky top-0 z-10 border-b border-[var(--nc-border)] bg-[var(--nc-bg)]/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           <div>
             <h1 className="text-xl font-bold tracking-tight text-amber-400">NovelCodex</h1>
@@ -299,6 +300,7 @@ export default function Home() {
             >
               ✦ Multi-Novel Chat
             </Link>
+            <ThemeToggle />
             <span className="text-sm text-zinc-500">{novels.length.toLocaleString()} novels</span>
           </div>
         </div>

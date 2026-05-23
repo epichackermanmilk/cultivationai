@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
+import ThemeToggle from '@/components/ThemeToggle'
 
 interface Novel {
   slug: string
@@ -50,24 +51,27 @@ function NovelSelector({
     })
   }, [novels, search, genre, minCh, maxCh])
 
-  const addAllVisible = () => visible.forEach(n => { if (!selected.has(n.slug)) onToggle(n.slug) })
+  const addAllVisible    = () => visible.forEach(n => { if (!selected.has(n.slug)) onToggle(n.slug) })
+  const removeAllVisible = () => visible.forEach(n => { if (selected.has(n.slug))  onToggle(n.slug) })
 
   return (
     <div className="flex h-full flex-col">
-      <div className="shrink-0 p-4 border-b border-zinc-800">
-        <h2 className="text-sm font-semibold text-zinc-100 mb-3">Select Novels</h2>
+      <div className="shrink-0 p-4 border-b border-[var(--nc-border)]">
+        <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--nc-text)' }}>Select Novels</h2>
 
         {/* Search */}
         <input
           type="text" placeholder="Search title or author…"
           value={search} onChange={e => setSearch(e.target.value)}
-          className="mb-2 w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 outline-none focus:border-amber-500"
+          className="mb-2 w-full rounded-lg border border-[var(--nc-border)] px-3 py-2 text-xs placeholder-zinc-500 outline-none focus:border-amber-500"
+          style={{ background: 'var(--nc-bg3)', color: 'var(--nc-text)' }}
         />
 
         {/* Genre filter */}
         <select
           value={genre} onChange={e => setGenre(e.target.value)}
-          className="mb-2 w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-xs text-zinc-100 outline-none focus:border-amber-500"
+          className="mb-2 w-full rounded-lg border border-[var(--nc-border)] px-3 py-2 text-xs outline-none focus:border-amber-500"
+          style={{ background: 'var(--nc-bg3)', color: 'var(--nc-text)' }}
         >
           <option value="">All genres</option>
           {allGenres.map(g => <option key={g} value={g}>{g}</option>)}
@@ -76,16 +80,24 @@ function NovelSelector({
         {/* Chapter range */}
         <div className="mb-3 flex gap-2">
           <input type="number" placeholder="Min ch" value={minCh} onChange={e => setMinCh(e.target.value)}
-            className="w-1/2 rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-xs text-zinc-100 outline-none focus:border-amber-500" />
+            className="w-1/2 rounded-lg border border-[var(--nc-border)] px-2 py-1.5 text-xs outline-none focus:border-amber-500"
+            style={{ background: 'var(--nc-bg3)', color: 'var(--nc-text)' }} />
           <input type="number" placeholder="Max ch" value={maxCh} onChange={e => setMaxCh(e.target.value)}
-            className="w-1/2 rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-xs text-zinc-100 outline-none focus:border-amber-500" />
+            className="w-1/2 rounded-lg border border-[var(--nc-border)] px-2 py-1.5 text-xs outline-none focus:border-amber-500"
+            style={{ background: 'var(--nc-bg3)', color: 'var(--nc-text)' }} />
         </div>
 
         <div className="flex items-center justify-between">
           <span className="text-xs text-zinc-500">{visible.length} shown</span>
-          <button onClick={addAllVisible} className="text-xs text-amber-400 hover:text-amber-300 transition">
-            + Add all visible
-          </button>
+          <div className="flex gap-2">
+            <button onClick={addAllVisible} className="text-xs text-amber-400 hover:text-amber-300 transition">
+              + Add all
+            </button>
+            <span className="text-zinc-700">|</span>
+            <button onClick={removeAllVisible} className="text-xs text-zinc-500 hover:text-red-400 transition">
+              − Remove all
+            </button>
+          </div>
         </div>
       </div>
 
@@ -162,17 +174,18 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-zinc-950 overflow-hidden">
+    <div className="flex h-screen flex-col overflow-hidden" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
       {/* Header */}
-      <header className="shrink-0 flex items-center gap-3 border-b border-zinc-800 bg-zinc-950 px-4 py-3">
+      <header className="shrink-0 flex items-center gap-3 border-b border-[var(--nc-border)] px-4 py-3" style={{ background: 'var(--nc-bg)' }}>
         <Link href="/" className="text-zinc-400 hover:text-zinc-100 transition text-sm">← Library</Link>
         <div className="h-4 w-px bg-zinc-700" />
         <h1 className="text-sm font-bold text-amber-400">NovelCodex</h1>
         <span className="text-xs text-zinc-600">Multi-Novel Chat</span>
         <div className="flex-1" />
+        <ThemeToggle />
         <button
           onClick={() => setSideOpen(v => !v)}
-          className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 transition"
+          className="rounded-lg border border-[var(--nc-border)] px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 transition"
         >
           {sideOpen ? 'Hide' : 'Show'} Library
         </button>
@@ -181,7 +194,7 @@ export default function ChatPage() {
       <div className="flex flex-1 overflow-hidden">
         {/* Novel selector sidebar */}
         {sideOpen && (
-          <aside className="w-72 shrink-0 border-r border-zinc-800 bg-zinc-900/60 overflow-hidden flex flex-col">
+          <aside className="w-72 shrink-0 border-r border-[var(--nc-border)] overflow-hidden flex flex-col" style={{ background: 'var(--nc-bg2)' }}>
             {loading
               ? <div className="p-4 text-xs text-zinc-500 animate-pulse">Loading novels…</div>
               : <NovelSelector novels={novels} selected={selected} onToggle={toggle} />
@@ -232,11 +245,15 @@ export default function ChatPage() {
 
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
-                  msg.role === 'user'
-                    ? 'bg-amber-500 text-black rounded-br-sm'
-                    : 'bg-zinc-800 text-zinc-100 rounded-bl-sm'
-                }`}>
+                <div
+                  className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
+                    msg.role === 'user' ? 'rounded-br-sm' : 'rounded-bl-sm'
+                  }`}
+                  style={msg.role === 'user'
+                    ? { background: '#f59e0b', color: '#000' }
+                    : { background: 'var(--nc-bg3)', color: 'var(--nc-text)' }
+                  }
+                >
                   {msg.content}
                 </div>
               </div>
@@ -244,7 +261,7 @@ export default function ChatPage() {
           </div>
 
           {/* Input */}
-          <div className="shrink-0 border-t border-zinc-800 bg-zinc-950 p-3">
+          <div className="shrink-0 border-t border-[var(--nc-border)] p-3" style={{ background: 'var(--nc-bg)' }}>
             {selected.size === 0 && (
               <p className="mb-2 text-center text-xs text-amber-600/80">
                 ← Select at least one novel to start chatting
@@ -260,8 +277,8 @@ export default function ChatPage() {
                   : 'Select novels first…'
                 }
                 rows={1}
-                className="flex-1 resize-none rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition max-h-32 overflow-y-auto"
-                style={{ fieldSizing: 'content' } as React.CSSProperties}
+                className="flex-1 resize-none rounded-xl border border-[var(--nc-border)] px-3 py-2.5 text-sm placeholder-zinc-500 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition max-h-32 overflow-y-auto"
+                style={{ background: 'var(--nc-bg2)', color: 'var(--nc-text)', fieldSizing: 'content' } as React.CSSProperties}
               />
               <button
                 onClick={sendDemo}

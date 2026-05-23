@@ -214,7 +214,7 @@ export default function Chat({ slug, title, author }: Props) {
                 <button
                   key={q}
                   onClick={() => { setInput(q); inputRef.current?.focus() }}
-                  className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 hover:border-amber-500/50 hover:text-zinc-200 transition"
+                  className="rounded-lg border border-[var(--nc-border)] px-3 py-1.5 text-xs hover:border-amber-500/50 transition" style={{ color: 'var(--nc-text2)' }}
                 >
                   {q}
                 </button>
@@ -227,10 +227,12 @@ export default function Chat({ slug, title, author }: Props) {
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
               className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
-                msg.role === 'user'
-                  ? 'bg-amber-500 text-black rounded-br-sm'
-                  : 'bg-zinc-800 text-zinc-100 rounded-bl-sm'
+                msg.role === 'user' ? 'rounded-br-sm' : 'rounded-bl-sm'
               }`}
+              style={msg.role === 'user'
+                ? { background: '#f59e0b', color: '#000' }
+                : { background: 'var(--nc-bg3)', color: 'var(--nc-text)' }
+              }
             >
               {msg.content}
               {msg.role === 'assistant' && msg.content === '' && (
@@ -243,7 +245,7 @@ export default function Chat({ slug, title, author }: Props) {
       </div>
 
       {/* Input */}
-      <div className="shrink-0 border-t border-zinc-800 bg-zinc-950 p-3">
+      <div className="shrink-0 border-t border-[var(--nc-border)] p-3" style={{ background: 'var(--nc-bg)' }}>
         <div className="flex items-end gap-2">
           <textarea
             ref={inputRef}
@@ -252,8 +254,8 @@ export default function Chat({ slug, title, author }: Props) {
             onKeyDown={onKeyDown}
             placeholder="Ask about the story, characters, cultivation system…"
             rows={1}
-            className="flex-1 resize-none rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition max-h-32 overflow-y-auto"
-            style={{ fieldSizing: 'content' } as React.CSSProperties}
+            className="flex-1 resize-none rounded-xl border border-[var(--nc-border)] px-3 py-2.5 text-sm placeholder-zinc-500 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition max-h-32 overflow-y-auto"
+            style={{ background: 'var(--nc-bg2)', color: 'var(--nc-text)', fieldSizing: 'content' } as React.CSSProperties}
             disabled={streaming}
           />
           <button
