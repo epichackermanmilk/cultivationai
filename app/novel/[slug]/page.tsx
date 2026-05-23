@@ -3,6 +3,7 @@ import Chat from './Chat'
 import CoverImage from './CoverImage'
 import Link from 'next/link'
 import ThemeToggle from '@/components/ThemeToggle'
+import TokenWidget from '@/components/TokenWidget'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -39,6 +40,7 @@ export default async function NovelPage({ params }: Props) {
             {novel.total_chapters.toLocaleString()} chapters
           </span>
         )}
+        <TokenWidget />
         <ThemeToggle />
       </header>
 

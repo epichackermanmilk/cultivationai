@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import ThemeToggle from '@/components/ThemeToggle'
+import TokenWidget from '@/components/TokenWidget'
 
 interface Novel {
   slug: string
@@ -300,6 +301,7 @@ export default function Home() {
             >
               ✦ Multi-Novel Chat
             </Link>
+            <TokenWidget />
             <ThemeToggle />
             <span className="text-sm text-zinc-500">{novels.length.toLocaleString()} novels</span>
           </div>

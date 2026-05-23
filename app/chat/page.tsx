@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 import ThemeToggle from '@/components/ThemeToggle'
+import TokenWidget from '@/components/TokenWidget'
 
 interface Novel {
   slug: string
@@ -182,6 +183,7 @@ export default function ChatPage() {
         <h1 className="text-sm font-bold text-amber-400">NovelCodex</h1>
         <span className="text-xs text-zinc-600">Multi-Novel Chat</span>
         <div className="flex-1" />
+        <TokenWidget />
         <ThemeToggle />
         <button
           onClick={() => setSideOpen(v => !v)}
