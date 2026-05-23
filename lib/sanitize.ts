@@ -16,9 +16,9 @@ export function isValidEmail(email: unknown): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) && email.length <= 254
 }
 
-/** Validate password: 8+ chars */
+/** Validate password: 7+ chars */
 export function isValidPassword(pw: unknown): boolean {
-  return typeof pw === 'string' && pw.length >= 8 && pw.length <= 128
+  return typeof pw === 'string' && pw.length >= 7 && pw.length <= 128
 }
 
 /** Reject obviously malformed JSON bodies */

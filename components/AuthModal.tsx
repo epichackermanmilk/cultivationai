@@ -1,153 +1,311 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/lib/auth-context'
 
+type Step = 'email' | 'login' | 'signup'
+
 interface Props {
-  onClose:       () => void
-  defaultTab?:   'login' | 'signup'
+  onClose: () => void
+  /** Pixel offset from the right edge of the viewport (default 16) */
+  rightOffset?: number
+  /** Pixel offset from the top of the viewport (default 64 — just below a typical header) */
+  topOffset?: number
 }
 
-export default function AuthModal({ onClose, defaultTab = 'login' }: Props) {
+/** Password rules: 7+ chars, at least one digit, at least one special char */
+function validatePassword(pw: string): string | null {
+  if (pw.length < 7)               return 'At least 7 characters required'
+  if (!/\d/.test(pw))              return 'Must include a number'
+  if (!/[^A-Za-z0-9]/.test(pw))   return 'Must include a special character'
+  return null
+}
+
+export default function AuthPanel({ onClose, rightOffset = 16, topOffset = 64 }: Props) {
   const { refresh } = useAuth()
-  const [tab,      setTab]      = useState<'login' | 'signup'>(defaultTab)
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  const [step,     setStep]     = useState<Step>('email')
   const [email,    setEmail]    = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error,    setError]    = useState('')
   const [loading,  setLoading]  = useState(false)
-  const [success,  setSuccess]  = useState(false)
+  const [checking, setChecking] = useState(false)
 
-  // Reset form when switching tabs
-  useEffect(() => { setError(''); setSuccess(false) }, [tab])
-
-  // Close on Escape
+  // ── Close on Escape ───────────────────────────────────────────────────────
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
   }, [onClose])
 
-  const submit = async () => {
-    setError(''); setLoading(true)
+  // ── Close on outside click ────────────────────────────────────────────────
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node))
+        onClose()
+    }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [onClose])
+
+  // ── Step 1: check if email has an account ─────────────────────────────────
+  const checkEmail = async () => {
+    const trimmed = email.trim()
+    if (!trimmed || !/\S+@\S+\.\S+/.test(trimmed)) {
+      setError('Enter a valid email address'); return
+    }
+    setError(''); setChecking(true)
     try {
-      const endpoint = tab === 'login' ? '/api/auth/login' : '/api/auth/signup'
-      const r = await fetch(endpoint, {
+      const r = await fetch('/api/auth/check-email', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email, password }),
+        body:    JSON.stringify({ email: trimmed }),
       })
       const d = await r.json()
-      if (!r.ok) { setError(d.error || 'Something went wrong'); return }
+      setStep(d.exists ? 'login' : 'signup')
+    } catch {
+      setError('Connection error — please try again')
+    } finally {
+      setChecking(false)
+    }
+  }
 
+  const resetToEmail = () => {
+    setStep('email'); setPassword(''); setUsername(''); setError('')
+  }
+
+  // ── Step 2a: sign in ──────────────────────────────────────────────────────
+  const login = async () => {
+    if (!password) { setError('Enter your password'); return }
+    setError(''); setLoading(true)
+    try {
+      const r = await fetch('/api/auth/login', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email: email.trim(), password }),
+      })
+      const d = await r.json()
+      if (!r.ok) { setError(d.error || 'Incorrect password'); return }
       await refresh()
-      setSuccess(true)
-      setTimeout(onClose, 800)
+      onClose()
     } finally {
       setLoading(false)
     }
   }
 
-  const onKey = (e: React.KeyboardEvent) => { if (e.key === 'Enter') submit() }
+  // ── Step 2b: create account ───────────────────────────────────────────────
+  const signup = async () => {
+    if (!username.trim()) { setError('Choose a username'); return }
+    const pwErr = validatePassword(password)
+    if (pwErr) { setError(pwErr); return }
+    setError(''); setLoading(true)
+    try {
+      const r = await fetch('/api/auth/signup', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email: email.trim(), password, username: username.trim() }),
+      })
+      const d = await r.json()
+      if (!r.ok) { setError(d.error || 'Could not create account'); return }
+      await refresh()
+      onClose()
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ── Google OAuth ──────────────────────────────────────────────────────────
+  const googleSignIn = () => {
+    // Supabase Google OAuth — requires Google provider enabled in Supabase dashboard
+    const base     = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const anon     = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const redirect = `${window.location.origin}/auth/callback`
+    if (base && anon) {
+      window.location.href =
+        `${base}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirect)}`
+    }
+  }
+
+  // ── Shared input class ────────────────────────────────────────────────────
+  const inputCls =
+    'w-full rounded-lg px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 ' +
+    'outline-none border transition ' +
+    'bg-black/40 border-zinc-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/40'
+
+  const btnPrimary =
+    'w-full rounded-lg bg-amber-500 py-2.5 text-sm font-semibold text-black ' +
+    'hover:bg-amber-400 transition disabled:opacity-40 disabled:cursor-not-allowed'
 
   return (
-    /* Backdrop */
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-    >
+    /* Full-viewport overlay — click outside the card to close */
+    <div className="fixed inset-0 z-[9999]">
       <div
-        className="w-full max-w-sm rounded-2xl border border-[var(--nc-border)] p-6 shadow-2xl"
-        style={{ background: 'var(--nc-bg2)' }}
+        ref={panelRef}
+        className="absolute w-80 rounded-2xl p-5 shadow-2xl shadow-black/70"
+        style={{
+          right:             rightOffset,
+          top:               topOffset,
+          background:        'rgba(10,10,14,0.96)',
+          backdropFilter:    'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+        }}
       >
-        {/* Header */}
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-amber-400">NovelCodex</h2>
-          <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300 transition text-xl leading-none">×</button>
-        </div>
+        {/* Semi-transparent close × */}
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute right-3 top-3 text-lg leading-none transition hover:text-zinc-300"
+          style={{ color: 'rgba(161,161,170,0.5)' }}   /* zinc-400 @ 50% */
+        >
+          ×
+        </button>
 
-        {/* Tabs */}
-        <div className="mb-5 flex rounded-lg border border-[var(--nc-border)] overflow-hidden text-sm">
-          {(['login', 'signup'] as const).map(t => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`flex-1 py-2 font-medium transition ${
-                tab === t ? 'bg-amber-500 text-black' : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              {t === 'login' ? 'Sign In' : 'Create Account'}
-            </button>
-          ))}
-        </div>
-
-        {success ? (
-          <div className="py-6 text-center">
-            <div className="text-3xl mb-2">✦</div>
-            <p className="text-sm text-amber-400 font-medium">
-              {tab === 'signup' ? 'Account created! Welcome.' : 'Signed in!'}
+        {/* ── Email step ────────────────────────────────────────────────── */}
+        {step === 'email' && (
+          <div className="space-y-3">
+            <p className="text-xs text-zinc-500 pr-5">
+              Enter your email to sign in or create an account
             </p>
-            {tab === 'signup' && (
-              <p className="mt-1 text-xs text-zinc-500">100 free tokens added to your account.</p>
-            )}
-          </div>
-        ) : (
-          <>
-            <div className="space-y-3 mb-4">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-400">Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  onKeyDown={onKey}
-                  placeholder="you@example.com"
-                  autoFocus
-                  className="w-full rounded-lg border border-[var(--nc-border)] px-3 py-2.5 text-sm placeholder-zinc-500 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
-                  style={{ background: 'var(--nc-bg3)', color: 'var(--nc-text)' }}
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-400">Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  onKeyDown={onKey}
-                  placeholder="••••••••"
-                  className="w-full rounded-lg border border-[var(--nc-border)] px-3 py-2.5 text-sm placeholder-zinc-500 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
-                  style={{ background: 'var(--nc-bg3)', color: 'var(--nc-text)' }}
-                />
-              </div>
+
+            <input
+              type="email"
+              value={email}
+              onChange={e => { setEmail(e.target.value); setError('') }}
+              onKeyDown={e => e.key === 'Enter' && checkEmail()}
+              placeholder="you@example.com"
+              autoFocus
+              className={inputCls}
+            />
+
+            {error && <p className="text-xs text-red-400">{error}</p>}
+
+            <button
+              onClick={checkEmail}
+              disabled={checking || !email.trim()}
+              className={btnPrimary}
+            >
+              {checking ? 'Checking…' : 'Continue →'}
+            </button>
+
+            {/* Divider */}
+            <div className="flex items-center gap-2 py-1">
+              <div className="flex-1 border-t border-zinc-800" />
+              <span className="text-xs text-zinc-700">or</span>
+              <div className="flex-1 border-t border-zinc-800" />
             </div>
 
-            {error && (
-              <p className="mb-3 rounded-lg bg-red-500/10 border border-red-500/30 px-3 py-2 text-xs text-red-400">
-                {error}
-              </p>
-            )}
-
+            {/* Google */}
             <button
-              onClick={submit}
-              disabled={loading || !email || !password}
-              className="w-full rounded-lg bg-amber-500 py-2.5 text-sm font-semibold text-black hover:bg-amber-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={googleSignIn}
+              className="w-full flex items-center justify-center gap-2.5 rounded-lg border border-zinc-800 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-600 hover:text-zinc-200 transition"
             >
-              {loading ? (
-                <span className="inline-flex items-center gap-2">
-                  <span className="h-3.5 w-3.5 rounded-full border-2 border-black border-t-transparent animate-spin" />
-                  {tab === 'login' ? 'Signing in…' : 'Creating account…'}
-                </span>
-              ) : (
-                tab === 'login' ? 'Sign In' : 'Create Account'
-              )}
+              {/* Google colour logo */}
+              <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" aria-hidden>
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              Sign in with Google
+            </button>
+          </div>
+        )}
+
+        {/* ── Login step ────────────────────────────────────────────────── */}
+        {step === 'login' && (
+          <div className="space-y-3">
+            {/* Breadcrumb back to email */}
+            <button
+              onClick={resetToEmail}
+              className="flex items-center gap-1 text-xs text-zinc-600 hover:text-zinc-400 transition pr-5"
+            >
+              <span>←</span>
+              <span className="truncate max-w-[200px]">{email}</span>
             </button>
 
-            {tab === 'signup' && (
-              <p className="mt-3 text-center text-xs text-zinc-500">
-                🎁 100 free tokens on sign-up
+            <input
+              type="password"
+              value={password}
+              onChange={e => { setPassword(e.target.value); setError('') }}
+              onKeyDown={e => e.key === 'Enter' && login()}
+              placeholder="Password"
+              autoFocus
+              className={inputCls}
+            />
+
+            {error && <p className="text-xs text-red-400">{error}</p>}
+
+            <button
+              onClick={login}
+              disabled={loading || !password}
+              className={btnPrimary}
+            >
+              {loading
+                ? <span className="inline-flex items-center justify-center gap-2">
+                    <span className="h-3.5 w-3.5 rounded-full border-2 border-black border-t-transparent animate-spin" />
+                    Signing in…
+                  </span>
+                : 'Sign In'}
+            </button>
+          </div>
+        )}
+
+        {/* ── Signup step ───────────────────────────────────────────────── */}
+        {step === 'signup' && (
+          <div className="space-y-3">
+            {/* Breadcrumb */}
+            <button
+              onClick={resetToEmail}
+              className="flex items-center gap-1 text-xs text-zinc-600 hover:text-zinc-400 transition pr-5"
+            >
+              <span>←</span>
+              <span className="truncate max-w-[200px]">{email}</span>
+            </button>
+
+            <input
+              type="text"
+              value={username}
+              onChange={e => { setUsername(e.target.value); setError('') }}
+              placeholder="Choose a username"
+              autoFocus
+              className={inputCls}
+            />
+
+            <div>
+              <input
+                type="password"
+                value={password}
+                onChange={e => { setPassword(e.target.value); setError('') }}
+                onKeyDown={e => e.key === 'Enter' && signup()}
+                placeholder="Create password"
+                className={inputCls}
+              />
+              <p className="mt-1.5 text-xs" style={{ color: 'rgba(113,113,122,0.7)' }}>
+                7+ chars · one number · one special character
               </p>
-            )}
-          </>
+            </div>
+
+            {error && <p className="text-xs text-red-400">{error}</p>}
+
+            <button
+              onClick={signup}
+              disabled={loading || !username.trim() || !password}
+              className={btnPrimary}
+            >
+              {loading
+                ? <span className="inline-flex items-center justify-center gap-2">
+                    <span className="h-3.5 w-3.5 rounded-full border-2 border-black border-t-transparent animate-spin" />
+                    Creating account…
+                  </span>
+                : 'Create Account'}
+            </button>
+
+            <p className="text-center text-xs" style={{ color: 'rgba(113,113,122,0.7)' }}>
+              🎁 100 free tokens on sign-up
+            </p>
+          </div>
         )}
       </div>
     </div>
