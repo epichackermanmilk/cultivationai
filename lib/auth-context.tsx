@@ -3,9 +3,11 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 
 export interface AuthUser {
-  id:     string
-  email:  string
-  tokens: number
+  id:                      string
+  email:                   string
+  tokens:                  number
+  username:                string | null
+  onboarding_bonus_claimed: boolean
 }
 
 interface AuthCtx {

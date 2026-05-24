@@ -17,17 +17,29 @@ export async function GET() {
   if (error || !user) return NextResponse.json({ user: null })
 
   // Prefer profiles table; fall back to user_metadata
-  let tokens = user.user_metadata?.tokens as number | undefined
+  let tokens   = user.user_metadata?.tokens as number | undefined
+  let username: string | null = null
+  let onboarding_bonus_claimed = false
   try {
     const { data: profile } = await sb
       .from('profiles')
-      .select('tokens')
+      .select('tokens, username, onboarding_bonus_claimed')
       .eq('id', user.id)
       .maybeSingle()
     if (profile?.tokens !== undefined) tokens = profile.tokens
+    if (profile?.username !== undefined) username = profile.username ?? null
+    if (profile?.onboarding_bonus_claimed !== undefined) {
+      onboarding_bonus_claimed = profile.onboarding_bonus_claimed
+    }
   } catch { /* profiles table optional */ }
 
   return NextResponse.json({
-    user: { id: user.id, email: user.email, tokens: tokens ?? 0 },
+    user: {
+      id:                      user.id,
+      email:                   user.email,
+      tokens:                  tokens ?? 0,
+      username,
+      onboarding_bonus_claimed,
+    },
   })
 }

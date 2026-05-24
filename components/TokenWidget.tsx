@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import AuthModal from './AuthModal'
 import BuyTokensModal from './BuyTokensModal'
@@ -66,12 +67,30 @@ export default function TokenWidget() {
             className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-[var(--nc-border)] p-3 shadow-xl z-50"
             style={{ background: 'var(--nc-bg2)' }}
           >
+            {/* Identity row */}
             <p className="truncate text-xs font-medium mb-0.5" style={{ color: 'var(--nc-text)' }}>
-              {user.email}
+              {user.username ?? user.email}
             </p>
+            {user.username && (
+              <p className="truncate text-xs mb-0.5" style={{ color: 'var(--nc-text2)' }}>
+                {user.email}
+              </p>
+            )}
             <p className="text-xs mb-3" style={{ color: 'var(--nc-text2)' }}>
               <span className="font-semibold text-amber-400">{user.tokens.toLocaleString()}</span> tokens remaining
             </p>
+
+            {/* Onboarding nudge if profile incomplete */}
+            {!user.onboarding_bonus_claimed && (
+              <Link
+                href="/profile"
+                onClick={() => setShowDropdown(false)}
+                className="mb-2 flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-400 hover:bg-amber-500/20 transition"
+              >
+                <span>⚡</span>
+                <span>Complete profile → earn 10 tokens</span>
+              </Link>
+            )}
 
             <button
               onClick={() => { setShowDropdown(false); setShowBuy(true) }}
@@ -79,6 +98,14 @@ export default function TokenWidget() {
             >
               ⚡ Buy Tokens
             </button>
+            <Link
+              href="/profile"
+              onClick={() => setShowDropdown(false)}
+              className="mb-1 block w-full rounded-lg py-1.5 text-center text-xs transition hover:text-amber-400"
+              style={{ color: 'var(--nc-text2)' }}
+            >
+              View Profile
+            </Link>
             <button
               onClick={() => { setShowDropdown(false); logout() }}
               className="w-full rounded-lg py-1.5 text-xs transition"
