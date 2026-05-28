@@ -77,3 +77,13 @@ body {
 }
 .nc-range::-webkit-slider-runnable-track { background: transparent; }
 .nc-range::-moz-range-track { background: transparent; }
+
+/* ── Landing page cover-panel scroll animations ───────────────────────────── */
+@keyframes nb-up {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-50%); }
+}
+@keyframes nb-down {
+  from { transform: translateY(-50%); }
+  to   { transform: translateY(0); }
+}

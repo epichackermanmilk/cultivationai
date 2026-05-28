@@ -248,7 +248,7 @@ export default function RecommendPage() {
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold mb-2" style={G}>Discover Your Next Novel</h1>
           <p className="text-sm" style={{ color: 'var(--nc-text2)' }}>
-            AI-powered recommendations · <span className="text-amber-400 font-medium">2 tokens</span> per search
+            AI-powered recommendations · <span className="text-amber-400 font-medium">10 tokens</span> per search
           </p>
         </div>
 
@@ -324,7 +324,7 @@ export default function RecommendPage() {
                 Finding your next obsession…
               </span>
             ) : (
-              '✨ Get Recommendations  (2 tokens)'
+              '✨ Get Recommendations  (10 tokens)'
             )}
           </button>
         )}
@@ -364,7 +364,7 @@ export default function RecommendPage() {
               disabled={loading}
               className="mt-6 w-full rounded-xl border border-[var(--nc-border)] py-3 text-sm font-medium transition hover:border-amber-500/50 hover:text-amber-400 disabled:opacity-40"
               style={{ color: 'var(--nc-text2)' }}>
-              {loading ? 'Searching…' : 'Try Again  (2 tokens)'}
+              {loading ? 'Searching…' : 'Try Again  (10 tokens)'}
             </button>
           </div>
         )}

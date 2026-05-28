@@ -1,7 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { toggleBookmark, getBookmarkedSlugs, type NovelMeta } from '@/lib/bookmarks'
+import {
+  toggleBookmark, serverToggleBookmark,
+  getBookmarkedSlugs, ensureServerSync,
+  type NovelMeta,
+} from '@/lib/bookmarks'
+import { useAuth } from '@/lib/auth-context'
 
 interface Props {
   novel: NovelMeta
@@ -10,17 +15,42 @@ interface Props {
 }
 
 export default function BookmarkButton({ novel, className = '', size = 'sm' }: Props) {
-  const [saved, setSaved] = useState(false)
+  const { user } = useAuth()
+  const [saved,   setSaved]   = useState(false)
+  const [loading, setLoading] = useState(false)
 
+  // Initialise state: server-synced for logged-in users, localStorage for guests
   useEffect(() => {
-    setSaved(getBookmarkedSlugs().has(novel.slug))
-  }, [novel.slug])
+    if (user) {
+      ensureServerSync().then(slugs => setSaved(slugs.has(novel.slug)))
+    } else {
+      setSaved(getBookmarkedSlugs().has(novel.slug))
+    }
+  }, [novel.slug, user])
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    const next = toggleBookmark(novel)
-    setSaved(next)
+    if (loading) return
+
+    // Optimistic update
+    setSaved(v => !v)
+    setLoading(true)
+
+    try {
+      if (user) {
+        const next = await serverToggleBookmark(novel)
+        setSaved(next)
+      } else {
+        const next = toggleBookmark(novel)
+        setSaved(next)
+      }
+    } catch {
+      // Roll back optimistic update on error
+      setSaved(v => !v)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const sz = size === 'sm' ? 'h-3.5 w-3.5' : 'h-5 w-5'
@@ -28,9 +58,10 @@ export default function BookmarkButton({ novel, className = '', size = 'sm' }: P
   return (
     <button
       onClick={handleClick}
+      disabled={loading}
       title={saved ? 'Remove bookmark' : 'Bookmark novel'}
       aria-label={saved ? 'Remove bookmark' : 'Bookmark novel'}
-      className={`flex items-center justify-center rounded-full border transition-all ${
+      className={`flex items-center justify-center rounded-full border transition-all disabled:opacity-60 ${
         saved
           ? 'border-rose-400/50 text-rose-400 hover:text-rose-300 hover:border-rose-300/60'
           : 'border-zinc-600 text-zinc-500 hover:text-rose-400 hover:border-rose-400/50'

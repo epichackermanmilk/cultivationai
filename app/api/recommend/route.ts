@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js'
 const openai   = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 const VPS_BASE = process.env.VPS_API_URL
 const VPS_KEY  = process.env.VPS_API_KEY
-const TOKENS_COST = 2
+const TOKENS_COST = 10
 
 // ── Module-level cache (same pattern as /api/novels) ─────────────────────────
 interface Novel {

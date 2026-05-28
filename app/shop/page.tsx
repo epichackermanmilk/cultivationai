@@ -39,7 +39,7 @@ const SUBS = [
 ]
 
 const FAQ = [
-  { q: 'What are tokens?', a: 'Tokens are the currency used to chat with novels on NovelCodex. Each message costs roughly 10 tokens depending on the length and complexity of the conversation.' },
+  { q: 'What are tokens?', a: 'Tokens are the in-app currency for every AI feature. Each feature has a fixed price: asking a question in regular novel chat costs 10 tokens, using the Recommender costs 10 tokens, and unlocking a novel for AI chat costs 50 tokens. Multi-novel chat costs more due to the complexity. We keep prices fixed so you always know exactly what you\'re spending — no surprise per-word billing. Because conversations go back and forth, features like character chat may be priced lower in the future to encourage more natural exchanges.' },
   { q: 'Do tokens expire?', a: 'No. Tokens you purchase never expire and carry over indefinitely.' },
   { q: 'Can I get a refund?', a: 'We offer refunds within 7 days of purchase if you have not used any tokens from that purchase. Contact us at hello@novelcodex.ai.' },
   { q: 'How do subscriptions work?', a: 'Subscriptions bill monthly and deposit tokens into your account on each renewal cycle. You can cancel anytime from your Stripe billing portal.' },

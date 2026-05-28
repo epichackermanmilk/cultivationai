@@ -2,24 +2,52 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getBookmarks, toggleBookmark, type NovelMeta } from '@/lib/bookmarks'
-import ThemeToggle   from '@/components/ThemeToggle'
-import TokenWidget   from '@/components/TokenWidget'
+import { getBookmarks, serverToggleBookmark, toggleBookmark, invalidateBookmarkCache, type NovelMeta } from '@/lib/bookmarks'
+import { useAuth } from '@/lib/auth-context'
+import ThemeToggle    from '@/components/ThemeToggle'
+import TokenWidget    from '@/components/TokenWidget'
 import FeedbackWidget from '@/components/FeedbackWidget'
 
 export default function BookmarksPage() {
-  const [books, setBooks] = useState<NovelMeta[]>([])
+  const { user, loading: authLoading } = useAuth()
+  const [books,   setBooks]   = useState<NovelMeta[]>([])
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setBooks(getBookmarks())
-    setMounted(true)
-  }, [])
+    if (authLoading) return
 
-  function remove(novel: NovelMeta) {
-    toggleBookmark(novel)               // removes from localStorage
+    if (user) {
+      // Fetch from Supabase
+      fetch('/api/bookmarks')
+        .then(r => r.ok ? r.json() : { bookmarks: [] })
+        .then(data => {
+          setBooks(data.bookmarks ?? [])
+          setMounted(true)
+        })
+        .catch(() => {
+          // Fallback to localStorage on error
+          setBooks(getBookmarks())
+          setMounted(true)
+        })
+    } else {
+      // Guest: use localStorage
+      setBooks(getBookmarks())
+      setMounted(true)
+    }
+  }, [user, authLoading])
+
+  async function remove(novel: NovelMeta) {
+    if (user) {
+      await serverToggleBookmark(novel)   // removes from server + cache
+    } else {
+      toggleBookmark(novel)               // removes from localStorage
+    }
     setBooks(prev => prev.filter(b => b.slug !== novel.slug))
   }
+
+  const storageLabel = user
+    ? 'synced to your account'
+    : 'stored locally in your browser'
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
@@ -62,7 +90,7 @@ export default function BookmarksPage() {
         ) : (
           <>
             <p className="mb-4 text-xs text-zinc-500">
-              {books.length} saved novel{books.length !== 1 ? 's' : ''} · stored locally in your browser
+              {books.length} saved novel{books.length !== 1 ? 's' : ''} · {storageLabel}
             </p>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {books.map(novel => (

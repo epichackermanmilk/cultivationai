@@ -48,7 +48,8 @@ export async function POST(req: Request) {
     .eq('id', user.id)
     .single()
 
-  if (!profile || profile.tokens < 1) {
+  const CHAT_COST = 10
+  if (!profile || profile.tokens < CHAT_COST) {
     return NextResponse.json(
       { error: 'Not enough tokens — visit the shop to get more.', code: 'INSUFFICIENT_TOKENS' },
       { status: 402 },
@@ -168,9 +169,9 @@ ${context}`
           try {
             await sb
               .from('profiles')
-              .update({ tokens: profile.tokens - 1 })
+              .update({ tokens: profile.tokens - CHAT_COST })
               .eq('id', user.id)
-              .gte('tokens', 1)
+              .gte('tokens', CHAT_COST)
           } catch { /* non-fatal — usage already logged */ }
         }
       }
@@ -180,7 +181,7 @@ ${context}`
   return new Response(readable, {
     headers: {
       'Content-Type':       'text/plain; charset=utf-8',
-      'X-Tokens-Remaining': String(profile.tokens - 1),
+      'X-Tokens-Remaining': String(profile.tokens - CHAT_COST),
     },
   })
 }

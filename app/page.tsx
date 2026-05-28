@@ -413,7 +413,7 @@ export default function LandingPage() {
           </Link>
           <Link href="/recommend"
             className="hidden sm:flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400">
-            ✨ Discover
+            Recommend
           </Link>
           <Link href="/chat"
             className="hidden sm:flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400">

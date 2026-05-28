@@ -35,6 +35,8 @@ const ROUTES: Array<{ test: (p: string) => boolean; limit: number; windowMs: num
   { test: p => p.startsWith('/api/character'),          limit: 30,  windowMs: 60 * 60_000 },
   // Conversations — 60 per min (save after every chat exchange)
   { test: p => p.startsWith('/api/conversations'),      limit: 60,  windowMs: 60_000 },
+  // Bookmarks — 60 per min (read/write; user-specific so abuse impact is low)
+  { test: p => p.startsWith('/api/bookmarks'),          limit: 60,  windowMs: 60_000 },
   // General API catch-all
   { test: p => p.startsWith('/api/'),                   limit: 120, windowMs: 60_000 },
 ]
@@ -49,6 +51,7 @@ const MAX_BODY: Record<string, number> = {
   '/api/support':           4_096,
   '/api/conversations':    16_384,
   '/api/recommend':           512,   // small body: {mode, slugs[], query}
+  '/api/bookmarks':         2_048,  // novel metadata: slug + title + author + genres
 }
 
 export function middleware(req: NextRequest) {

@@ -33,6 +33,7 @@ export default function Chat({ slug, title, author }: Props) {
   const [characterName, setCharName]    = useState('')
   const [charSuggestions, setCharSugg]  = useState<string[]>([])
   const [charLoading, setCharLoading]   = useState(false)
+  const [embedError, setEmbedError]     = useState<string | null>(null)
   const bottomRef                       = useRef<HTMLDivElement>(null)
   const inputRef                        = useRef<HTMLTextAreaElement>(null)
   const pollRef                         = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -44,6 +45,7 @@ export default function Chat({ slug, title, author }: Props) {
     setHistLoaded(false)
     setEmbedPct(0)
     setEmbedEta(null)
+    setEmbedError(null)
     checkEmbed()
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -116,7 +118,6 @@ export default function Chat({ slug, title, author }: Props) {
   }
 
   async function startEmbed() {
-    setEmbedState('embedding')
     setEmbedPct(0)
     setEmbedEta(null)
     embedStartRef.current = Date.now()
@@ -124,10 +125,28 @@ export default function Chat({ slug, title, author }: Props) {
       const res = await fetch(`/api/embed/${slug}`, { method: 'POST' })
       if (res.status === 401) {
         setEmbedState('not_embedded')
-        // surface auth error in the embed gate
         return
       }
+      if (res.status === 402) {
+        // Not enough tokens — stay on the gate screen with a message
+        setEmbedState('not_embedded')
+        setEmbedError('Not enough tokens to unlock this novel. Visit the shop to get more.')
+        return
+      }
+      // If already embedded (200 with embedded:true), jump straight to ready
+      if (res.ok) {
+        const data = await res.json()
+        if (data.embedded || data.status === 'done') {
+          setEmbedState('ready')
+          // Update token display if server returned remaining balance
+          if (data.tokensRemaining !== undefined) updateTokens(data.tokensRemaining)
+          return
+        }
+        // Update token display for the deduction
+        if (data.tokensRemaining !== undefined) updateTokens(data.tokensRemaining)
+      }
     } catch { /* handled by poll */ }
+    setEmbedState('embedding')
     startPolling()
   }
 
@@ -301,13 +320,23 @@ export default function Chat({ slug, title, author }: Props) {
           We&apos;ll process all chapters and build a searchable knowledge base so you can chat with the story.
           This takes a few minutes.
         </p>
-        <button
-          onClick={startEmbed}
-          className="rounded-lg bg-amber-500 px-6 py-2.5 text-sm font-semibold text-black hover:bg-amber-400 transition-colors"
-        >
-          Unlock &ldquo;{title}&rdquo;
-        </button>
-        <p className="text-xs text-zinc-600">Uses 1 token per chat message after unlocking</p>
+        {embedError ? (
+          <div className="flex max-w-xs flex-col items-center gap-3">
+            <p className="text-sm text-red-400">{embedError}</p>
+            <a href="/shop"
+              className="rounded-lg bg-amber-500 px-6 py-2.5 text-sm font-semibold text-black hover:bg-amber-400 transition-colors">
+              Get More Tokens →
+            </a>
+          </div>
+        ) : (
+          <button
+            onClick={startEmbed}
+            className="rounded-lg bg-amber-500 px-6 py-2.5 text-sm font-semibold text-black hover:bg-amber-400 transition-colors"
+          >
+            Unlock &ldquo;{title}&rdquo;
+          </button>
+        )}
+        <p className="text-xs text-zinc-600">Costs 50 tokens to unlock · 10 tokens per message after</p>
       </div>
     )
   }
@@ -424,7 +453,7 @@ export default function Chat({ slug, title, author }: Props) {
             </div>
             {characterName && (
               <p className="mt-1 text-[10px] text-zinc-500">
-                Chatting as <span className="text-amber-400 font-medium">{characterName}</span> · 1 token per message
+                Chatting as <span className="text-amber-400 font-medium">{characterName}</span> · 10 tokens per message
               </p>
             )}
           </div>
@@ -548,8 +577,8 @@ export default function Chat({ slug, title, author }: Props) {
         </div>
         <p className="mt-1.5 text-center text-xs text-zinc-600">
           {chatMode === 'character' && characterName
-            ? `1 token · talking to ${characterName} · Enter to send`
-            : '1 token per message · Enter to send · Shift+Enter for new line'}
+            ? `10 tokens · talking to ${characterName} · Enter to send`
+            : '10 tokens per message · Enter to send · Shift+Enter for new line'}
         </p>
       </div>
     </div>

@@ -348,7 +348,7 @@ export default function LibraryPage() {
           : filters.genres.every(g => n.genres.includes(g))
       )
     }
-    list = list.filter(n => n.total_chapters >= filters.minChapters && n.total_chapters <= filters.maxChapters)
+    list = list.filter(n => n.total_chapters >= filters.minChapters && (filters.maxChapters >= CHAPTER_MAX || n.total_chapters <= filters.maxChapters))
     if (filters.sort === 'asc')  list = [...list].sort((a,b) => a.total_chapters - b.total_chapters)
     if (filters.sort === 'desc') list = [...list].sort((a,b) => b.total_chapters - a.total_chapters)
     return list
@@ -375,7 +375,7 @@ export default function LibraryPage() {
   const activeFilterCount = (
     filters.genres.length +
     (filters.sort !== 'default' ? 1 : 0) +
-    (filters.minChapters > 0 || filters.maxChapters < 99999 ? 1 : 0)
+    (filters.minChapters > 0 || filters.maxChapters < CHAPTER_MAX ? 1 : 0)
   )
 
   return (
@@ -401,7 +401,7 @@ export default function LibraryPage() {
               className="flex items-center gap-1.5 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-amber-500/50 hover:text-amber-400 transition"
               title="Get recommendations"
             >
-              ✨ Discover
+              Recommend
             </Link>
             <Link
               href="/bookmarks"

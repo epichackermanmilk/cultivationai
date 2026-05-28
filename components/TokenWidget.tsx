@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { useTheme } from '@/lib/theme-context'
 import AuthModal from './AuthModal'
-import BuyTokensModal from './BuyTokensModal'
 
 // ── Icon helpers ──────────────────────────────────────────────────────────────
 const IcoUser = () => (
@@ -53,7 +52,6 @@ export default function TokenWidget() {
   const { user, loading, logout } = useAuth()
   const { theme, toggle: toggleTheme } = useTheme()
   const [showAuth,     setShowAuth]     = useState(false)
-  const [showBuy,      setShowBuy]      = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
   const dropRef = useRef<HTMLDivElement>(null)
 
@@ -170,14 +168,15 @@ export default function TokenWidget() {
             </Link>
 
             {/* Purchase Tokens */}
-            <button
-              onClick={() => { setShowDropdown(false); setShowBuy(true) }}
+            <Link
+              href="/shop"
+              onClick={() => setShowDropdown(false)}
               className={ROW}
               style={{ ...ROW_BORDER, color: 'var(--nc-text)' }}
             >
               <IcoWallet />
               <span className="text-sm font-medium">Purchase Tokens</span>
-            </button>
+            </Link>
 
             {/* Support */}
             <Link
@@ -227,7 +226,6 @@ export default function TokenWidget() {
         )}
       </div>
 
-      {showBuy && <BuyTokensModal onClose={() => setShowBuy(false)} />}
     </>
   )
 }
