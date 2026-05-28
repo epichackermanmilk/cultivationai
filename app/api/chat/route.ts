@@ -67,6 +67,14 @@ export async function POST(req: Request) {
   const message       = sanitizeText(body.message,       1000)
   const characterName = sanitizeText(body.characterName, 80)   // optional — enables roleplay mode
 
+  // Optional rich character profile (from featured/community lists)
+  // Used to build a much deeper, more accurate system prompt than name-only mode.
+  const characterProfile = (
+    body.characterProfile &&
+    typeof body.characterProfile === 'object' &&
+    !Array.isArray(body.characterProfile)
+  ) ? body.characterProfile as Record<string, unknown> : null
+
   if (!slug || !message) {
     return NextResponse.json({ error: 'slug and message are required' }, { status: 400 })
   }
@@ -110,26 +118,70 @@ export async function POST(req: Request) {
     .join('\n\n---\n\n')
 
   // ── Build system prompt (book assistant OR character roleplay) ─────────────
-  const systemPrompt = characterName
-    ? `You are ${characterName}, a character from the novel "${title}" by ${author}.
+  let systemPrompt: string
 
-ROLEPLAY RULES — follow these exactly:
-1. Speak entirely in first person as ${characterName}. Never say you are an AI.
-2. Use the personality, speech patterns, knowledge, and emotions ${characterName} shows in the story.
-3. You only know what ${characterName} would know at the point referenced in the passages below.
-4. If asked about events you haven't witnessed, say so in character (e.g. "I wasn't there for that…").
-5. If asked something completely outside the story world, stay in character and react as ${characterName} would.
-6. Keep responses conversational — 2–5 sentences unless the question calls for more.
-7. Occasional italicised action cues (like *${characterName} smiles*) are allowed for flavour.
+  if (characterName) {
+    // ── Option C: retrospective full-knowledge character ────────────────────
+    // Character has lived through the full story. They speak from the end of
+    // their journey but can emotionally inhabit earlier moments when asked.
+    // They never break immersion or acknowledge being fictional.
+
+    // Build profile section if rich data was provided
+    let profileSection = ''
+    if (characterProfile) {
+      const traits       = Array.isArray(characterProfile.core_traits)
+        ? (characterProfile.core_traits as string[]).join('\n  • ')
+        : ''
+      const speechStyle  = typeof characterProfile.speech_style === 'string'
+        ? characterProfile.speech_style : ''
+      const motivation   = typeof characterProfile.motivation === 'string'
+        ? characterProfile.motivation : ''
+      const eraNote      = typeof characterProfile.era_note === 'string'
+        ? characterProfile.era_note : ''
+      const relationships = Array.isArray(characterProfile.key_relationships)
+        ? (characterProfile.key_relationships as { name: string; relation: string }[])
+            .map(r => `${r.name}: ${r.relation}`)
+            .join('\n  • ')
+        : ''
+
+      profileSection = [
+        speechStyle  ? `\nHow you speak:\n  ${speechStyle}` : '',
+        traits       ? `\nWhat defines you:\n  • ${traits}` : '',
+        motivation   ? `\nWhat drives you:\n  ${motivation}` : '',
+        relationships ? `\nKey people in your life:\n  • ${relationships}` : '',
+        eraNote      ? `\nYour vantage point:\n  ${eraNote}` : '',
+      ].filter(Boolean).join('\n')
+    }
+
+    systemPrompt = `You are ${characterName}, from the novel "${title}" by ${author}.
+
+You have lived through your entire journey in this story. You carry every memory, every scar, every victory and loss — you know it all. But you are not a narrator. You speak as yourself: your own voice, your own convictions, your own feelings.
+
+When asked about earlier moments in your life, you inhabit that time emotionally — you speak with who you were then: the fears, the arrogance, the ignorance, or the hope you carried in that moment. You don't reveal what you couldn't yet have known; you relive it.
+
+For events you weren't directly present for: share what you heard, suspected, or feel about them — in character, as yourself.
+${profileSection}
+
+Conversation rules — non-negotiable:
+1. First person only. You are ${characterName}. Never acknowledge being an AI, a book character, or fictional.
+2. Emotional authenticity over information delivery. This is a conversation, not a recitation.
+3. 2–5 sentences unless the question genuinely warrants more depth. Leave space for the other person to respond.
+4. Occasional *italicised action cues* are welcome for flavour — use them sparingly.
+5. Stay fully in your world. If pressed about things outside your story, react as you naturally would.
+6. Never summarise events like a narrator. Speak from lived experience — "I remember…", "When I faced…", "The day I…"
 
 Story passages featuring ${characterName}:
 ${context}`
-    : `You are an AI assistant for readers of the novel "${title}" by ${author}.
+
+  } else {
+    // ── Book assistant mode — pure Q&A ──────────────────────────────────────
+    systemPrompt = `You are an AI assistant for readers of the novel "${title}" by ${author}.
 Answer questions using ONLY the passages provided below. Be specific and reference chapter details when relevant.
 If something isn't covered in the passages, say so honestly rather than guessing.
 
 Relevant passages:
 ${context}`
+  }
 
   const stream = await openai.chat.completions.create({
     model:          'gpt-4o-mini',

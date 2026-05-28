@@ -45,7 +45,7 @@ const ROUTES: Array<{ test: (p: string) => boolean; limit: number; windowMs: num
 const MAX_BODY: Record<string, number> = {
   '/api/auth/signup': 1_024,
   '/api/auth/login':  1_024,
-  '/api/chat':        8_192,
+  '/api/chat':       10_240,   // extra headroom for characterProfile payload
   '/api/embed':       512,
   '/api/checkout':    256,
   '/api/support':           4_096,

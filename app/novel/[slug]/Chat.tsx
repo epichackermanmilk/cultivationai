@@ -18,6 +18,16 @@ interface Props {
 type EmbedState = 'unknown' | 'checking' | 'not_embedded' | 'embedding' | 'ready' | 'error'
 type ChatMode   = 'book' | 'character'
 
+interface CharProfile {
+  name:              string
+  speech_style?:     string
+  core_traits?:      string[]
+  motivation?:       string
+  key_relationships?: { name: string; relation: string }[]
+  era_note?:         string
+  featured?:         boolean
+}
+
 export default function Chat({ slug, title, author }: Props) {
   const { updateTokens } = useAuth()
 
@@ -31,7 +41,11 @@ export default function Chat({ slug, title, author }: Props) {
   // ── Character mode ─────────────────────────────────────────────────────────
   const [chatMode, setChatMode]         = useState<ChatMode>('book')
   const [characterName, setCharName]    = useState('')
-  const [charSuggestions, setCharSugg]  = useState<string[]>([])
+  const [characterProfile, setCharProf] = useState<CharProfile | null>(null)
+  const [featuredChars, setFeatured]    = useState<CharProfile[]>([])
+  const [communityChars, setCommunity]  = useState<CharProfile[]>([])
+  const [charSuggestions, setCharSugg]  = useState<string[]>([])  // backward compat
+  const [charInput, setCharInput]       = useState('')
   const [charLoading, setCharLoading]   = useState(false)
   const [embedError, setEmbedError]     = useState<string | null>(null)
   const bottomRef                       = useRef<HTMLDivElement>(null)
@@ -70,19 +84,36 @@ export default function Chat({ slug, title, author }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [embedState, slug])
 
-  // Load character suggestions once the novel is ready
+  // Load character data once the novel is ready
   useEffect(() => {
-    if (embedState !== 'ready' || charSuggestions.length > 0) return
+    if (embedState !== 'ready' || featuredChars.length > 0 || communityChars.length > 0) return
     setCharLoading(true)
     fetch(`/api/character/${slug}`)
-      .then(r => r.ok ? r.json() : { characters: [] })
-      .then(data => {
-        if (Array.isArray(data.characters)) setCharSugg(data.characters)
+      .then(r => r.ok ? r.json() : {} as Record<string, unknown>)
+      .then((data: Record<string, unknown>) => {
+        if (Array.isArray(data.featured))   setFeatured(data.featured as CharProfile[])
+        if (Array.isArray(data.community))  setCommunity(data.community as CharProfile[])
+        if (Array.isArray(data.characters)) setCharSugg(data.characters as string[])
       })
       .catch(() => {})
       .finally(() => setCharLoading(false))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [embedState, slug])
+
+  // Pick a character (from featured, community, or free text)
+  function selectCharacter(profile: CharProfile) {
+    setCharName(profile.name)
+    setCharProf(profile)
+    setCharInput('')
+    setMessages([])
+  }
+
+  function clearCharacter() {
+    setCharName('')
+    setCharProf(null)
+    setCharInput('')
+    setMessages([])
+  }
 
   // Clear messages and character state when switching modes
   function switchMode(m: ChatMode) {
@@ -90,6 +121,8 @@ export default function Chat({ slug, title, author }: Props) {
     setChatMode(m)
     setMessages([])
     setCharName('')
+    setCharProf(null)
+    setCharInput('')
     setInput('')
   }
 
@@ -208,9 +241,10 @@ export default function Chat({ slug, title, author }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
           slug, title, author, message: text, history,
-          ...(chatMode === 'character' && characterName.trim()
-            ? { characterName: characterName.trim() }
-            : {}),
+          ...(chatMode === 'character' && characterName.trim() ? {
+            characterName:    characterName.trim(),
+            characterProfile: characterProfile ?? undefined,
+          } : {}),
         }),
       })
 
@@ -416,44 +450,106 @@ export default function Chat({ slug, title, author }: Props) {
 
         {/* Character picker — shown only in character mode */}
         {chatMode === 'character' && (
-          <div className="mt-2">
-            {/* Suggestions */}
-            {charLoading && (
-              <div className="mb-2 flex gap-1.5">
-                {[1,2,3].map(i => <div key={i} className="h-6 w-20 animate-pulse rounded-full bg-zinc-800" />)}
-              </div>
-            )}
-            {!charLoading && charSuggestions.length > 0 && !characterName && (
-              <div className="mb-2 flex flex-wrap gap-1.5">
-                {charSuggestions.map(c => (
-                  <button key={c} onClick={() => setCharName(c)}
-                    className="rounded-full border border-[var(--nc-border)] px-2.5 py-0.5 text-xs transition hover:border-amber-500/50 hover:text-amber-400"
-                    style={{ color: 'var(--nc-text2)' }}>
-                    {c}
-                  </button>
-                ))}
-              </div>
-            )}
-            {/* Name input */}
-            <div className="flex items-center gap-2">
-              <input
-                value={characterName}
-                onChange={e => setCharName(e.target.value)}
-                placeholder="Type or pick a character name…"
-                className="flex-1 rounded-lg border border-[var(--nc-border)] bg-[var(--nc-bg2)] px-3 py-1.5 text-xs placeholder-zinc-500 outline-none focus:border-amber-500 transition"
-                style={{ color: 'var(--nc-text)' }}
-                maxLength={80}
-              />
-              {characterName && (
-                <button onClick={() => setCharName('')}
+          <div className="mt-2 space-y-2.5">
+
+            {/* ── Active character chip ── */}
+            {characterName ? (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1">
+                  {characterProfile?.featured && (
+                    <span className="text-amber-400 text-[10px]">✦</span>
+                  )}
+                  <span className="text-xs font-semibold text-amber-300">{characterName}</span>
+                </div>
+                <button onClick={clearCharacter}
                   className="text-xs text-zinc-500 hover:text-zinc-300 transition">
-                  ✕
+                  Change
                 </button>
-              )}
-            </div>
+              </div>
+            ) : (
+              <>
+                {/* ── Loading skeleton ── */}
+                {charLoading && (
+                  <div className="flex gap-1.5">
+                    {[1,2,3].map(i => <div key={i} className="h-6 w-20 animate-pulse rounded-full bg-zinc-800" />)}
+                  </div>
+                )}
+
+                {/* ── Featured characters ── */}
+                {!charLoading && featuredChars.length > 0 && (
+                  <div>
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-amber-500/70">
+                      ✦ Featured
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {featuredChars.map(c => (
+                        <button key={c.name}
+                          onClick={() => selectCharacter(c)}
+                          className="flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-0.5 text-xs font-medium text-amber-300 transition hover:bg-amber-500/20 hover:border-amber-500/60">
+                          <span>✦</span>
+                          {c.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Community characters ── */}
+                {!charLoading && communityChars.length > 0 && (
+                  <div>
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest"
+                      style={{ color: 'var(--nc-text2)' }}>
+                      Characters
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {communityChars.map(c => (
+                        <button key={c.name}
+                          onClick={() => selectCharacter(c)}
+                          className="rounded-full border border-[var(--nc-border)] px-2.5 py-0.5 text-xs transition hover:border-amber-500/50 hover:text-amber-400"
+                          style={{ color: 'var(--nc-text2)' }}>
+                          {c.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Free-text: talk to anyone ── */}
+                <div>
+                  {(featuredChars.length > 0 || communityChars.length > 0) && (
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest"
+                      style={{ color: 'var(--nc-text2)' }}>
+                      Someone else
+                    </p>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={charInput}
+                      onChange={e => setCharInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && charInput.trim()) {
+                          selectCharacter({ name: charInput.trim() })
+                        }
+                      }}
+                      placeholder="Type any character name…"
+                      className="flex-1 rounded-lg border border-[var(--nc-border)] bg-[var(--nc-bg2)] px-3 py-1.5 text-xs placeholder-zinc-500 outline-none focus:border-amber-500 transition"
+                      style={{ color: 'var(--nc-text)' }}
+                      maxLength={80}
+                    />
+                    <button
+                      onClick={() => { if (charInput.trim()) selectCharacter({ name: charInput.trim() }) }}
+                      disabled={!charInput.trim()}
+                      className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5 text-xs text-amber-400 transition hover:bg-amber-500/20 disabled:opacity-40">
+                      Talk →
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+
             {characterName && (
-              <p className="mt-1 text-[10px] text-zinc-500">
-                Chatting as <span className="text-amber-400 font-medium">{characterName}</span> · 10 tokens per message
+              <p className="text-[10px] text-zinc-600">
+                Talking to <span className="text-amber-400">{characterName}</span> · 10 tokens per message
               </p>
             )}
           </div>
