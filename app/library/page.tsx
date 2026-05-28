@@ -397,6 +397,13 @@ export default function LibraryPage() {
               ✦ Multi-Novel Chat
             </Link>
             <Link
+              href="/recommend"
+              className="flex items-center gap-1.5 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-amber-500/50 hover:text-amber-400 transition"
+              title="Get recommendations"
+            >
+              ✨ Discover
+            </Link>
+            <Link
               href="/bookmarks"
               className="flex items-center gap-1.5 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-amber-500/50 hover:text-amber-400 transition"
               title="My Bookmarks"

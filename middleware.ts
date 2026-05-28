@@ -29,6 +29,8 @@ const ROUTES: Array<{ test: (p: string) => boolean; limit: number; windowMs: num
   { test: p => p.startsWith('/api/embed'),              limit: 10,  windowMs: 60_000 },
   // Support — 3 per 10 min (prevent spam submissions)
   { test: p => p.startsWith('/api/support'),            limit: 3,   windowMs: 10 * 60_000 },
+  // Recommend — 10 per hour (costs 2 tokens + OpenAI call each time)
+  { test: p => p.startsWith('/api/recommend'),          limit: 10,  windowMs: 60 * 60_000 },
   // Conversations — 60 per min (save after every chat exchange)
   { test: p => p.startsWith('/api/conversations'),      limit: 60,  windowMs: 60_000 },
   // General API catch-all
@@ -43,7 +45,8 @@ const MAX_BODY: Record<string, number> = {
   '/api/embed':       512,
   '/api/checkout':    256,
   '/api/support':           4_096,
-  '/api/conversations':    16_384,   // up to 100 messages × ~4KB each worst-case is fine; cap at 16KB
+  '/api/conversations':    16_384,
+  '/api/recommend':           512,   // small body: {mode, slugs[], query}
 }
 
 export function middleware(req: NextRequest) {
