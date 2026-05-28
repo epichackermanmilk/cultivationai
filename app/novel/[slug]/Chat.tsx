@@ -16,21 +16,27 @@ interface Props {
 }
 
 type EmbedState = 'unknown' | 'checking' | 'not_embedded' | 'embedding' | 'ready' | 'error'
+type ChatMode   = 'book' | 'character'
 
 export default function Chat({ slug, title, author }: Props) {
   const { updateTokens } = useAuth()
 
-  const [messages, setMessages]       = useState<Message[]>([])
-  const [input, setInput]             = useState('')
-  const [streaming, setStreaming]     = useState(false)
-  const [embedState, setEmbedState]   = useState<EmbedState>('unknown')
-  const [embedPct, setEmbedPct]       = useState(0)
-  const [embedEta, setEmbedEta]       = useState<string | null>(null)
-  const [historyLoaded, setHistLoaded] = useState(false)
-  const bottomRef                     = useRef<HTMLDivElement>(null)
-  const inputRef                      = useRef<HTMLTextAreaElement>(null)
-  const pollRef                       = useRef<ReturnType<typeof setInterval> | null>(null)
-  const embedStartRef                 = useRef<number | null>(null)
+  const [messages, setMessages]         = useState<Message[]>([])
+  const [input, setInput]               = useState('')
+  const [streaming, setStreaming]       = useState(false)
+  const [embedState, setEmbedState]     = useState<EmbedState>('unknown')
+  const [embedPct, setEmbedPct]         = useState(0)
+  const [embedEta, setEmbedEta]         = useState<string | null>(null)
+  const [historyLoaded, setHistLoaded]  = useState(false)
+  // ── Character mode ─────────────────────────────────────────────────────────
+  const [chatMode, setChatMode]         = useState<ChatMode>('book')
+  const [characterName, setCharName]    = useState('')
+  const [charSuggestions, setCharSugg]  = useState<string[]>([])
+  const [charLoading, setCharLoading]   = useState(false)
+  const bottomRef                       = useRef<HTMLDivElement>(null)
+  const inputRef                        = useRef<HTMLTextAreaElement>(null)
+  const pollRef                         = useRef<ReturnType<typeof setInterval> | null>(null)
+  const embedStartRef                   = useRef<number | null>(null)
 
   // Check embedding status on mount (also resets history state on slug change)
   useEffect(() => {
@@ -61,6 +67,29 @@ export default function Chat({ slug, title, author }: Props) {
       .catch(() => { /* non-fatal */ })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [embedState, slug])
+
+  // Load character suggestions once the novel is ready
+  useEffect(() => {
+    if (embedState !== 'ready' || charSuggestions.length > 0) return
+    setCharLoading(true)
+    fetch(`/api/character/${slug}`)
+      .then(r => r.ok ? r.json() : { characters: [] })
+      .then(data => {
+        if (Array.isArray(data.characters)) setCharSugg(data.characters)
+      })
+      .catch(() => {})
+      .finally(() => setCharLoading(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [embedState, slug])
+
+  // Clear messages and character state when switching modes
+  function switchMode(m: ChatMode) {
+    if (m === chatMode) return
+    setChatMode(m)
+    setMessages([])
+    setCharName('')
+    setInput('')
+  }
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -139,6 +168,8 @@ export default function Chat({ slug, title, author }: Props) {
   async function send() {
     const text = input.trim()
     if (!text || streaming || embedState !== 'ready') return
+    // In character mode, require a character name to be set
+    if (chatMode === 'character' && !characterName.trim()) return
 
     const userMsg: Message      = { role: 'user',      content: text }
     const assistantMsg: Message = { role: 'assistant', content: '' }
@@ -156,7 +187,12 @@ export default function Chat({ slug, title, author }: Props) {
       const res = await fetch('/api/chat', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ slug, title, author, message: text, history }),
+        body:    JSON.stringify({
+          slug, title, author, message: text, history,
+          ...(chatMode === 'character' && characterName.trim()
+            ? { characterName: characterName.trim() }
+            : {}),
+        }),
       })
 
       // ── Handle error status codes before streaming ────────────────────────
@@ -326,14 +362,89 @@ export default function Chat({ slug, title, author }: Props) {
   // ── Chat UI ─────────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
+
+      {/* ── Mode toggle ──────────────────────────────────────────────────────── */}
+      <div className="shrink-0 border-b border-[var(--nc-border)] px-3 py-2">
+        <div className="flex rounded-lg border border-[var(--nc-border)] p-0.5 gap-0.5"
+          style={{ background: 'var(--nc-bg)' }}>
+          <button
+            onClick={() => switchMode('book')}
+            className={`flex-1 rounded-md py-1.5 text-xs font-medium transition ${
+              chatMode === 'book' ? 'bg-amber-500 text-black' : 'hover:bg-zinc-800/50'
+            }`}
+            style={chatMode !== 'book' ? { color: 'var(--nc-text2)' } : {}}>
+            📖 Ask the Book
+          </button>
+          <button
+            onClick={() => switchMode('character')}
+            className={`flex-1 rounded-md py-1.5 text-xs font-medium transition ${
+              chatMode === 'character' ? 'bg-amber-500 text-black' : 'hover:bg-zinc-800/50'
+            }`}
+            style={chatMode !== 'character' ? { color: 'var(--nc-text2)' } : {}}>
+            🎭 Character Chat
+          </button>
+        </div>
+
+        {/* Character picker — shown only in character mode */}
+        {chatMode === 'character' && (
+          <div className="mt-2">
+            {/* Suggestions */}
+            {charLoading && (
+              <div className="mb-2 flex gap-1.5">
+                {[1,2,3].map(i => <div key={i} className="h-6 w-20 animate-pulse rounded-full bg-zinc-800" />)}
+              </div>
+            )}
+            {!charLoading && charSuggestions.length > 0 && !characterName && (
+              <div className="mb-2 flex flex-wrap gap-1.5">
+                {charSuggestions.map(c => (
+                  <button key={c} onClick={() => setCharName(c)}
+                    className="rounded-full border border-[var(--nc-border)] px-2.5 py-0.5 text-xs transition hover:border-amber-500/50 hover:text-amber-400"
+                    style={{ color: 'var(--nc-text2)' }}>
+                    {c}
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Name input */}
+            <div className="flex items-center gap-2">
+              <input
+                value={characterName}
+                onChange={e => setCharName(e.target.value)}
+                placeholder="Type or pick a character name…"
+                className="flex-1 rounded-lg border border-[var(--nc-border)] bg-[var(--nc-bg2)] px-3 py-1.5 text-xs placeholder-zinc-500 outline-none focus:border-amber-500 transition"
+                style={{ color: 'var(--nc-text)' }}
+                maxLength={80}
+              />
+              {characterName && (
+                <button onClick={() => setCharName('')}
+                  className="text-xs text-zinc-500 hover:text-zinc-300 transition">
+                  ✕
+                </button>
+              )}
+            </div>
+            {characterName && (
+              <p className="mt-1 text-[10px] text-zinc-500">
+                Chatting as <span className="text-amber-400 font-medium">{characterName}</span> · 1 token per message
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center gap-3 text-center opacity-60">
-            <div className="text-3xl">✨</div>
+            <div className="text-3xl">{chatMode === 'character' ? '🎭' : '✨'}</div>
             <p className="text-sm text-zinc-400">
-              Ask anything about <span className="text-amber-400">{title}</span>
+              {chatMode === 'character' && characterName
+                ? <>You&apos;re now talking to <span className="text-amber-400">{characterName}</span></>
+                : chatMode === 'character'
+                ? 'Pick a character above to start roleplaying'
+                : <>Ask anything about <span className="text-amber-400">{title}</span></>
+              }
             </p>
+            {chatMode === 'book' && (
             <div className="mt-2 flex flex-col gap-2">
               {[
                 'Who are the main characters?',
@@ -350,6 +461,7 @@ export default function Chat({ slug, title, author }: Props) {
                 </button>
               ))}
             </div>
+            )}
           </div>
         )}
 
@@ -422,7 +534,7 @@ export default function Chat({ slug, title, author }: Props) {
           />
           <button
             onClick={send}
-            disabled={streaming || !input.trim()}
+            disabled={streaming || !input.trim() || (chatMode === 'character' && !characterName.trim())}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-black transition hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {streaming ? (
@@ -434,7 +546,11 @@ export default function Chat({ slug, title, author }: Props) {
             )}
           </button>
         </div>
-        <p className="mt-1.5 text-center text-xs text-zinc-600">1 token per message · Enter to send · Shift+Enter for new line</p>
+        <p className="mt-1.5 text-center text-xs text-zinc-600">
+          {chatMode === 'character' && characterName
+            ? `1 token · talking to ${characterName} · Enter to send`
+            : '1 token per message · Enter to send · Shift+Enter for new line'}
+        </p>
       </div>
     </div>
   )

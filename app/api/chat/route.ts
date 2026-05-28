@@ -59,11 +59,12 @@ export async function POST(req: Request) {
   const parsed = await parseJsonBody(req, 8_192)
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 })
 
-  const body    = parsed.data as Record<string, unknown>
-  const slug    = sanitizeText(body.slug,    100)
-  const title   = sanitizeText(body.title,   200)
-  const author  = sanitizeText(body.author,  200)
-  const message = sanitizeText(body.message, 1000)
+  const body          = parsed.data as Record<string, unknown>
+  const slug          = sanitizeText(body.slug,          100)
+  const title         = sanitizeText(body.title,         200)
+  const author        = sanitizeText(body.author,        200)
+  const message       = sanitizeText(body.message,       1000)
+  const characterName = sanitizeText(body.characterName, 80)   // optional — enables roleplay mode
 
   if (!slug || !message) {
     return NextResponse.json({ error: 'slug and message are required' }, { status: 400 })
@@ -83,26 +84,46 @@ export async function POST(req: Request) {
     }))
 
   // ── Embed & retrieve ───────────────────────────────────────────────────────
+  // In character mode, bias the embedding query toward that character so we
+  // retrieve passages where they appear rather than generic topic matches.
+  const embeddingQuery = characterName
+    ? `${characterName} ${message}`
+    : message
+
   const embRes = await openai.embeddings.create({
     model: 'text-embedding-3-small',
-    input: message,
+    input: embeddingQuery,
   })
   const queryEmbedding = embRes.data[0].embedding
   const chunks = await matchChunks(queryEmbedding, slug, 6)
 
   if (chunks.length === 0) {
-    return new Response(
-      "I don't have enough information from this novel to answer that question. Try asking about specific characters, events, or plot points.",
-      { headers: { 'Content-Type': 'text/plain' } },
-    )
+    const notFoundMsg = characterName
+      ? `*${characterName} looks around, puzzled.* I'm afraid I can't recall anything about that — try asking me something else.`
+      : "I don't have enough information from this novel to answer that question. Try asking about specific characters, events, or plot points."
+    return new Response(notFoundMsg, { headers: { 'Content-Type': 'text/plain' } })
   }
 
   const context = chunks
     .map(c => `[Ch.${c.chapter_number} — ${c.chapter_title}]\n${c.text}`)
     .join('\n\n---\n\n')
 
-  // ── Stream ─────────────────────────────────────────────────────────────────
-  const systemPrompt = `You are an AI assistant for readers of the novel "${title}" by ${author}.
+  // ── Build system prompt (book assistant OR character roleplay) ─────────────
+  const systemPrompt = characterName
+    ? `You are ${characterName}, a character from the novel "${title}" by ${author}.
+
+ROLEPLAY RULES — follow these exactly:
+1. Speak entirely in first person as ${characterName}. Never say you are an AI.
+2. Use the personality, speech patterns, knowledge, and emotions ${characterName} shows in the story.
+3. You only know what ${characterName} would know at the point referenced in the passages below.
+4. If asked about events you haven't witnessed, say so in character (e.g. "I wasn't there for that…").
+5. If asked something completely outside the story world, stay in character and react as ${characterName} would.
+6. Keep responses conversational — 2–5 sentences unless the question calls for more.
+7. Occasional italicised action cues (like *${characterName} smiles*) are allowed for flavour.
+
+Story passages featuring ${characterName}:
+${context}`
+    : `You are an AI assistant for readers of the novel "${title}" by ${author}.
 Answer questions using ONLY the passages provided below. Be specific and reference chapter details when relevant.
 If something isn't covered in the passages, say so honestly rather than guessing.
 
@@ -114,7 +135,7 @@ ${context}`
     stream:         true,
     stream_options: { include_usage: true },
     max_tokens:     800,
-    temperature:    0.3,
+    temperature:    characterName ? 0.7 : 0.3,  // more expressive in roleplay mode
     messages:    [
       { role: 'system', content: systemPrompt },
       ...history,

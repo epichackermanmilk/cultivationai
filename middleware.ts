@@ -31,6 +31,8 @@ const ROUTES: Array<{ test: (p: string) => boolean; limit: number; windowMs: num
   { test: p => p.startsWith('/api/support'),            limit: 3,   windowMs: 10 * 60_000 },
   // Recommend — 10 per hour (costs 2 tokens + OpenAI call each time)
   { test: p => p.startsWith('/api/recommend'),          limit: 10,  windowMs: 60 * 60_000 },
+  // Character suggestions — 30 per hour (cached in DB so real calls are rare)
+  { test: p => p.startsWith('/api/character'),          limit: 30,  windowMs: 60 * 60_000 },
   // Conversations — 60 per min (save after every chat exchange)
   { test: p => p.startsWith('/api/conversations'),      limit: 60,  windowMs: 60_000 },
   // General API catch-all
