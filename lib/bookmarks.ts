@@ -67,3 +67,10 @@ export function getRecent(): RecentEntry[] {
     return raw ? JSON.parse(raw) : []
   } catch { return [] }
 }
+
+export function removeRecent(slug: string): void {
+  try {
+    const updated = getRecent().filter(r => r.slug !== slug)
+    localStorage.setItem(RECENT_KEY, JSON.stringify(updated))
+  } catch { /* localStorage unavailable */ }
+}

@@ -2,13 +2,15 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 
 interface ProfileData {
-  username:                string | null
-  age:                     number | null
-  tokens:                  number
+  username:                 string | null
+  age:                      number | null
+  tokens:                   number
   onboarding_bonus_claimed: boolean
+  email_marketing_consent:  boolean
 }
 
 export default function ProfilePage() {
@@ -18,12 +20,14 @@ export default function ProfilePage() {
   const [profile,  setProfile]  = useState<ProfileData | null>(null)
   const [fetching, setFetching] = useState(true)
 
-  const [username,  setUsername]  = useState('')
-  const [age,       setAge]       = useState('')
-  const [saving,    setSaving]    = useState(false)
-  const [error,     setError]     = useState<string | null>(null)
-  const [bonusMsg,  setBonusMsg]  = useState<string | null>(null)
-  const [saved,     setSaved]     = useState(false)
+  const [username,       setUsername]       = useState('')
+  const [age,            setAge]            = useState('')
+  const [emailConsent,   setEmailConsent]   = useState(false)
+  const [saving,         setSaving]         = useState(false)
+  const [error,          setError]          = useState<string | null>(null)
+  const [bonusMsg,       setBonusMsg]       = useState<string | null>(null)
+  const [saved,          setSaved]          = useState(false)
+  const [showAgeConfirm, setShowAgeConfirm] = useState(false)
 
   const bonusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -41,6 +45,7 @@ export default function ProfilePage() {
         setProfile(d)
         setUsername(d.username ?? '')
         setAge(d.age != null ? String(d.age) : '')
+        setEmailConsent(d.email_marketing_consent ?? false)
       })
       .finally(() => setFetching(false))
   }, [user])
@@ -48,8 +53,7 @@ export default function ProfilePage() {
   const bothFilled = username.trim().length >= 3 && age.trim() !== ''
   const bonusPending = profile && !profile.onboarding_bonus_claimed && bothFilled
 
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault()
+  async function doSave() {
     if (!user) return
     setSaving(true)
     setError(null)
@@ -62,6 +66,7 @@ export default function ProfilePage() {
     if (trimmed) body.username = trimmed
     const parsedAge = parseInt(age, 10)
     if (!isNaN(parsedAge)) body.age = parsedAge
+    body.email_marketing_consent = emailConsent
 
     try {
       const r = await fetch('/api/profile', {
@@ -79,10 +84,11 @@ export default function ProfilePage() {
       // Update local profile state
       setProfile(prev => prev ? {
         ...prev,
-        username:                d.username,
-        age:                     d.age,
-        tokens:                  d.tokens,
+        username:                 d.username,
+        age:                      d.age,
+        tokens:                   d.tokens,
         onboarding_bonus_claimed: d.bonus_awarded ? true : prev.onboarding_bonus_claimed,
+        email_marketing_consent:  d.email_marketing_consent ?? emailConsent,
       } : null)
 
       setSaved(true)
@@ -103,6 +109,18 @@ export default function ProfilePage() {
     }
   }
 
+  function handleSave(e: React.FormEvent) {
+    e.preventDefault()
+    if (!user) return
+    // First time setting age → require confirmation (it can't be changed later)
+    const isSettingAgeFresh = !hasAge && age.trim() !== ''
+    if (isSettingAgeFresh) {
+      setShowAgeConfirm(true)
+    } else {
+      doSave()
+    }
+  }
+
   if (loading || fetching) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -119,6 +137,40 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-12">
+
+      {/* ── Age-lock confirmation dialog ─────────────────────────────────── */}
+      {showAgeConfirm && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}>
+          <div className="w-full max-w-sm rounded-2xl border p-6 shadow-2xl"
+            style={{ background: 'var(--nc-bg2)', borderColor: 'var(--nc-border)' }}>
+            <h3 className="mb-2 text-base font-bold" style={{ color: 'var(--nc-text)' }}>
+              Confirm your age
+            </h3>
+            <p className="mb-1 text-sm" style={{ color: 'var(--nc-text2)' }}>
+              You're setting your age to <span className="font-semibold text-amber-400">{age}</span>.
+            </p>
+            <p className="mb-5 text-sm font-medium text-red-400">
+              ⚠ You won't be able to change this later.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowAgeConfirm(false)}
+                className="flex-1 rounded-xl border py-2.5 text-sm transition hover:border-amber-500/40"
+                style={{ borderColor: 'var(--nc-border)', color: 'var(--nc-text2)' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { setShowAgeConfirm(false); doSave() }}
+                className="flex-1 rounded-xl bg-amber-500 py-2.5 text-sm font-semibold text-black hover:bg-amber-400 transition"
+              >
+                Yes, confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <h1 className="mb-1 text-2xl font-bold" style={{ color: 'var(--nc-text)' }}>
         Your Profile
       </h1>
@@ -128,21 +180,29 @@ export default function ProfilePage() {
 
       {/* Onboarding reward banner */}
       {!bonusAlreadyClaimed && (
-        <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
-          <span className="text-xl">⚡</span>
-          <div>
+        <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-base leading-none">⚡</span>
             <p className="text-sm font-semibold text-amber-400">Earn 10 free tokens</p>
-            <p className="mt-0.5 text-xs" style={{ color: 'var(--nc-text2)' }}>
-              Set a username and your age to unlock your welcome bonus. One-time reward.
-            </p>
           </div>
-          {/* Progress pills */}
-          <div className="ml-auto flex flex-col gap-1 text-right">
-            <span className={`text-xs font-medium ${hasUsername ? 'text-emerald-400' : 'text-zinc-500'}`}>
-              {hasUsername ? '✓ Username' : '○ Username'}
+          <p className="text-xs mb-3" style={{ color: 'var(--nc-text2)' }}>
+            Set a username and your age to unlock your welcome bonus. One-time reward.
+          </p>
+          {/* Progress pills — horizontal row below the text */}
+          <div className="flex gap-2">
+            <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${
+              hasUsername
+                ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
+                : 'border-zinc-600 bg-zinc-800/50 text-zinc-500'
+            }`}>
+              {hasUsername ? '✓' : '○'} Username
             </span>
-            <span className={`text-xs font-medium ${hasAge ? 'text-emerald-400' : 'text-zinc-500'}`}>
-              {hasAge ? '✓ Age' : '○ Age'}
+            <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${
+              hasAge
+                ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
+                : 'border-zinc-600 bg-zinc-800/50 text-zinc-500'
+            }`}>
+              {hasAge ? '✓' : '○'} Age
             </span>
           </div>
         </div>
@@ -171,13 +231,19 @@ export default function ProfilePage() {
         className="rounded-2xl border p-6 space-y-5"
         style={{ borderColor: 'var(--nc-border)', background: 'var(--nc-bg2)' }}
       >
-        {/* Token balance */}
-        <div className="flex items-center justify-between rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+        {/* Token balance → links to shop */}
+        <Link
+          href="/shop"
+          className="flex items-center justify-between rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 transition hover:bg-amber-500/20"
+        >
           <span className="text-sm font-medium" style={{ color: 'var(--nc-text)' }}>Token balance</span>
-          <span className="text-lg font-bold text-amber-400">
-            ⚡ {(profile?.tokens ?? user.tokens).toLocaleString()}
+          <span className="flex items-center gap-1.5 text-lg font-bold text-amber-400">
+            <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+            </svg>
+            {(profile?.tokens ?? user.tokens).toLocaleString()}
           </span>
-        </div>
+        </Link>
 
         {/* Username */}
         <div>
@@ -212,11 +278,14 @@ export default function ProfilePage() {
           <input
             type="number"
             value={age}
-            onChange={e => setAge(e.target.value)}
+            onChange={e => !hasAge && setAge(e.target.value)}
+            readOnly={hasAge}
             placeholder="e.g. 24"
             min={13}
             max={120}
-            className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30"
+            className={`w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition ${
+              hasAge ? 'cursor-not-allowed opacity-60' : 'focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30'
+            }`}
             style={{
               background:  'var(--nc-bg)',
               borderColor: 'var(--nc-border)',
@@ -224,8 +293,34 @@ export default function ProfilePage() {
             }}
           />
           <p className="mt-1 text-xs" style={{ color: 'var(--nc-text2)' }}>
-            Must be 13 or older to use NovelBrain
+            {hasAge ? '🔒 Age cannot be changed after it\'s set.' : 'Must be 13 or older to use NovelBrain'}
           </p>
+        </div>
+
+        {/* Email notifications toggle */}
+        <div className="flex items-start justify-between gap-3 rounded-xl border px-4 py-3"
+          style={{ borderColor: 'var(--nc-border)' }}>
+          <div>
+            <p className="text-sm font-medium" style={{ color: 'var(--nc-text)' }}>Email notifications</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--nc-text2)' }}>
+              New features, novel updates &amp; announcements.{' '}
+              <a href="/unsubscribe" className="text-amber-400 hover:underline">Unsubscribe</a>
+            </p>
+          </div>
+          {/* Toggle switch */}
+          <button
+            type="button"
+            onClick={() => setEmailConsent(v => !v)}
+            aria-pressed={emailConsent}
+            className={`relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition-colors ${
+              emailConsent ? 'bg-amber-500' : 'bg-zinc-700'
+            }`}
+          >
+            <span
+              className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform"
+              style={{ left: '2px', transform: emailConsent ? 'translateX(16px)' : 'translateX(0)' }}
+            />
+          </button>
         </div>
 
         {/* Hint when bonus is about to trigger */}
@@ -247,7 +342,7 @@ export default function ProfilePage() {
       {/* Quick links */}
       <div className="mt-6 grid grid-cols-2 gap-3">
         <a
-          href="/"
+          href="/library"
           className="flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm transition hover:border-amber-500/40"
           style={{ borderColor: 'var(--nc-border)', color: 'var(--nc-text2)' }}
         >

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useAuth } from '@/lib/auth-context'
 
 type Step = 'email' | 'login' | 'signup'
@@ -25,13 +26,14 @@ export default function AuthPanel({ onClose, rightOffset = 16, topOffset = 64 }:
   const { refresh } = useAuth()
   const panelRef = useRef<HTMLDivElement>(null)
 
-  const [step,     setStep]     = useState<Step>('email')
-  const [email,    setEmail]    = useState('')
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [error,    setError]    = useState('')
-  const [loading,  setLoading]  = useState(false)
-  const [checking, setChecking] = useState(false)
+  const [step,         setStep]         = useState<Step>('email')
+  const [email,        setEmail]        = useState('')
+  const [username,     setUsername]     = useState('')
+  const [password,     setPassword]     = useState('')
+  const [emailConsent, setEmailConsent] = useState(true)
+  const [error,        setError]        = useState('')
+  const [loading,      setLoading]      = useState(false)
+  const [checking,     setChecking]     = useState(false)
 
   // ── Close on Escape ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -73,7 +75,7 @@ export default function AuthPanel({ onClose, rightOffset = 16, topOffset = 64 }:
   }
 
   const resetToEmail = () => {
-    setStep('email'); setPassword(''); setUsername(''); setError('')
+    setStep('email'); setPassword(''); setUsername(''); setError(''); setEmailConsent(true)
   }
 
   // ── Step 2a: sign in ──────────────────────────────────────────────────────
@@ -105,7 +107,7 @@ export default function AuthPanel({ onClose, rightOffset = 16, topOffset = 64 }:
       const r = await fetch('/api/auth/signup', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email: email.trim(), password, username: username.trim() }),
+        body:    JSON.stringify({ email: email.trim(), password, username: username.trim(), email_marketing_consent: emailConsent }),
       })
       const d = await r.json()
       if (!r.ok) { setError(d.error || 'Could not create account'); return }
@@ -120,9 +122,8 @@ export default function AuthPanel({ onClose, rightOffset = 16, topOffset = 64 }:
   const googleSignIn = () => {
     // Supabase Google OAuth — requires Google provider enabled in Supabase dashboard
     const base     = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const anon     = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     const redirect = `${window.location.origin}/auth/callback`
-    if (base && anon) {
+    if (base) {
       window.location.href =
         `${base}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirect)}`
     }
@@ -138,7 +139,7 @@ export default function AuthPanel({ onClose, rightOffset = 16, topOffset = 64 }:
     'w-full rounded-lg bg-amber-500 py-2.5 text-sm font-semibold text-black ' +
     'hover:bg-amber-400 transition disabled:opacity-40 disabled:cursor-not-allowed'
 
-  return (
+  return createPortal(
     /* Full-viewport overlay — click outside the card to close */
     <div className="fixed inset-0 z-[9999]">
       <div
@@ -289,6 +290,28 @@ export default function AuthPanel({ onClose, rightOffset = 16, topOffset = 64 }:
 
             {error && <p className="text-xs text-red-400">{error}</p>}
 
+            {/* Email marketing opt-in */}
+            <label className="flex items-start gap-2 cursor-pointer select-none">
+              <div className="relative mt-0.5 shrink-0">
+                <input
+                  type="checkbox"
+                  checked={emailConsent}
+                  onChange={e => setEmailConsent(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="h-4 w-4 rounded border border-zinc-700 peer-checked:border-amber-500 peer-checked:bg-amber-500 transition flex items-center justify-center">
+                  {emailConsent && (
+                    <svg className="h-2.5 w-2.5 text-black" viewBox="0 0 10 8" fill="none">
+                      <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <span className="text-xs leading-relaxed" style={{ color: 'rgba(113,113,122,0.85)' }}>
+                Get notified about new features, novels, and updates
+              </span>
+            </label>
+
             <button
               onClick={signup}
               disabled={loading || !username.trim() || !password}
@@ -308,6 +331,7 @@ export default function AuthPanel({ onClose, rightOffset = 16, topOffset = 64 }:
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

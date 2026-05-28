@@ -3,30 +3,73 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
+import { useTheme } from '@/lib/theme-context'
 import AuthModal from './AuthModal'
 import BuyTokensModal from './BuyTokensModal'
 
+// ── Icon helpers ──────────────────────────────────────────────────────────────
+const IcoUser = () => (
+  <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+)
+const IcoBookmark = () => (
+  <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+  </svg>
+)
+const IcoWallet = () => (
+  <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18-3a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
+  </svg>
+)
+const IcoSupport = () => (
+  <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+  </svg>
+)
+const IcoSun = () => (
+  <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <circle cx="12" cy="12" r="4" strokeLinecap="round" />
+    <path strokeLinecap="round" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+  </svg>
+)
+const IcoMoon = () => (
+  <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+  </svg>
+)
+const IcoSignOut = () => (
+  <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+  </svg>
+)
+
+// ── Shared row style ──────────────────────────────────────────────────────────
+const ROW = 'flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-zinc-800/50'
+const ROW_BORDER = { borderBottom: '1px solid var(--nc-border)' }
+
 export default function TokenWidget() {
   const { user, loading, logout } = useAuth()
-  const [showAuth,    setShowAuth]    = useState(false)
-  const [showBuy,     setShowBuy]     = useState(false)
+  const { theme, toggle: toggleTheme } = useTheme()
+  const [showAuth,     setShowAuth]     = useState(false)
+  const [showBuy,      setShowBuy]      = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
   const dropRef = useRef<HTMLDivElement>(null)
 
-  // Close dropdown on outside click
+  // Close on outside click
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
+    const h = (e: MouseEvent) => {
       if (dropRef.current && !dropRef.current.contains(e.target as Node))
         setShowDropdown(false)
     }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
   }, [])
 
-  if (loading) {
-    return <div className="h-8 w-20 animate-pulse rounded-lg bg-zinc-800" />
-  }
+  if (loading) return <div className="h-8 w-24 animate-pulse rounded-lg bg-zinc-800" />
 
+  // ── Unauthenticated ───────────────────────────────────────────────────────
   if (!user) {
     return (
       <>
@@ -34,90 +77,157 @@ export default function TokenWidget() {
           onClick={() => setShowAuth(true)}
           className="flex items-center gap-1.5 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:border-amber-500/50 hover:text-amber-400 transition"
         >
-          {/* Person icon */}
           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
           </svg>
-          Profile
+          Sign In
         </button>
         {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
       </>
     )
   }
 
+  // ── Authenticated ─────────────────────────────────────────────────────────
   return (
     <>
-      {/* Token badge + dropdown */}
       <div className="relative" ref={dropRef}>
+        {/* Trigger button */}
         <button
           onClick={() => setShowDropdown(v => !v)}
-          className="flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 transition"
+          className="flex items-center gap-1.5 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-amber-500/50 hover:text-amber-400 transition"
         >
-          <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M11.3 1.046A1 1 0 0110 2v3a1 1 0 001.447.894l5-2.5A1 1 0 0017 2.5V2a1 1 0 00-1-1H11.5a1 1 0 00-.2.046zM3 6a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V6zm2 2a1 1 0 000 2h2a1 1 0 000-2H5zm0 4a1 1 0 000 2h2a1 1 0 000-2H5zm4 0a1 1 0 000 2h2a1 1 0 000-2H9zm0-4a1 1 0 000 2h2a1 1 0 000-2H9z" />
+          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
           </svg>
-          {user.tokens.toLocaleString()}
-          <svg className="h-3 w-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          Profile
+          <svg
+            className={`h-3 w-3 transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden
+          >
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
 
+        {/* Dropdown */}
         {showDropdown && (
           <div
-            className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-[var(--nc-border)] p-3 shadow-xl z-50"
-            style={{ background: 'var(--nc-bg2)' }}
+            className="absolute right-0 top-full mt-2 w-64 rounded-2xl border shadow-2xl z-50 overflow-hidden"
+            style={{ background: 'var(--nc-bg2)', borderColor: 'var(--nc-border)' }}
           >
-            {/* Identity row */}
-            <p className="truncate text-xs font-medium mb-0.5" style={{ color: 'var(--nc-text)' }}>
-              {user.username ?? user.email}
-            </p>
-            {user.username && (
-              <p className="truncate text-xs mb-0.5" style={{ color: 'var(--nc-text2)' }}>
-                {user.email}
+            {/* ── Account header ── */}
+            <div className="px-4 py-3" style={ROW_BORDER}>
+              <p className="text-sm font-semibold truncate" style={{ color: 'var(--nc-text)' }}>
+                {user.username ?? 'Set a username →'}
               </p>
-            )}
-            <p className="text-xs mb-3" style={{ color: 'var(--nc-text2)' }}>
-              <span className="font-semibold text-amber-400">{user.tokens.toLocaleString()}</span> tokens remaining
-            </p>
+              {user.username && (
+                <p className="text-xs truncate mt-0.5" style={{ color: 'var(--nc-text2)' }}>{user.email}</p>
+              )}
+              {!user.username && (
+                <p className="text-xs mt-0.5" style={{ color: 'var(--nc-text2)' }}>{user.email}</p>
+              )}
+              <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1">
+                <span className="text-amber-400 text-sm leading-none">⚡</span>
+                <span className="text-xs font-bold text-amber-400">{user.tokens.toLocaleString()}</span>
+                <span className="text-xs" style={{ color: 'var(--nc-text2)' }}>tokens</span>
+              </div>
+            </div>
 
-            {/* Onboarding nudge if profile incomplete */}
+            {/* Onboarding nudge */}
             {!user.onboarding_bonus_claimed && (
               <Link
                 href="/profile"
                 onClick={() => setShowDropdown(false)}
-                className="mb-2 flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-400 hover:bg-amber-500/20 transition"
+                className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-amber-400 transition hover:bg-amber-500/5"
+                style={ROW_BORDER}
               >
                 <span>⚡</span>
                 <span>Complete profile → earn 10 tokens</span>
               </Link>
             )}
 
-            <button
-              onClick={() => { setShowDropdown(false); setShowBuy(true) }}
-              className="mb-2 w-full rounded-lg bg-amber-500 py-2 text-xs font-semibold text-black hover:bg-amber-400 transition"
-            >
-              ⚡ Buy Tokens
-            </button>
+            {/* ── Menu rows ── */}
+
+            {/* Profile */}
             <Link
               href="/profile"
               onClick={() => setShowDropdown(false)}
-              className="mb-1 block w-full rounded-lg py-1.5 text-center text-xs transition hover:text-amber-400"
-              style={{ color: 'var(--nc-text2)' }}
+              className={ROW}
+              style={{ ...ROW_BORDER, color: 'var(--nc-text)' }}
             >
-              View Profile
+              <IcoUser />
+              <span className="text-sm font-medium">Profile</span>
             </Link>
+
+            {/* Bookmarks */}
+            <Link
+              href="/bookmarks"
+              onClick={() => setShowDropdown(false)}
+              className={ROW}
+              style={{ ...ROW_BORDER, color: 'var(--nc-text)' }}
+            >
+              <IcoBookmark />
+              <span className="text-sm font-medium">Bookmarks</span>
+            </Link>
+
+            {/* Purchase Tokens */}
+            <button
+              onClick={() => { setShowDropdown(false); setShowBuy(true) }}
+              className={ROW}
+              style={{ ...ROW_BORDER, color: 'var(--nc-text)' }}
+            >
+              <IcoWallet />
+              <span className="text-sm font-medium">Purchase Tokens</span>
+            </button>
+
+            {/* Support */}
+            <Link
+              href="/support"
+              onClick={() => setShowDropdown(false)}
+              className={ROW}
+              style={{ ...ROW_BORDER, color: 'var(--nc-text)' }}
+            >
+              <IcoSupport />
+              <span className="text-sm font-medium">Support</span>
+            </Link>
+
+            {/* Light / Dark Mode */}
+            <button
+              onClick={toggleTheme}
+              className={ROW}
+              style={{ ...ROW_BORDER, color: 'var(--nc-text)' }}
+            >
+              {theme === 'dark' ? <IcoSun /> : <IcoMoon />}
+              <span className="text-sm font-medium">
+                {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+              </span>
+              {/* iOS-style pill toggle */}
+              <span
+                className={`ml-auto flex h-5 w-9 shrink-0 items-center rounded-full px-0.5 transition-colors duration-200 ${
+                  theme === 'light' ? 'bg-amber-500' : 'bg-zinc-700'
+                }`}
+              >
+                <span
+                  className={`h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                    theme === 'light' ? 'translate-x-4' : 'translate-x-0'
+                  }`}
+                />
+              </span>
+            </button>
+
+            {/* Sign Out */}
             <button
               onClick={() => { setShowDropdown(false); logout() }}
-              className="w-full rounded-lg py-1.5 text-xs transition"
+              className={ROW}
               style={{ color: 'var(--nc-text2)' }}
             >
-              Sign out
+              <IcoSignOut />
+              <span className="text-sm font-medium">Sign out</span>
             </button>
           </div>
         )}
       </div>
 
-      {showBuy  && <BuyTokensModal onClose={() => setShowBuy(false)} />}
+      {showBuy && <BuyTokensModal onClose={() => setShowBuy(false)} />}
     </>
   )
 }

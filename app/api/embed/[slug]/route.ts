@@ -1,5 +1,13 @@
 import { isNovelEmbedded } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
+
+function admin() {
+  return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+}
 
 const VPS_BASE = process.env.VPS_API_URL
 const VPS_KEY  = process.env.VPS_API_KEY
@@ -25,14 +33,23 @@ async function vpsGet(path: string) {
 }
 
 export async function POST(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
+  // Auth required — embedding is an expensive server-side operation
+  const cookieStore = await cookies()
+  const token = cookieStore.get('nc_session')?.value
+  if (!token) return NextResponse.json({ error: 'Sign in to unlock novels' }, { status: 401 })
+
+  const sb = admin()
+  const { data: { user }, error: authErr } = await sb.auth.getUser(token)
+  if (authErr || !user) return NextResponse.json({ error: 'Session expired — please sign in again' }, { status: 401 })
+
   const { slug } = await params
   if (!validateSlug(slug))
     return NextResponse.json({ error: 'Invalid slug' }, { status: 400 })
   try {
     const result = await vpsPost(`/embed/${slug}`)
     return NextResponse.json(result)
-  } catch (e) {
-    return NextResponse.json({ error: String(e) }, { status: 502 })
+  } catch {
+    return NextResponse.json({ error: 'Embedding service unavailable' }, { status: 502 })
   }
 }
 
@@ -52,7 +69,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
     } catch {
       return NextResponse.json({ embedded: false, status: 'not_started' })
     }
-  } catch (e) {
-    return NextResponse.json({ error: String(e) }, { status: 500 })
+  } catch {
+    return NextResponse.json({ error: 'Failed to check embedding status' }, { status: 500 })
   }
 }

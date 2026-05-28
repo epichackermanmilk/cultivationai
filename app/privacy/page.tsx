@@ -1,8 +1,8 @@
 import Link from 'next/link'
 
 export const metadata = {
-  title: 'Privacy Policy — NovelCodex',
-  description: 'NovelCodex Privacy Policy — CCPA compliant.',
+  title: 'Privacy Policy — NovelBrain',
+  description: 'NovelBrain Privacy Policy — CCPA compliant.',
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -21,8 +21,8 @@ export default function PrivacyPage() {
     <div className="min-h-screen" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
       <header className="border-b border-[var(--nc-border)] px-6 py-4">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
-          <Link href="/" className="text-xl font-bold text-amber-400">NovelCodex</Link>
-          <Link href="/" className="text-sm" style={{ color: 'var(--nc-text2)' }}>← Library</Link>
+          <Link href="/" className="text-xl font-bold text-amber-400">NovelBrain</Link>
+          <Link href="/library" className="text-sm" style={{ color: 'var(--nc-text2)' }}>← Library</Link>
         </div>
       </header>
 
@@ -33,9 +33,9 @@ export default function PrivacyPage() {
         </p>
 
         <p className="mb-8 text-sm leading-relaxed" style={{ color: 'var(--nc-text)' }}>
-          NovelCodex (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) is committed to protecting your privacy.
+          NovelBrain (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) is committed to protecting your privacy.
           This Privacy Policy explains how we collect, use, disclose, and safeguard your information
-          when you visit <strong>novelcodex.com</strong> (the &quot;Site&quot;). Please read this policy
+          when you visit <strong>novelbrain.ai</strong> (the &quot;Site&quot;). Please read this policy
           carefully. By using the Site, you consent to the practices described here.
         </p>
 
@@ -64,7 +64,7 @@ export default function PrivacyPage() {
           <p>If you provide your email address, we may send you transactional messages (account creation,
           password reset). We will only send marketing emails if you explicitly opt in. You may unsubscribe
           from marketing emails at any time by clicking the unsubscribe link in any email or contacting us
-          at <a href="mailto:privacy@novelcodex.com" className="text-amber-400 hover:underline">privacy@novelcodex.com</a>.
+          at <a href="mailto:privacy@novelbrain.ai" className="text-amber-400 hover:underline">privacy@novelbrain.ai</a>.
           We comply with the CAN-SPAM Act and GDPR email consent requirements.</p>
         </Section>
 
@@ -82,8 +82,8 @@ export default function PrivacyPage() {
             exercising your CCPA rights.</li>
           </ul>
           <p>To exercise these rights, contact us at{' '}
-            <a href="mailto:privacy@novelcodex.com" className="text-amber-400 hover:underline">
-              privacy@novelcodex.com
+            <a href="mailto:privacy@novelbrain.ai" className="text-amber-400 hover:underline">
+              privacy@novelbrain.ai
             </a>{' '}
             or use the feedback widget on the Site. We will respond within 45 days.
           </p>
@@ -126,13 +126,13 @@ export default function PrivacyPage() {
         <Section title="10. Contact Us">
           <p>
             Privacy inquiries:{' '}
-            <a href="mailto:privacy@novelcodex.com" className="text-amber-400 hover:underline">
-              privacy@novelcodex.com
+            <a href="mailto:privacy@novelbrain.ai" className="text-amber-400 hover:underline">
+              privacy@novelbrain.ai
             </a>
             <br />
             DMCA / content removal:{' '}
-            <a href="mailto:dmca@novelcodex.com" className="text-amber-400 hover:underline">
-              dmca@novelcodex.com
+            <a href="mailto:dmca@novelbrain.ai" className="text-amber-400 hover:underline">
+              dmca@novelbrain.ai
             </a>
           </p>
         </Section>
@@ -140,7 +140,7 @@ export default function PrivacyPage() {
         <div className="mt-12 flex gap-4 text-xs" style={{ color: 'var(--nc-text2)' }}>
           <Link href="/about" className="hover:text-amber-400 transition">About</Link>
           <Link href="/terms" className="hover:text-amber-400 transition">Terms of Service</Link>
-          <Link href="/"      className="hover:text-amber-400 transition">Library</Link>
+          <Link href="/library" className="hover:text-amber-400 transition">Library</Link>
         </div>
       </main>
     </div>

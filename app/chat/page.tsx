@@ -1,8 +1,7 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import Link from 'next/link'
-import ThemeToggle    from '@/components/ThemeToggle'
 import TokenWidget    from '@/components/TokenWidget'
 import FeedbackWidget from '@/components/FeedbackWidget'
 
@@ -22,6 +21,107 @@ interface Message {
 }
 
 // ── Novel selector sidebar ────────────────────────────────────────────────────
+// ── Genre multi-select dropdown (amenities style) ────────────────────────────
+function GenreDropdown({
+  allGenres, selected, onToggle, onClearAll,
+}: {
+  allGenres: string[]
+  selected:  string[]
+  onToggle:  (g: string) => void
+  onClearAll: () => void
+}) {
+  const [open, setOpen]     = useState(false)
+  const [search, setSearch] = useState('')
+  const ref = useRef<HTMLDivElement>(null)
+  const count = selected.length
+
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [])
+
+  const visible = allGenres.filter(g => g.toLowerCase().includes(search.toLowerCase()))
+
+  return (
+    <div ref={ref} className="relative mb-2">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="flex w-full items-center justify-between rounded-lg border px-3 py-2 text-xs transition"
+        style={{
+          borderColor: open ? 'var(--nc-amber, #f59e0b)' : 'var(--nc-border)',
+          color: 'var(--nc-text)', background: 'var(--nc-bg3)',
+        }}
+      >
+        <span>{count > 0 ? `${count} genre${count > 1 ? 's' : ''} selected` : 'All Genres'}</span>
+        <svg
+          className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          className="absolute z-30 w-full mt-1 rounded-lg border shadow-xl overflow-hidden"
+          style={{ background: 'var(--nc-bg2)', borderColor: 'var(--nc-border)' }}
+        >
+          {/* Search */}
+          <div className="p-2" style={{ borderBottom: '1px solid var(--nc-border)' }}>
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search genres…"
+              className="w-full rounded-md border px-2.5 py-1.5 text-xs outline-none focus:border-amber-500"
+              style={{ background: 'var(--nc-bg)', borderColor: 'var(--nc-border)', color: 'var(--nc-text)' }}
+            />
+          </div>
+
+          {/* Checkbox list */}
+          <div className="max-h-44 overflow-y-auto">
+            {visible.length === 0 && (
+              <p className="px-3 py-2 text-xs text-center text-zinc-500">No genres match</p>
+            )}
+            {visible.map(g => (
+              <button
+                key={g}
+                onClick={() => onToggle(g)}
+                className="flex w-full items-center gap-2 px-3 py-1.5 text-xs transition hover:bg-zinc-800/50"
+                style={{ color: 'var(--nc-text)' }}
+              >
+                <span className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border transition ${
+                  selected.includes(g) ? 'border-amber-500 bg-amber-500' : 'border-zinc-600'
+                }`}>
+                  {selected.includes(g) && <span className="text-[8px] font-bold text-black leading-none">✓</span>}
+                </span>
+                {g}
+              </button>
+            ))}
+          </div>
+
+          {/* Footer */}
+          {count > 0 && (
+            <div className="flex items-center justify-end p-2" style={{ borderTop: '1px solid var(--nc-border)' }}>
+              <button
+                onClick={() => { onClearAll(); }}
+                className="text-xs transition hover:text-zinc-200"
+                style={{ color: 'var(--nc-text2)' }}
+              >
+                Clear ({count})
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Novel selector sidebar ────────────────────────────────────────────────────
 function NovelSelector({
   novels,
   selected,
@@ -31,10 +131,10 @@ function NovelSelector({
   selected: Set<string>
   onToggle: (slug: string) => void
 }) {
-  const [search,    setSearch]    = useState('')
-  const [genre,     setGenre]     = useState('')
-  const [minCh,     setMinCh]     = useState('')
-  const [maxCh,     setMaxCh]     = useState('')
+  const [search,         setSearch]     = useState('')
+  const [selectedGenres, setSelGenres]  = useState<string[]>([])
+  const [minCh,          setMinCh]      = useState('')
+  const [maxCh,          setMaxCh]      = useState('')
 
   const allGenres = useMemo(() => {
     const s = new Set<string>()
@@ -42,16 +142,19 @@ function NovelSelector({
     return [...s].sort()
   }, [novels])
 
+  const toggleGenre = (g: string) =>
+    setSelGenres(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g])
+
   const visible = useMemo(() => {
     return novels.filter(n => {
       if (search && !n.title.toLowerCase().includes(search.toLowerCase()) &&
           !n.author.toLowerCase().includes(search.toLowerCase())) return false
-      if (genre && !n.genres.includes(genre)) return false
+      if (selectedGenres.length > 0 && !n.genres.some(g => selectedGenres.includes(g))) return false
       if (minCh && n.total_chapters < Number(minCh)) return false
       if (maxCh && n.total_chapters > Number(maxCh)) return false
       return true
     })
-  }, [novels, search, genre, minCh, maxCh])
+  }, [novels, search, selectedGenres, minCh, maxCh])
 
   const addAllVisible    = () => visible.forEach(n => { if (!selected.has(n.slug)) onToggle(n.slug) })
   const removeAllVisible = () => visible.forEach(n => { if (selected.has(n.slug))  onToggle(n.slug) })
@@ -70,14 +173,12 @@ function NovelSelector({
         />
 
         {/* Genre filter */}
-        <select
-          value={genre} onChange={e => setGenre(e.target.value)}
-          className="mb-2 w-full rounded-lg border border-[var(--nc-border)] px-3 py-2 text-xs outline-none focus:border-amber-500"
-          style={{ background: 'var(--nc-bg3)', color: 'var(--nc-text)' }}
-        >
-          <option value="">All genres</option>
-          {allGenres.map(g => <option key={g} value={g}>{g}</option>)}
-        </select>
+        <GenreDropdown
+          allGenres={allGenres}
+          selected={selectedGenres}
+          onToggle={toggleGenre}
+          onClearAll={() => setSelGenres([])}
+        />
 
         {/* Chapter range */}
         <div className="mb-3 flex gap-2">
@@ -179,13 +280,12 @@ export default function ChatPage() {
     <div className="flex h-screen flex-col overflow-hidden" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
       {/* Header */}
       <header className="shrink-0 flex items-center gap-3 border-b border-[var(--nc-border)] px-4 py-3" style={{ background: 'var(--nc-bg)' }}>
-        <Link href="/" className="text-zinc-400 hover:text-zinc-100 transition text-sm">← Library</Link>
+        <Link href="/library" className="text-zinc-400 hover:text-zinc-100 transition text-sm">← Library</Link>
         <div className="h-4 w-px bg-zinc-700" />
-        <h1 className="text-sm font-bold text-amber-400">NovelCodex</h1>
+        <h1 className="text-sm font-bold text-amber-400">NovelBrain</h1>
         <span className="text-xs text-zinc-600">Multi-Novel Chat</span>
         <div className="flex-1" />
         <TokenWidget />
-        <ThemeToggle />
         <button
           onClick={() => setSideOpen(v => !v)}
           className="rounded-lg border border-[var(--nc-border)] px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 transition"
@@ -271,7 +371,7 @@ export default function ChatPage() {
                 <button
                   onClick={() => {
                     const lines = messages.map(m =>
-                      `${m.role === 'user' ? 'You' : 'NovelCodex'}: ${m.content}`
+                      `${m.role === 'user' ? 'You' : 'NovelBrain'}: ${m.content}`
                     ).join('\n\n')
                     const a = document.createElement('a')
                     a.href = URL.createObjectURL(new Blob([lines], { type: 'text/plain' }))

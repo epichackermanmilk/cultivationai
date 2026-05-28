@@ -1,8 +1,8 @@
 import Link from 'next/link'
 
 export const metadata = {
-  title: 'About — NovelCodex',
-  description: 'Learn about NovelCodex — an AI-powered reader for cultivation and xianxia novels.',
+  title: 'About — NovelBrain',
+  description: 'Learn about NovelBrain — an AI-powered reader for cultivation and xianxia novels.',
 }
 
 export default function AboutPage() {
@@ -10,18 +10,18 @@ export default function AboutPage() {
     <div className="min-h-screen" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
       <header className="border-b border-[var(--nc-border)] px-6 py-4">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
-          <Link href="/" className="text-xl font-bold text-amber-400">NovelCodex</Link>
-          <Link href="/" className="text-sm" style={{ color: 'var(--nc-text2)' }}>← Library</Link>
+          <Link href="/" className="text-xl font-bold text-amber-400">NovelBrain</Link>
+          <Link href="/library" className="text-sm" style={{ color: 'var(--nc-text2)' }}>← Library</Link>
         </div>
       </header>
 
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <h1 className="mb-2 text-3xl font-bold text-amber-400">About NovelCodex</h1>
+        <h1 className="mb-2 text-3xl font-bold text-amber-400">About NovelBrain</h1>
         <p className="mb-8 text-sm" style={{ color: 'var(--nc-text2)' }}>Last updated: May 2026</p>
 
         <section className="mb-8 space-y-4 leading-relaxed" style={{ color: 'var(--nc-text)' }}>
           <p>
-            <strong>NovelCodex</strong> is an AI-powered reading companion for cultivation, xianxia,
+            <strong>NovelBrain</strong> is an AI-powered reading companion for cultivation, xianxia,
             wuxia, and web-novel fiction. We index publicly available novel chapters and let readers
             explore stories through natural-language conversation — ask about characters, cultivation
             systems, plot arcs, or anything else hidden in thousands of chapters.
@@ -47,13 +47,13 @@ export default function AboutPage() {
         <section className="mb-8">
           <h2 className="mb-4 text-xl font-semibold text-amber-400">Content & Copyright</h2>
           <p className="text-sm leading-relaxed" style={{ color: 'var(--nc-text)' }}>
-            NovelCodex indexes chapter text from publicly accessible web-novel hosting platforms for
+            NovelBrain indexes chapter text from publicly accessible web-novel hosting platforms for
             the purpose of enabling AI-powered search and conversation. We do not redistribute raw
             chapter text to end users. All original content remains the property of its respective
             authors and publishers. If you are a rights holder and wish to request removal of your
             content from our index, please contact us at{' '}
-            <a href="mailto:dmca@novelcodex.com" className="text-amber-400 hover:underline">
-              dmca@novelcodex.com
+            <a href="mailto:dmca@novelbrain.ai" className="text-amber-400 hover:underline">
+              dmca@novelbrain.ai
             </a>.
           </p>
         </section>
@@ -62,8 +62,8 @@ export default function AboutPage() {
           <h2 className="mb-4 text-xl font-semibold text-amber-400">Contact</h2>
           <p className="text-sm leading-relaxed" style={{ color: 'var(--nc-text)' }}>
             Questions, partnerships, or content removal requests:{' '}
-            <a href="mailto:hello@novelcodex.com" className="text-amber-400 hover:underline">
-              hello@novelcodex.com
+            <a href="mailto:hello@novelbrain.ai" className="text-amber-400 hover:underline">
+              hello@novelbrain.ai
             </a>
           </p>
         </section>
@@ -71,7 +71,7 @@ export default function AboutPage() {
         <div className="mt-12 flex gap-4 text-xs" style={{ color: 'var(--nc-text2)' }}>
           <Link href="/privacy" className="hover:text-amber-400 transition">Privacy Policy</Link>
           <Link href="/terms"   className="hover:text-amber-400 transition">Terms of Service</Link>
-          <Link href="/"        className="hover:text-amber-400 transition">Library</Link>
+          <Link href="/library" className="hover:text-amber-400 transition">Library</Link>
         </div>
       </main>
     </div>

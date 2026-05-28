@@ -3,9 +3,10 @@ import Chat from './Chat'
 import CoverImage from './CoverImage'
 import VisitTracker from './VisitTracker'
 import Link from 'next/link'
-import ThemeToggle    from '@/components/ThemeToggle'
-import TokenWidget    from '@/components/TokenWidget'
-import FeedbackWidget from '@/components/FeedbackWidget'
+import ThemeToggle          from '@/components/ThemeToggle'
+import TokenWidget          from '@/components/TokenWidget'
+import FeedbackWidget       from '@/components/FeedbackWidget'
+import DescriptionExpander  from '@/components/DescriptionExpander'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -29,7 +30,7 @@ export default async function NovelPage({ params }: Props) {
     <div className="flex h-screen flex-col overflow-hidden" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
       {/* Header */}
       <header className="flex shrink-0 items-center gap-3 border-b border-[var(--nc-border)] px-4 py-3" style={{ background: 'var(--nc-bg)' }}>
-        <Link href="/" className="text-zinc-400 hover:text-zinc-100 transition-colors text-sm">
+        <Link href="/library" className="text-zinc-400 hover:text-zinc-100 transition-colors text-sm">
           ← Back
         </Link>
         <div className="h-4 w-px bg-zinc-700" />
@@ -65,9 +66,7 @@ export default async function NovelPage({ params }: Props) {
                 </div>
               )}
               {novel.description && (
-                <p className="mt-3 text-xs leading-relaxed text-zinc-400 line-clamp-6">
-                  {novel.description}
-                </p>
+                <DescriptionExpander text={novel.description} lines={4} className="mt-3" />
               )}
               <div className="mt-4 rounded-lg bg-zinc-800 p-3">
                 <p className="text-xs text-zinc-400">

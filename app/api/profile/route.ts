@@ -28,7 +28,7 @@ export async function GET() {
   const sb = admin()
   const { data: profile } = await sb
     .from('profiles')
-    .select('tokens, username, age, onboarding_bonus_claimed')
+    .select('tokens, username, age, onboarding_bonus_claimed, email_marketing_consent')
     .eq('id', user.id)
     .maybeSingle()
 
@@ -39,6 +39,7 @@ export async function GET() {
     username: profile?.username ?? null,
     age: profile?.age ?? null,
     onboarding_bonus_claimed: profile?.onboarding_bonus_claimed ?? false,
+    email_marketing_consent: profile?.email_marketing_consent ?? false,
   })
 }
 
@@ -51,7 +52,7 @@ export async function PATCH(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json().catch(() => ({}))
-  const { username, age } = body as { username?: string; age?: number }
+  const { username, age, email_marketing_consent } = body as { username?: string; age?: number; email_marketing_consent?: boolean }
 
   // Validate username
   if (username !== undefined) {
@@ -72,10 +73,15 @@ export async function PATCH(req: NextRequest) {
 
   const sb = admin()
 
+  // Validate email_marketing_consent
+  if (email_marketing_consent !== undefined && typeof email_marketing_consent !== 'boolean') {
+    return NextResponse.json({ error: 'Invalid email_marketing_consent value' }, { status: 400 })
+  }
+
   // Load current profile
   const { data: current } = await sb
     .from('profiles')
-    .select('tokens, username, age, onboarding_bonus_claimed')
+    .select('tokens, username, age, onboarding_bonus_claimed, email_marketing_consent')
     .eq('id', user.id)
     .maybeSingle()
 
@@ -109,6 +115,7 @@ export async function PATCH(req: NextRequest) {
     tokens:   newTokens,
   }
   if (awardBonus) updatePayload.onboarding_bonus_claimed = true
+  if (email_marketing_consent !== undefined) updatePayload.email_marketing_consent = email_marketing_consent
 
   const { error: updateErr } = await sb
     .from('profiles')
@@ -123,11 +130,16 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
   }
 
+  const newConsent = email_marketing_consent !== undefined
+    ? email_marketing_consent
+    : (current?.email_marketing_consent ?? false)
+
   return NextResponse.json({
-    tokens:          newTokens,
-    username:        newUsername ?? null,
-    age:             newAge      ?? null,
-    bonus_awarded:   awardBonus,
-    bonus_tokens:    awardBonus ? ONBOARDING_BONUS : 0,
+    tokens:                   newTokens,
+    username:                 newUsername ?? null,
+    age:                      newAge      ?? null,
+    bonus_awarded:            awardBonus,
+    bonus_tokens:             awardBonus ? ONBOARDING_BONUS : 0,
+    email_marketing_consent:  newConsent,
   })
 }

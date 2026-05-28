@@ -1,8 +1,8 @@
 import Link from 'next/link'
 
 export const metadata = {
-  title: 'Terms of Service — NovelCodex',
-  description: 'NovelCodex Terms of Service — UGC liability, subscription, email compliance.',
+  title: 'Terms of Service — NovelBrain',
+  description: 'NovelBrain Terms of Service — UGC liability, subscription, email compliance.',
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -21,8 +21,8 @@ export default function TermsPage() {
     <div className="min-h-screen" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
       <header className="border-b border-[var(--nc-border)] px-6 py-4">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
-          <Link href="/" className="text-xl font-bold text-amber-400">NovelCodex</Link>
-          <Link href="/" className="text-sm" style={{ color: 'var(--nc-text2)' }}>← Library</Link>
+          <Link href="/" className="text-xl font-bold text-amber-400">NovelBrain</Link>
+          <Link href="/library" className="text-sm" style={{ color: 'var(--nc-text2)' }}>← Library</Link>
         </div>
       </header>
 
@@ -33,7 +33,7 @@ export default function TermsPage() {
         </p>
 
         <p className="mb-8 text-sm leading-relaxed" style={{ color: 'var(--nc-text)' }}>
-          By accessing or using NovelCodex (&quot;Site,&quot; &quot;Service&quot;), you agree to be bound by these
+          By accessing or using NovelBrain (&quot;Site,&quot; &quot;Service&quot;), you agree to be bound by these
           Terms of Service (&quot;Terms&quot;). If you do not agree, do not use the Site.
         </p>
 
@@ -52,8 +52,8 @@ export default function TermsPage() {
         <Section title="2. User Accounts">
           <p>You are responsible for maintaining the confidentiality of your account credentials. You are
           responsible for all activities that occur under your account. Notify us immediately at{' '}
-            <a href="mailto:hello@novelcodex.com" className="text-amber-400 hover:underline">
-              hello@novelcodex.com
+            <a href="mailto:hello@novelbrain.ai" className="text-amber-400 hover:underline">
+              hello@novelbrain.ai
             </a>{' '}
             if you suspect unauthorised access.
           </p>
@@ -61,43 +61,43 @@ export default function TermsPage() {
         </Section>
 
         <Section title="3. Tokens and Subscriptions">
-          <p>NovelCodex may offer token-based access to AI features. Tokens are consumed when you use
+          <p>NovelBrain may offer token-based access to AI features. Tokens are consumed when you use
           AI chat functionality. All token purchases are final and non-refundable unless required by
           applicable law. We reserve the right to modify token pricing or features with reasonable notice.
           Free tokens provided upon account creation have no monetary value and cannot be redeemed for cash.</p>
           <p>If we offer subscription plans in the future, subscriptions will auto-renew unless cancelled
           before the renewal date. You will receive notice of any subscription charges before they occur.
           To cancel, use the account settings or contact us at{' '}
-            <a href="mailto:hello@novelcodex.com" className="text-amber-400 hover:underline">
-              hello@novelcodex.com
+            <a href="mailto:hello@novelbrain.ai" className="text-amber-400 hover:underline">
+              hello@novelbrain.ai
             </a>.
           </p>
         </Section>
 
         <Section title="4. User-Generated Content (UGC)">
           <p>You may submit feedback, suggestions, bug reports, and novel requests through our feedback
-          widget (&quot;User Content&quot;). By submitting User Content, you grant NovelCodex a non-exclusive,
+          widget (&quot;User Content&quot;). By submitting User Content, you grant NovelBrain a non-exclusive,
           royalty-free, worldwide licence to use, display, and improve the Service using your feedback.</p>
           <p>You represent that your User Content does not violate any third-party rights, contain illegal
-          material, or constitute spam. NovelCodex is not responsible for User Content submitted by other
+          material, or constitute spam. NovelBrain is not responsible for User Content submitted by other
           users.</p>
-          <p><strong>Section 230 Notice:</strong> NovelCodex is an interactive computer service provider
+          <p><strong>Section 230 Notice:</strong> NovelBrain is an interactive computer service provider
           as defined by 47 U.S.C. § 230. We are not the publisher or speaker of any User Content
           submitted by users and are not liable for such content to the extent permitted by law.</p>
         </Section>
 
         <Section title="5. Intellectual Property">
           <p>All original content, design, and code on the Site (excluding indexed novel text owned by
-          third-party authors) is owned by NovelCodex or its licensors. You may not copy, reproduce, or
+          third-party authors) is owned by NovelBrain or its licensors. You may not copy, reproduce, or
           distribute our proprietary materials without express written consent.</p>
           <p>Novel chapter text indexed by our system remains the property of the respective authors and
-          publishers. NovelCodex does not claim ownership of third-party literary works.</p>
+          publishers. NovelBrain does not claim ownership of third-party literary works.</p>
         </Section>
 
         <Section title="6. DMCA / Content Removal">
           <p>If you believe content on our Site infringes your copyright, please send a DMCA notice to{' '}
-            <a href="mailto:dmca@novelcodex.com" className="text-amber-400 hover:underline">
-              dmca@novelcodex.com
+            <a href="mailto:dmca@novelbrain.ai" className="text-amber-400 hover:underline">
+              dmca@novelbrain.ai
             </a>{' '}
             including: (a) identification of the copyrighted work; (b) identification of the infringing
             material and its URL; (c) your contact information; (d) a statement of good faith belief;
@@ -108,7 +108,7 @@ export default function TermsPage() {
         <Section title="7. Disclaimer of Warranties">
           <p>THE SERVICE IS PROVIDED &quot;AS IS&quot; WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED,
           INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
-          OR NON-INFRINGEMENT. AI-generated responses may contain errors or inaccuracies. NovelCodex
+          OR NON-INFRINGEMENT. AI-generated responses may contain errors or inaccuracies. NovelBrain
           does not warrant that the Service will be uninterrupted or error-free.</p>
         </Section>
 
@@ -132,8 +132,8 @@ export default function TermsPage() {
 
         <Section title="11. Contact">
           <p>
-            <a href="mailto:hello@novelcodex.com" className="text-amber-400 hover:underline">
-              hello@novelcodex.com
+            <a href="mailto:hello@novelbrain.ai" className="text-amber-400 hover:underline">
+              hello@novelbrain.ai
             </a>
           </p>
         </Section>
@@ -141,7 +141,7 @@ export default function TermsPage() {
         <div className="mt-12 flex gap-4 text-xs" style={{ color: 'var(--nc-text2)' }}>
           <Link href="/about"   className="hover:text-amber-400 transition">About</Link>
           <Link href="/privacy" className="hover:text-amber-400 transition">Privacy Policy</Link>
-          <Link href="/"        className="hover:text-amber-400 transition">Library</Link>
+          <Link href="/library" className="hover:text-amber-400 transition">Library</Link>
         </div>
       </main>
     </div>

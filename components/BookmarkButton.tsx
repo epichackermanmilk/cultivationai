@@ -30,10 +30,10 @@ export default function BookmarkButton({ novel, className = '', size = 'sm' }: P
       onClick={handleClick}
       title={saved ? 'Remove bookmark' : 'Bookmark novel'}
       aria-label={saved ? 'Remove bookmark' : 'Bookmark novel'}
-      className={`flex items-center justify-center rounded-full transition-all ${
+      className={`flex items-center justify-center rounded-full border transition-all ${
         saved
-          ? 'text-rose-400 hover:text-rose-300'
-          : 'text-zinc-600 hover:text-rose-400'
+          ? 'border-rose-400/50 text-rose-400 hover:text-rose-300 hover:border-rose-300/60'
+          : 'border-zinc-600 text-zinc-500 hover:text-rose-400 hover:border-rose-400/50'
       } ${className}`}
     >
       <svg className={sz} fill={saved ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
