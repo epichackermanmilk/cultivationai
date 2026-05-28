@@ -20,10 +20,12 @@ export async function GET() {
   let tokens   = user.user_metadata?.tokens as number | undefined
   let username: string | null = null
   let onboarding_bonus_claimed = false
+  // created_at falls back to auth.users.created_at (always present)
+  let created_at: string = user.created_at ?? new Date().toISOString()
   try {
     const { data: profile } = await sb
       .from('profiles')
-      .select('tokens, username, onboarding_bonus_claimed')
+      .select('tokens, username, onboarding_bonus_claimed, created_at')
       .eq('id', user.id)
       .maybeSingle()
     if (profile?.tokens !== undefined) tokens = profile.tokens
@@ -31,6 +33,7 @@ export async function GET() {
     if (profile?.onboarding_bonus_claimed !== undefined) {
       onboarding_bonus_claimed = profile.onboarding_bonus_claimed
     }
+    if (profile?.created_at) created_at = profile.created_at
   } catch { /* profiles table optional */ }
 
   return NextResponse.json({
@@ -40,6 +43,7 @@ export async function GET() {
       tokens:                  tokens ?? 0,
       username,
       onboarding_bonus_claimed,
+      created_at,
     },
   })
 }

@@ -8,6 +8,7 @@ export interface AuthUser {
   tokens:                  number
   username:                string | null
   onboarding_bonus_claimed: boolean
+  created_at:              string   // ISO timestamp — used for welcome deal countdown
 }
 
 interface AuthCtx {

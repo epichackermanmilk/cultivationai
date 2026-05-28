@@ -8,13 +8,15 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06
 const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://novelcodex.org'
 
 const ONE_TIME = [
-  { label: 'Spark',   total: 100,   priceNum: 1     },
+  { label: 'Welcome', total: 500,   priceNum: 1     }, // new-member deal, 7-day window
   { label: 'Story',   total: 550,   priceNum: 4.99  },
   { label: 'Novel',   total: 1200,  priceNum: 9.99  },
   { label: 'Library', total: 3500,  priceNum: 24.99 },
   { label: 'Saga',    total: 9250,  priceNum: 49.99 },
   { label: 'Titan',   total: 20000, priceNum: 99.99 },
 ]
+
+const WELCOME_WINDOW_MS = 7 * 24 * 60 * 60 * 1000   // 7 days
 const SUBS = [
   { label: 'Reader',  tokens: 700,  priceNum: 4.99 },
   { label: 'Scholar', tokens: 1600, priceNum: 9.99 },
@@ -46,6 +48,17 @@ export async function POST(req: Request) {
     if (mode === 'once') {
       const t = ONE_TIME.find(t => t.label === tier)
       if (!t) return NextResponse.json({ error: 'Unknown tier' }, { status: 400 })
+
+      // Welcome deal: enforce 7-day window server-side (can't be bypassed client-side)
+      if (tier === 'Welcome') {
+        const accountAge = Date.now() - new Date(user.created_at).getTime()
+        if (accountAge > WELCOME_WINDOW_MS) {
+          return NextResponse.json(
+            { error: 'Your new member offer has expired.' },
+            { status: 403 },
+          )
+        }
+      }
 
       const session = await stripe.checkout.sessions.create({
         mode: 'payment',

@@ -1,19 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Footer from '@/components/Footer'
 import { useAuth } from '@/lib/auth-context'
 
 // ── Pricing data ──────────────────────────────────────────────────────────────
 const ONE_TIME = [
-  { label: 'Spark',   base: 100,  bonus: 0,     total: 100,    price: '$1.00',  priceNum: 1,     highlight: false, badge: null },
   { label: 'Story',   base: 499,  bonus: 51,    total: 550,    price: '$4.99',  priceNum: 4.99,  highlight: false, badge: null },
   { label: 'Novel',   base: 999,  bonus: 201,   total: 1200,   price: '$9.99',  priceNum: 9.99,  highlight: true,  badge: 'Best value' },
   { label: 'Library', base: 2499, bonus: 1001,  total: 3500,   price: '$24.99', priceNum: 24.99, highlight: false, badge: null },
   { label: 'Saga',    base: 4999, bonus: 4251,  total: 9250,   price: '$49.99', priceNum: 49.99, highlight: false, badge: 'Power reader' },
   { label: 'Titan',   base: 9999, bonus: 10001, total: 20000,  price: '$99.99', priceNum: 99.99, highlight: false, badge: 'Best deal' },
 ]
+
+const WELCOME_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 
 const SUBS = [
   {
@@ -57,6 +58,113 @@ function BoltIcon({ className }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">
       <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
     </svg>
+  )
+}
+
+// ── Welcome Deal countdown ────────────────────────────────────────────────────
+function useCountdown(expiresAt: number) {
+  const [remaining, setRemaining] = useState(() => Math.max(0, expiresAt - Date.now()))
+
+  useEffect(() => {
+    if (remaining <= 0) return
+    const id = setInterval(() => {
+      const r = Math.max(0, expiresAt - Date.now())
+      setRemaining(r)
+    }, 1000)
+    return () => clearInterval(id)
+  }, [expiresAt, remaining])
+
+  const totalSecs = Math.floor(remaining / 1000)
+  const d = Math.floor(totalSecs / 86400)
+  const h = Math.floor((totalSecs % 86400) / 3600)
+  const m = Math.floor((totalSecs % 3600) / 60)
+  const s = totalSecs % 60
+  return { d, h, m, s, expired: remaining <= 0 }
+}
+
+function WelcomeDeal({
+  createdAt,
+  loading,
+  onBuy,
+}: {
+  createdAt: string
+  loading: string | null
+  onBuy: (tier: string, mode: string) => void
+}) {
+  const expiresAt = new Date(createdAt).getTime() + WELCOME_WINDOW_MS
+  const { d, h, m, s, expired } = useCountdown(expiresAt)
+  if (expired) return null
+
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const isLoading = loading === 'once-Welcome'
+
+  return (
+    <div className="mb-10 relative overflow-hidden rounded-2xl border border-amber-500/50 p-6"
+      style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(217,119,6,0.08) 100%)' }}>
+
+      {/* Pulse glow */}
+      <div className="pointer-events-none absolute -top-12 -right-12 h-48 w-48 rounded-full opacity-20"
+        style={{ background: 'radial-gradient(circle, #f59e0b 0%, transparent 70%)' }} />
+
+      {/* Badge */}
+      <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-amber-500 px-3 py-1 text-xs font-bold text-black">
+        ⚡ New Member Offer — Limited Time
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+        <div>
+          <h2 className="text-2xl font-extrabold mb-1" style={{ color: 'var(--nc-text)' }}>
+            500 tokens for{' '}
+            <span style={{ background: 'linear-gradient(135deg,#fbbf24,#d97706)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              $1.00
+            </span>
+          </h2>
+          <p className="text-sm mb-3" style={{ color: 'var(--nc-text2)' }}>
+            That&apos;s <span className="font-bold text-amber-400">5× the normal value</span> — our welcome gift to you.
+            Enough for 50 chat messages, novel unlocks, and recommendations.
+          </p>
+
+          {/* Value comparison pills */}
+          <div className="flex flex-wrap gap-2 text-xs">
+            <span className="rounded-full border border-zinc-600 px-2.5 py-1 text-zinc-400 line-through">
+              Normal: 100 tokens / $1
+            </span>
+            <span className="rounded-full border border-amber-500/50 bg-amber-500/10 px-2.5 py-1 text-amber-400 font-semibold">
+              Deal: 500 tokens / $1 ✦ 500% value
+            </span>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center gap-3 shrink-0">
+          {/* Countdown */}
+          <div className="flex items-center gap-1.5 text-center">
+            {[{ v: d, u: 'd' }, { v: h, u: 'h' }, { v: m, u: 'm' }, { v: s, u: 's' }].map(({ v, u }) => (
+              <div key={u} className="flex flex-col items-center">
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5 min-w-[2.5rem] text-center">
+                  <span className="text-lg font-mono font-bold text-amber-400">{pad(v)}</span>
+                </div>
+                <span className="text-[10px] text-zinc-500 mt-0.5">{u}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-zinc-500">Expires after 7 days</p>
+
+          <button
+            onClick={() => onBuy('Welcome', 'once')}
+            disabled={!!loading}
+            className="w-full rounded-xl py-3 px-8 text-sm font-bold text-black transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0"
+            style={{ background: 'linear-gradient(135deg,#fbbf24 0%,#f59e0b 50%,#d97706 100%)', boxShadow: '0 6px 20px rgba(245,158,11,0.35)' }}
+          >
+            {isLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent" />
+                Redirecting…
+              </span>
+            ) : 'Claim Offer — $1.00'}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -150,6 +258,18 @@ export default function ShopPage() {
               <Link href="/library" className="ml-2 underline hover:text-red-300">Sign in</Link>
             )}
           </div>
+        )}
+
+        {/* ── Welcome Deal (new members only, 7-day window) ─────────────── */}
+        {user && (() => {
+          const age = Date.now() - new Date(user.created_at ?? 0).getTime()
+          return age < WELCOME_WINDOW_MS
+        })() && (
+          <WelcomeDeal
+            createdAt={user.created_at}
+            loading={loading}
+            onBuy={handleBuy}
+          />
         )}
 
         {/* ── Tab switcher ─────────────────────────────────────────────────── */}
