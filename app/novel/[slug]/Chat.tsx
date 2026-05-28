@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useAuth } from '@/lib/auth-context'
 
 interface Message {
-  role: 'user' | 'assistant'
+  role:    'user' | 'assistant'
   content: string
+  isError?: boolean
 }
 
 interface Props {
@@ -16,21 +18,49 @@ interface Props {
 type EmbedState = 'unknown' | 'checking' | 'not_embedded' | 'embedding' | 'ready' | 'error'
 
 export default function Chat({ slug, title, author }: Props) {
+  const { updateTokens } = useAuth()
+
   const [messages, setMessages]       = useState<Message[]>([])
   const [input, setInput]             = useState('')
   const [streaming, setStreaming]     = useState(false)
   const [embedState, setEmbedState]   = useState<EmbedState>('unknown')
   const [embedPct, setEmbedPct]       = useState(0)
+  const [embedEta, setEmbedEta]       = useState<string | null>(null)
+  const [historyLoaded, setHistLoaded] = useState(false)
   const bottomRef                     = useRef<HTMLDivElement>(null)
   const inputRef                      = useRef<HTMLTextAreaElement>(null)
   const pollRef                       = useRef<ReturnType<typeof setInterval> | null>(null)
+  const embedStartRef                 = useRef<number | null>(null)
 
-  // Check embedding status on mount
+  // Check embedding status on mount (also resets history state on slug change)
   useEffect(() => {
+    setMessages([])
+    setHistLoaded(false)
+    setEmbedPct(0)
+    setEmbedEta(null)
     checkEmbed()
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug])
+
+  // Load saved conversation when novel is ready and we haven't loaded yet
+  useEffect(() => {
+    if (embedState !== 'ready' || historyLoaded) return
+    setHistLoaded(true)
+    fetch(`/api/conversations/${slug}`)
+      .then(r => r.ok ? r.json() : { messages: [] })
+      .then(data => {
+        const saved = Array.isArray(data.messages) ? data.messages : []
+        if (saved.length > 0) {
+          setMessages(saved.map((m: { role: string; content: string }) => ({
+            role:    m.role as 'user' | 'assistant',
+            content: m.content,
+          })))
+        }
+      })
+      .catch(() => { /* non-fatal */ })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [embedState, slug])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -46,6 +76,7 @@ export default function Chat({ slug, title, author }: Props) {
       } else if (data.status === 'processing') {
         setEmbedState('embedding')
         setEmbedPct(data.pct ?? 0)
+        if (!embedStartRef.current) embedStartRef.current = Date.now()
         startPolling()
       } else {
         setEmbedState('not_embedded')
@@ -58,25 +89,50 @@ export default function Chat({ slug, title, author }: Props) {
   async function startEmbed() {
     setEmbedState('embedding')
     setEmbedPct(0)
-    await fetch(`/api/embed/${slug}`, { method: 'POST' })
+    setEmbedEta(null)
+    embedStartRef.current = Date.now()
+    try {
+      const res = await fetch(`/api/embed/${slug}`, { method: 'POST' })
+      if (res.status === 401) {
+        setEmbedState('not_embedded')
+        // surface auth error in the embed gate
+        return
+      }
+    } catch { /* handled by poll */ }
     startPolling()
   }
 
   function startPolling() {
     if (pollRef.current) clearInterval(pollRef.current)
     pollRef.current = setInterval(async () => {
-      const res  = await fetch(`/api/embed/${slug}`)
-      const data = await res.json()
-      if (data.embedded || data.status === 'done') {
-        clearInterval(pollRef.current!)
-        setEmbedState('ready')
-        setEmbedPct(100)
-      } else if (data.status === 'processing') {
-        setEmbedPct(data.pct ?? 0)
-      } else if (data.status === 'error') {
-        clearInterval(pollRef.current!)
-        setEmbedState('error')
-      }
+      try {
+        const res  = await fetch(`/api/embed/${slug}`)
+        const data = await res.json()
+        if (data.embedded || data.status === 'done') {
+          clearInterval(pollRef.current!)
+          pollRef.current = null
+          embedStartRef.current = null
+          setEmbedState('ready')
+          setEmbedPct(100)
+          setEmbedEta(null)
+        } else if (data.status === 'processing') {
+          const pct = data.pct ?? 0
+          setEmbedPct(pct)
+          // Estimate remaining time from elapsed + progress
+          if (embedStartRef.current && pct > 2) {
+            const elapsed   = (Date.now() - embedStartRef.current) / 1000
+            const totalEst  = elapsed / (pct / 100)
+            const remaining = Math.max(0, Math.round(totalEst - elapsed))
+            setEmbedEta(remaining > 60
+              ? `~${Math.ceil(remaining / 60)} min remaining`
+              : `~${remaining}s remaining`)
+          }
+        } else if (data.status === 'error') {
+          clearInterval(pollRef.current!)
+          pollRef.current = null
+          setEmbedState('error')
+        }
+      } catch { /* keep polling */ }
     }, 2500)
   }
 
@@ -84,19 +140,52 @@ export default function Chat({ slug, title, author }: Props) {
     const text = input.trim()
     if (!text || streaming || embedState !== 'ready') return
 
-    const userMsg: Message   = { role: 'user', content: text }
+    const userMsg: Message      = { role: 'user',      content: text }
     const assistantMsg: Message = { role: 'assistant', content: '' }
+    // Snapshot current messages for history (before we add the new pair)
+    const prevMessages = messages
     setMessages(prev => [...prev, userMsg, assistantMsg])
     setInput('')
     setStreaming(true)
 
+    let fullResponse = ''
+    let exchangeOk   = false
+
     try {
-      const history = messages.slice(-8).map(m => ({ role: m.role, content: m.content }))
+      const history = prevMessages.slice(-8).map(m => ({ role: m.role, content: m.content }))
       const res = await fetch('/api/chat', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ slug, title, author, message: text, history }),
       })
+
+      // ── Handle error status codes before streaming ────────────────────────
+      if (!res.ok) {
+        let errMsg = 'Sorry, something went wrong. Please try again.'
+        if (res.status === 401) {
+          errMsg = 'Please sign in to continue chatting.'
+        } else if (res.status === 402) {
+          errMsg = '⚡ You\'re out of tokens. Visit the shop to get more and keep chatting!'
+        } else {
+          try {
+            const body = await res.json()
+            if (body?.error) errMsg = body.error
+          } catch { /* ignore */ }
+        }
+        setMessages(prev => {
+          const updated = [...prev]
+          updated[updated.length - 1] = { role: 'assistant', content: errMsg, isError: true }
+          return updated
+        })
+        return
+      }
+
+      // ── Read token balance from header (available immediately) ────────────
+      const remaining = res.headers.get('X-Tokens-Remaining')
+      if (remaining !== null) {
+        const n = parseInt(remaining, 10)
+        if (!isNaN(n)) updateTokens(n)
+      }
 
       if (!res.body) throw new Error('No response body')
 
@@ -107,6 +196,7 @@ export default function Chat({ slug, title, author }: Props) {
         const { done, value } = await reader.read()
         if (done) break
         const chunk = decoder.decode(value)
+        fullResponse += chunk
         setMessages(prev => {
           const updated = [...prev]
           updated[updated.length - 1] = {
@@ -116,18 +206,35 @@ export default function Chat({ slug, title, author }: Props) {
           return updated
         })
       }
-    } catch (e) {
+
+      exchangeOk = fullResponse.length > 0
+    } catch {
       setMessages(prev => {
         const updated = [...prev]
         updated[updated.length - 1] = {
           ...updated[updated.length - 1],
           content: 'Sorry, something went wrong. Please try again.',
+          isError: true,
         }
         return updated
       })
     } finally {
       setStreaming(false)
       setTimeout(() => inputRef.current?.focus(), 50)
+
+      // ── Persist conversation after a successful exchange ──────────────────
+      if (exchangeOk) {
+        const saved = [
+          ...prevMessages,
+          userMsg,
+          { role: 'assistant' as const, content: fullResponse },
+        ]
+        fetch(`/api/conversations/${slug}`, {
+          method:  'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ messages: saved, novel_title: title }),
+        }).catch(() => { /* non-fatal */ })
+      }
     }
   }
 
@@ -156,6 +263,7 @@ export default function Chat({ slug, title, author }: Props) {
         </h2>
         <p className="max-w-xs text-sm text-zinc-400">
           We&apos;ll process all chapters and build a searchable knowledge base so you can chat with the story.
+          This takes a few minutes.
         </p>
         <button
           onClick={startEmbed}
@@ -163,22 +271,43 @@ export default function Chat({ slug, title, author }: Props) {
         >
           Unlock &ldquo;{title}&rdquo;
         </button>
+        <p className="text-xs text-zinc-600">Uses 1 token per chat message after unlocking</p>
       </div>
     )
   }
 
   if (embedState === 'embedding') {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-        <div className="text-4xl">⚙️</div>
-        <h2 className="text-sm font-semibold text-zinc-100">Processing chapters…</h2>
-        <div className="w-64 overflow-hidden rounded-full bg-zinc-800 h-2">
-          <div
-            className="h-full rounded-full bg-amber-500 transition-all duration-500"
-            style={{ width: `${embedPct}%` }}
-          />
+      <div className="flex flex-1 flex-col items-center justify-center gap-5 p-8 text-center">
+        <div className="relative">
+          {/* Outer ring */}
+          <svg className="h-20 w-20 -rotate-90" viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="34" fill="none" stroke="currentColor" strokeWidth="6" className="text-zinc-800" />
+            <circle
+              cx="40" cy="40" r="34" fill="none"
+              stroke="currentColor" strokeWidth="6"
+              strokeLinecap="round"
+              strokeDasharray={`${2 * Math.PI * 34}`}
+              strokeDashoffset={`${2 * Math.PI * 34 * (1 - embedPct / 100)}`}
+              className="text-amber-500 transition-all duration-700"
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-lg font-bold text-amber-400">{Math.round(embedPct)}%</span>
+          </div>
         </div>
-        <p className="text-xs text-zinc-500">{embedPct}% complete</p>
+        <div>
+          <h2 className="text-sm font-semibold text-zinc-100">Processing chapters…</h2>
+          {embedEta && (
+            <p className="mt-1 text-xs text-zinc-500">{embedEta}</p>
+          )}
+          {!embedEta && embedPct === 0 && (
+            <p className="mt-1 text-xs text-zinc-500">Starting up…</p>
+          )}
+        </div>
+        <p className="max-w-xs text-xs text-zinc-600">
+          Hang tight — we&apos;re reading every chapter so you can ask anything about this novel.
+        </p>
       </div>
     )
   }
@@ -186,9 +315,9 @@ export default function Chat({ slug, title, author }: Props) {
   if (embedState === 'error') {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
-        <p className="text-sm text-red-400">Something went wrong. Please try again.</p>
-        <button onClick={checkEmbed} className="text-xs text-amber-400 hover:underline">
-          Retry
+        <p className="text-sm text-red-400">Something went wrong while processing this novel.</p>
+        <button onClick={checkEmbed} className="rounded-lg border border-zinc-700 px-4 py-2 text-xs text-amber-400 hover:border-amber-500/50 transition">
+          Try Again
         </button>
       </div>
     )
@@ -214,7 +343,8 @@ export default function Chat({ slug, title, author }: Props) {
                 <button
                   key={q}
                   onClick={() => { setInput(q); inputRef.current?.focus() }}
-                  className="rounded-lg border border-[var(--nc-border)] px-3 py-1.5 text-xs hover:border-amber-500/50 transition" style={{ color: 'var(--nc-text2)' }}
+                  className="rounded-lg border border-[var(--nc-border)] px-3 py-1.5 text-xs hover:border-amber-500/50 transition"
+                  style={{ color: 'var(--nc-text2)' }}
                 >
                   {q}
                 </button>
@@ -228,15 +358,26 @@ export default function Chat({ slug, title, author }: Props) {
             <div
               className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
                 msg.role === 'user' ? 'rounded-br-sm' : 'rounded-bl-sm'
-              }`}
+              } ${msg.isError ? 'border border-red-500/30' : ''}`}
               style={msg.role === 'user'
                 ? { background: '#f59e0b', color: '#000' }
-                : { background: 'var(--nc-bg3)', color: 'var(--nc-text)' }
+                : msg.isError
+                  ? { background: 'var(--nc-bg3)', color: '#f87171' }
+                  : { background: 'var(--nc-bg3)', color: 'var(--nc-text)' }
               }
             >
               {msg.content}
               {msg.role === 'assistant' && msg.content === '' && (
                 <span className="inline-block h-4 w-1 animate-pulse bg-zinc-400 ml-0.5" />
+              )}
+              {/* Shop link for out-of-tokens errors */}
+              {msg.isError && msg.content.includes('shop') && (
+                <a
+                  href="/shop"
+                  className="mt-2 block text-xs font-semibold text-amber-400 underline underline-offset-2"
+                >
+                  Go to Shop →
+                </a>
               )}
             </div>
           </div>
@@ -293,7 +434,7 @@ export default function Chat({ slug, title, author }: Props) {
             )}
           </button>
         </div>
-        <p className="mt-1.5 text-center text-xs text-zinc-600">Enter to send · Shift+Enter for new line</p>
+        <p className="mt-1.5 text-center text-xs text-zinc-600">1 token per message · Enter to send · Shift+Enter for new line</p>
       </div>
     </div>
   )

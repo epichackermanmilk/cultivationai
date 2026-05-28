@@ -19,9 +19,19 @@ function check(key: string, limit: number, windowMs: number): { ok: boolean; res
 
 // ── Route config ──────────────────────────────────────────────────────────────
 const ROUTES: Array<{ test: (p: string) => boolean; limit: number; windowMs: number }> = [
-  { test: p => /^\/api\/auth\/(login|signup)/.test(p), limit: 5,  windowMs: 15 * 60_000 },
-  { test: p => p.startsWith('/api/chat'),               limit: 20, windowMs: 60_000 },
-  { test: p => p.startsWith('/api/embed'),              limit: 10, windowMs: 60_000 },
+  // Auth — tightest: 5 attempts per 15 min (brute-force protection)
+  { test: p => /^\/api\/auth\/(login|signup)/.test(p), limit: 5,   windowMs: 15 * 60_000 },
+  // Checkout — 6 per hour (prevents card-testing / abuse)
+  { test: p => p.startsWith('/api/checkout'),           limit: 6,   windowMs: 60 * 60_000 },
+  // Chat — 20 per minute (each call costs OpenAI money)
+  { test: p => p.startsWith('/api/chat'),               limit: 20,  windowMs: 60_000 },
+  // Embed — 10 per minute (triggers expensive VPS embedding job)
+  { test: p => p.startsWith('/api/embed'),              limit: 10,  windowMs: 60_000 },
+  // Support — 3 per 10 min (prevent spam submissions)
+  { test: p => p.startsWith('/api/support'),            limit: 3,   windowMs: 10 * 60_000 },
+  // Conversations — 60 per min (save after every chat exchange)
+  { test: p => p.startsWith('/api/conversations'),      limit: 60,  windowMs: 60_000 },
+  // General API catch-all
   { test: p => p.startsWith('/api/'),                   limit: 120, windowMs: 60_000 },
 ]
 
@@ -31,6 +41,9 @@ const MAX_BODY: Record<string, number> = {
   '/api/auth/login':  1_024,
   '/api/chat':        8_192,
   '/api/embed':       512,
+  '/api/checkout':    256,
+  '/api/support':           4_096,
+  '/api/conversations':    16_384,   // up to 100 messages × ~4KB each worst-case is fine; cap at 16KB
 }
 
 export function middleware(req: NextRequest) {

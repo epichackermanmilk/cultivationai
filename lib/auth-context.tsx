@@ -11,14 +11,15 @@ export interface AuthUser {
 }
 
 interface AuthCtx {
-  user:    AuthUser | null
-  loading: boolean
-  refresh: () => Promise<void>
-  logout:  () => Promise<void>
+  user:         AuthUser | null
+  loading:      boolean
+  refresh:      () => Promise<void>
+  logout:       () => Promise<void>
+  updateTokens: (n: number) => void   // optimistic update after chat deduction
 }
 
 const Ctx = createContext<AuthCtx>({
-  user: null, loading: true, refresh: async () => {}, logout: async () => {},
+  user: null, loading: true, refresh: async () => {}, logout: async () => {}, updateTokens: () => {},
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -44,7 +45,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
   }
 
-  return <Ctx.Provider value={{ user, loading, refresh, logout }}>{children}</Ctx.Provider>
+  const updateTokens = useCallback((n: number) => {
+    setUser(prev => prev ? { ...prev, tokens: n } : prev)
+  }, [])
+
+  return <Ctx.Provider value={{ user, loading, refresh, logout, updateTokens }}>{children}</Ctx.Provider>
 }
 
 export const useAuth = () => useContext(Ctx)
