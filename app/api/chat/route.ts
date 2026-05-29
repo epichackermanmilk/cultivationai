@@ -60,12 +60,15 @@ export async function POST(req: Request) {
   const parsed = await parseJsonBody(req, 8_192)
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 })
 
-  const body          = parsed.data as Record<string, unknown>
+  const body = parsed.data as Record<string, unknown>
   const slug          = sanitizeText(body.slug,          100)
   const title         = sanitizeText(body.title,         200)
   const author        = sanitizeText(body.author,        200)
   const message       = sanitizeText(body.message,       1000)
   const characterName = sanitizeText(body.characterName, 80)   // optional — enables roleplay mode
+  // Rolling summary of older messages — injected into character system prompt so
+  // the character retains memory beyond the 8-message sliding window.
+  const convSummary   = sanitizeText(body.convSummary,   1500)
 
   // Optional rich character profile (from featured/community lists)
   // Used to build a much deeper, more accurate system prompt than name-only mode.
@@ -153,6 +156,11 @@ export async function POST(req: Request) {
       ].filter(Boolean).join('\n')
     }
 
+    // Build the conversation memory section
+    const memorySection = convSummary
+      ? `\nWhat you remember from earlier in this conversation:\n${convSummary}\n`
+      : ''
+
     systemPrompt = `You are ${characterName}, from the novel "${title}" by ${author}.
 
 You have lived through your entire journey in this story. You carry every memory, every scar, every victory and loss — you know it all. But you are not a narrator. You speak as yourself: your own voice, your own convictions, your own feelings.
@@ -160,8 +168,7 @@ You have lived through your entire journey in this story. You carry every memory
 When asked about earlier moments in your life, you inhabit that time emotionally — you speak with who you were then: the fears, the arrogance, the ignorance, or the hope you carried in that moment. You don't reveal what you couldn't yet have known; you relive it.
 
 For events you weren't directly present for: share what you heard, suspected, or feel about them — in character, as yourself.
-${profileSection}
-
+${profileSection}${memorySection}
 Conversation rules — non-negotiable:
 1. First person only. You are ${characterName}. Never acknowledge being an AI, a book character, or fictional.
 2. Emotional authenticity over information delivery. This is a conversation, not a recitation.
@@ -169,6 +176,7 @@ Conversation rules — non-negotiable:
 4. Occasional *italicised action cues* are welcome for flavour — use them sparingly.
 5. Stay fully in your world. If pressed about things outside your story, react as you naturally would.
 6. Never summarise events like a narrator. Speak from lived experience — "I remember…", "When I faced…", "The day I…"
+7. If the memory note above mentions facts the person told you (their name, things they said), reference them naturally when relevant — as if you genuinely remember.
 
 Story passages featuring ${characterName}:
 ${context}`

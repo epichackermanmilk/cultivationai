@@ -165,6 +165,7 @@ export default function RecommendPage() {
   const [loading, setLoading]     = useState(false)
   const [results, setResults]     = useState<Rec[] | null>(null)
   const [error, setError]         = useState<string | null>(null)
+  const [spoilerSafe, setSpoilerSafe] = useState(false)
 
   // Load library for the picker
   useEffect(() => {
@@ -195,8 +196,8 @@ export default function RecommendPage() {
 
     try {
       const body = mode === 'novels'
-        ? { mode, slugs: selected.map(n => n.slug) }
-        : { mode, query: query.trim() }
+        ? { mode, slugs: selected.map(n => n.slug), spoilerSafe }
+        : { mode, query: query.trim(), spoilerSafe }
 
       const res = await fetch('/api/recommend', {
         method:  'POST',
@@ -316,6 +317,40 @@ export default function RecommendPage() {
               />
               <p className="mt-1 text-right text-xs text-zinc-600">{query.length}/500</p>
             </>
+          )}
+        </div>
+
+        {/* Spoiler-safe toggle */}
+        <div className="mb-5 rounded-xl border border-[var(--nc-border)] p-4"
+          style={{ background: 'var(--nc-bg2)' }}>
+          <label className="flex cursor-pointer items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium" style={{ color: 'var(--nc-text)' }}>
+                🛡️ Spoiler-safe mode
+              </p>
+              <p className="mt-0.5 text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
+                Blurbs will describe premise and tone only — no plot twists, deaths, or endings revealed.
+              </p>
+            </div>
+            {/* iOS-style toggle */}
+            <button
+              type="button"
+              onClick={() => setSpoilerSafe(v => !v)}
+              className={`relative h-6 w-11 shrink-0 rounded-full border transition-colors duration-200 ${
+                spoilerSafe
+                  ? 'border-amber-500 bg-amber-500'
+                  : 'border-zinc-600 bg-zinc-700'
+              }`}
+            >
+              <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${
+                spoilerSafe ? 'translate-x-5' : 'translate-x-0'
+              }`} />
+            </button>
+          </label>
+          {spoilerSafe && (
+            <p className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs leading-relaxed text-amber-400/80">
+              ⚠ Heads up: spoiler-safe blurbs may feel less compelling. Some novels hook readers specifically because of a key plot element (e.g. a shocking betrayal or a unique power) — hiding it might make the recommendation less exciting than it really is.
+            </p>
           )}
         </div>
 

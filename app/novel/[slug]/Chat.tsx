@@ -48,6 +48,14 @@ export default function Chat({ slug, title, author }: Props) {
   const [charInput, setCharInput]       = useState('')
   const [charLoading, setCharLoading]   = useState(false)
   const [embedError, setEmbedError]     = useState<string | null>(null)
+  // ── Character memory: rolling summary of older messages ────────────────────
+  // Avoids the "amnesiac at message 9" problem in long roleplay sessions.
+  // We summarise all but the last 8 messages every 16 messages, keeping context
+  // compact while preserving what the character "remembers" from earlier.
+  const [convSummary,    setConvSummary]    = useState('')
+  const [summarizedUpTo, setSummarizedUpTo] = useState(0)  // message index last summarised
+  // ── Mode explanation popup (shown once when switching to character mode) ────
+  const [showModeExplain, setShowModeExplain] = useState(false)
   const bottomRef                       = useRef<HTMLDivElement>(null)
   const inputRef                        = useRef<HTMLTextAreaElement>(null)
   const pollRef                         = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -133,6 +141,8 @@ export default function Chat({ slug, title, author }: Props) {
     setCharProf(profile)
     setCharInput('')
     setMessages([])
+    setConvSummary('')
+    setSummarizedUpTo(0)
   }
 
   function clearCharacter() {
@@ -140,6 +150,8 @@ export default function Chat({ slug, title, author }: Props) {
     setCharProf(null)
     setCharInput('')
     setMessages([])
+    setConvSummary('')
+    setSummarizedUpTo(0)
   }
 
   // Clear messages and character state when switching modes
@@ -147,10 +159,16 @@ export default function Chat({ slug, title, author }: Props) {
     if (m === chatMode) return
     setChatMode(m)
     setMessages([])
+    setConvSummary('')
+    setSummarizedUpTo(0)
     setCharName('')
     setCharProf(null)
     setCharInput('')
     setInput('')
+    // Show the mode-explanation popup the first time a user switches to character mode
+    if (m === 'character' && !localStorage.getItem('nc-char-mode-seen')) {
+      setShowModeExplain(true)
+    }
   }
 
   useEffect(() => {
@@ -271,6 +289,8 @@ export default function Chat({ slug, title, author }: Props) {
           ...(chatMode === 'character' && characterName.trim() ? {
             characterName:    characterName.trim(),
             characterProfile: characterProfile ?? undefined,
+            // Pass rolling summary so the character remembers earlier messages
+            ...(convSummary ? { convSummary } : {}),
           } : {}),
         }),
       })
@@ -350,6 +370,33 @@ export default function Chat({ slug, title, author }: Props) {
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify({ messages: saved, novel_title: title }),
         }).catch(() => { /* non-fatal */ })
+
+        // ── Background summarisation for character mode ───────────────────
+        // Every 16 messages (8 full turns), compress old messages into a
+        // rolling memory note that the character carries forward.
+        // We summarise everything older than the last 8 messages.
+        if (chatMode === 'character' && characterName.trim()) {
+          const totalAfter = saved.length
+          const threshold  = summarizedUpTo + 16
+          if (totalAfter >= threshold && totalAfter > 16) {
+            const toSummarise = saved.slice(0, totalAfter - 8)
+            setSummarizedUpTo(totalAfter)  // mark immediately to avoid double-firing
+            fetch('/api/summarize', {
+              method:  'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body:    JSON.stringify({
+                messages:      toSummarise.map(m => ({ role: m.role, content: m.content })),
+                characterName: characterName.trim(),
+                novelTitle:    title,
+              }),
+            })
+              .then(r => r.ok ? r.json() : null)
+              .then((data: { summary?: string } | null) => {
+                if (data?.summary) setConvSummary(data.summary)
+              })
+              .catch(() => { /* non-fatal — falls back to sliding window */ })
+          }
+        }
       }
     }
   }
@@ -452,6 +499,46 @@ export default function Chat({ slug, title, author }: Props) {
   // ── Chat UI ─────────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
+
+      {/* ── Mode explanation popup ────────────────────────────────────────────── */}
+      {showModeExplain && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.70)', backdropFilter: 'blur(6px)' }}>
+          <div className="relative w-full max-w-sm rounded-2xl border p-6 shadow-2xl"
+            style={{ background: 'var(--nc-bg2)', borderColor: 'var(--nc-border)' }}>
+            <p className="mb-1 text-xs font-bold uppercase tracking-widest text-amber-500/70">Two ways to read</p>
+            <h2 className="mb-4 text-base font-bold" style={{ color: 'var(--nc-text)' }}>
+              What&apos;s the difference?
+            </h2>
+            <div className="space-y-4">
+              <div className="rounded-xl border border-[var(--nc-border)] p-3"
+                style={{ background: 'var(--nc-bg)' }}>
+                <p className="mb-1 text-sm font-semibold" style={{ color: 'var(--nc-text)' }}>📖 Ask the Book</p>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
+                  Pure factual Q&amp;A. Ask anything about plot, lore, cultivation systems, character arcs, or spoilers. Every answer is grounded in actual chapter text. Perfect for researching a novel or settling debates.
+                </p>
+                <p className="mt-2 text-[10px] text-zinc-600">No persistent memory — each question draws fresh context from the chapters.</p>
+              </div>
+              <div className="rounded-xl border border-amber-500/25 p-3"
+                style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(180,83,9,0.04) 100%)' }}>
+                <p className="mb-1 text-sm font-semibold text-amber-300">🎭 Character Chat</p>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
+                  Immersive roleplay. The character speaks as themselves — from lived experience, not as a narrator. They remember what you tell them, have opinions, and react emotionally. Best for deep dives into a character&apos;s psyche.
+                </p>
+                <p className="mt-2 text-[10px] text-amber-500/60">Memory builds over the conversation — the character won&apos;t forget what you shared.</p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                localStorage.setItem('nc-char-mode-seen', '1')
+                setShowModeExplain(false)
+              }}
+              className="mt-5 w-full rounded-xl bg-amber-500 py-2.5 text-sm font-semibold text-black hover:bg-amber-400 transition">
+              Got it, let&apos;s go →
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Mode toggle ──────────────────────────────────────────────────────── */}
       <div className="shrink-0 border-b border-[var(--nc-border)] px-3 py-2">
@@ -577,6 +664,9 @@ export default function Chat({ slug, title, author }: Props) {
             {characterName && (
               <p className="text-[10px] text-zinc-600">
                 Talking to <span className="text-amber-400">{characterName}</span> · 10 tokens per message
+                {convSummary && (
+                  <span className="ml-1.5 text-amber-500/50" title="Character remembers earlier messages via summary">· 🧠 memory active</span>
+                )}
               </p>
             )}
           </div>
