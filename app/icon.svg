@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="leftPage" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <linearGradient id="rightPage" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="120" height="120" rx="22" fill="#09090b"/>
+
+  <!-- Left page -->
+  <path d="M14 88 L14 26 Q14 18 22 16 L57 13 L57 91 Q38 88 22 90 Q14 91 14 88 Z"
+        fill="url(#leftPage)"/>
+
+  <!-- Right page -->
+  <path d="M106 88 L106 26 Q106 18 98 16 L63 13 L63 91 Q82 88 98 90 Q106 91 106 88 Z"
+        fill="url(#rightPage)"/>
+
+  <!-- Spine -->
+  <rect x="55.5" y="13" width="9" height="78" rx="2" fill="#92400e"/>
+
+  <!-- Left page lines -->
+  <line x1="24" y1="34" x2="50" y2="32" stroke="#78350f" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+  <line x1="24" y1="44" x2="50" y2="42" stroke="#78350f" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+  <line x1="24" y1="54" x2="50" y2="52" stroke="#78350f" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+  <line x1="24" y1="64" x2="42" y2="62" stroke="#78350f" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+
+  <!-- Right page lines -->
+  <line x1="70" y1="32" x2="96" y2="34" stroke="#78350f" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+  <line x1="70" y1="42" x2="96" y2="44" stroke="#78350f" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+  <line x1="70" y1="52" x2="96" y2="54" stroke="#78350f" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+  <line x1="70" y1="62" x2="88" y2="64" stroke="#78350f" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+
+  <!-- Spine glow -->
+  <rect x="55.5" y="13" width="9" height="78" rx="2" fill="url(#glow)"/>
+
+  <!-- Four-pointed star (AI / mystical spark) at bottom of spine -->
+  <path d="M60 76 L61.6 81.6 L67 83 L61.6 84.4 L60 90 L58.4 84.4 L53 83 L58.4 81.6 Z"
+        fill="#fef3c7" opacity="0.95"/>
+</svg>

@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NovelBrain",
+  title: "NovelCodex",
   description: "Every secret, every character, every world — ask anything.",
 };
 
