@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Footer from '@/components/Footer'
+import SiteNav from '@/components/SiteNav'
+import Footer  from '@/components/Footer'
 import { useAuth } from '@/lib/auth-context'
 
 // ── Pricing data ──────────────────────────────────────────────────────────────
@@ -214,25 +215,7 @@ export default function ShopPage() {
   return (
     <div className="min-h-screen" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
 
-      {/* ── Nav ──────────────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-[var(--nc-border)] bg-[var(--nc-bg)]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <Link href="/" className="group">
-            <span className="block text-xl font-bold tracking-tight" style={G}>NovelCodex</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            {user && (
-              <span className="flex items-center gap-1 text-sm font-medium text-amber-400">
-                <BoltIcon className="h-3.5 w-3.5" />
-                {user.tokens?.toLocaleString() ?? 0}
-              </span>
-            )}
-            <Link href="/library" className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-amber-500/50 hover:text-amber-400 transition">
-              {user ? 'Library' : 'Sign in'}
-            </Link>
-          </div>
-        </div>
-      </header>
+      <SiteNav maxWidth="max-w-5xl" />
 
       <main className="mx-auto max-w-5xl px-4 py-12">
 

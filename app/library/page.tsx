@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import TokenWidget    from '@/components/TokenWidget'
+import SiteNav        from '@/components/SiteNav'
 import BookmarkButton from '@/components/BookmarkButton'
 import RecentSection  from '@/components/RecentSection'
 import FeedbackWidget from '@/components/FeedbackWidget'
@@ -382,46 +382,11 @@ export default function LibraryPage() {
     <div className="relative min-h-screen" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
       <ParticleCanvas />
 
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-[var(--nc-border)] bg-[var(--nc-bg)]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-          <Link href="/library" className="group">
-            <h1 className="text-xl font-bold tracking-tight text-amber-400 group-hover:text-amber-300 transition">NovelCodex</h1>
-            <p className="text-xs text-zinc-500">Every secret, every character, every world — ask anything.</p>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/chat"
-              className="flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-amber-500/50 hover:text-amber-400 transition"
-            >
-              ✦ Multi-Novel Chat
-            </Link>
-            <Link
-              href="/characters"
-              className="flex items-center gap-1.5 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-amber-500/50 hover:text-amber-400 transition"
-              title="Character Chat"
-            >
-              🎭 Characters
-            </Link>
-            <Link
-              href="/recommend"
-              className="flex items-center gap-1.5 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-amber-500/50 hover:text-amber-400 transition"
-              title="Get recommendations"
-            >
-              Recommend
-            </Link>
-            <Link
-              href="/bookmarks"
-              className="flex items-center gap-1.5 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-amber-500/50 hover:text-amber-400 transition"
-              title="My Bookmarks"
-            >
-              Bookmarks
-            </Link>
-            <TokenWidget />
-            <span className="text-sm text-zinc-500">{novels.length.toLocaleString()} novels</span>
-          </div>
-        </div>
-      </header>
+      <SiteNav right={
+        <span className="hidden sm:inline text-sm text-zinc-500 shrink-0">
+          {novels.length.toLocaleString()} novels
+        </span>
+      } />
 
       <main className="relative z-10 mx-auto max-w-7xl px-4 py-8">
         {/* Search + Filter */}

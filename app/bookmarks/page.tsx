@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { getBookmarks, serverToggleBookmark, toggleBookmark, invalidateBookmarkCache, type NovelMeta } from '@/lib/bookmarks'
 import { useAuth } from '@/lib/auth-context'
-import ThemeToggle    from '@/components/ThemeToggle'
-import TokenWidget    from '@/components/TokenWidget'
+import SiteNav        from '@/components/SiteNav'
 import FeedbackWidget from '@/components/FeedbackWidget'
 
 export default function BookmarksPage() {
@@ -51,19 +50,7 @@ export default function BookmarksPage() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
-      {/* Header */}
-      <header
-        className="sticky top-0 z-30 flex items-center gap-3 border-b border-[var(--nc-border)] px-4 py-3"
-        style={{ background: 'var(--nc-bg)' }}
-      >
-        <Link href="/library" className="text-zinc-400 hover:text-zinc-100 transition-colors text-sm">
-          ← Back
-        </Link>
-        <div className="h-4 w-px bg-zinc-700" />
-        <h1 className="flex-1 text-sm font-semibold text-amber-400">My Bookmarks</h1>
-        <TokenWidget />
-        <ThemeToggle />
-      </header>
+      <SiteNav maxWidth="max-w-4xl" />
 
       <main className="flex-1 px-4 py-6 mx-auto w-full max-w-4xl">
         {!mounted ? (
