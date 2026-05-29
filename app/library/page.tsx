@@ -78,9 +78,9 @@ interface Filters {
 }
 
 const DEFAULT_FILTERS: Filters = {
-  genres: [], genreMode: 'OR', minChapters: 0, maxChapters: 5000, sort: 'default',
+  genres: [], genreMode: 'OR', minChapters: 0, maxChapters: 10000, sort: 'default',
 }
-const CHAPTER_MAX = 5000
+const CHAPTER_MAX = 10000
 
 function Chevron({ open }: { open: boolean }) {
   return (
@@ -244,12 +244,12 @@ function FilterPanel({ allGenres, novels, filters, onChange, onClose }: {
             <div className="absolute h-1 rounded-full" style={{ background: 'var(--nc-bg3)', left: '9px', right: '9px' }}>
               <div className="absolute h-1 rounded-full bg-amber-500" style={{ left: `${loPct}%`, right: `${100 - hiPct}%` }} />
             </div>
-            <input type="range" className="nc-range" min={0} max={CHAPTER_MAX} step={50}
+            <input type="range" className="nc-range" min={0} max={CHAPTER_MAX} step={100}
               value={local.minChapters}
               onChange={e => { const v = Math.min(Number(e.target.value), local.maxChapters - 1); up({ minChapters: v }) }}
               style={{ zIndex: local.minChapters > CHAPTER_MAX - 100 ? 5 : 3 }}
             />
-            <input type="range" className="nc-range" min={0} max={CHAPTER_MAX} step={50}
+            <input type="range" className="nc-range" min={0} max={CHAPTER_MAX} step={100}
               value={local.maxChapters}
               onChange={e => { const v = Math.max(Number(e.target.value), local.minChapters + 1); up({ maxChapters: v }) }}
               style={{ zIndex: 4 }}
