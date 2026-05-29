@@ -90,9 +90,9 @@ function LibraryMockup() {
         </div>
       </div>
       <div className="flex gap-1.5 px-4 pb-3 flex-wrap">
-        {['Cultivation', 'Xianxia', 'Wuxia'].map((g, i) => (
-          <span key={g} className={`text-xs rounded-full px-2 py-0.5 ${i === 0 ? 'bg-amber-500/20 border border-amber-500/30' : 'text-zinc-500'}`}
-            style={i === 0 ? { ...G } : { background: 'var(--nc-bg3)' }}>{g}</span>
+        {['Cultivation', 'Xianxia', 'Wuxia'].map(g => (
+          <span key={g} className="text-xs rounded-full px-2 py-0.5 bg-amber-500/20 border border-amber-500/30"
+            style={G}>{g}</span>
         ))}
       </div>
       <div className="grid grid-cols-3 gap-2 px-4 pb-4">
@@ -122,8 +122,8 @@ function UnlockMockup() {
           <p className="text-sm font-bold leading-tight mb-1 truncate" style={{ color: 'var(--nc-text)' }}>Against the Gods</p>
           <p className="text-xs mb-2" style={{ color: 'var(--nc-text2)' }}>by Mars Gravity</p>
           <div className="flex gap-1 flex-wrap">
-            <span className="text-xs rounded-full px-2 py-0.5" style={{ background: 'var(--nc-bg3)', color: 'var(--nc-text2)' }}>Cultivation</span>
-            <span className="text-xs rounded-full px-2 py-0.5" style={{ background: 'var(--nc-bg3)', color: 'var(--nc-text2)' }}>Xianxia</span>
+            <span className="text-xs rounded-full px-2 py-0.5 bg-amber-500/20 border border-amber-500/30" style={G}>Cultivation</span>
+            <span className="text-xs rounded-full px-2 py-0.5 bg-amber-500/20 border border-amber-500/30" style={G}>Xianxia</span>
           </div>
         </div>
       </div>
@@ -408,19 +408,19 @@ export default function LandingPage() {
         </Link>
         <div className="flex items-center gap-3">
           <Link href="/chat"
-            className="hidden sm:flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400">
+            className="hidden sm:flex items-center rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
             ✦ Multi-Novel Chat
           </Link>
           <Link href="/characters"
-            className="hidden sm:flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400">
+            className="hidden sm:flex items-center rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
             🎭 Characters
           </Link>
           <Link href="/recommend"
-            className="hidden sm:flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400">
+            className="hidden sm:flex items-center rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
             Recommend
           </Link>
           <Link href="/bookmarks"
-            className="hidden sm:flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400">
+            className="hidden sm:flex items-center rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
             Bookmarks
           </Link>
           <TokenWidget />

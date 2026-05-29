@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 type FeedbackType = 'bug' | 'suggestion' | 'novel_request'
 
@@ -23,6 +23,40 @@ export default function FeedbackWidget() {
   const [email,   setEmail]   = useState('')
   const [loading, setLoading] = useState(false)
   const [sent,    setSent]    = useState(false)
+
+  // ── Draggable bubble ──────────────────────────────────────────────────────
+  const [pos,     setPos]     = useState<{ x: number; y: number } | null>(null)
+  const dragging  = useRef(false)
+  const dragStart = useRef({ mx: 0, my: 0, bx: 0, by: 0 })
+  const btnRef    = useRef<HTMLButtonElement>(null)
+
+  const onMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0) return
+    e.preventDefault()
+    const btn = btnRef.current!
+    const rect = btn.getBoundingClientRect()
+    dragging.current  = true
+    dragStart.current = { mx: e.clientX, my: e.clientY, bx: rect.left, by: rect.top }
+
+    const onMove = (ev: MouseEvent) => {
+      if (!dragging.current) return
+      const dx = ev.clientX - dragStart.current.mx
+      const dy = ev.clientY - dragStart.current.my
+      const nx = Math.max(0, Math.min(window.innerWidth  - 44, dragStart.current.bx + dx))
+      const ny = Math.max(0, Math.min(window.innerHeight - 44, dragStart.current.by + dy))
+      setPos({ x: nx, y: ny })
+    }
+    const onUp = (ev: MouseEvent) => {
+      const totalMove = Math.abs(ev.clientX - dragStart.current.mx) + Math.abs(ev.clientY - dragStart.current.my)
+      dragging.current = false
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup',   onUp)
+      // Only open modal if it was a click (not a drag)
+      if (totalMove < 5) setOpen(true)
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup',   onUp)
+  }, [])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
@@ -47,14 +81,20 @@ export default function FeedbackWidget() {
     setTimeout(() => { setOpen(false); reset() }, 2500)
   }
 
+  // Build positional style: default bottom-right, override if dragged
+  const bubbleStyle: React.CSSProperties = pos
+    ? { position: 'fixed', left: pos.x, top: pos.y, bottom: 'auto', right: 'auto', background: 'var(--nc-amber)', color: '#000', cursor: 'grab' }
+    : { background: 'var(--nc-amber)', color: '#000', cursor: 'grab' }
+
   return (
     <>
       {/* Floating button */}
       <button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-40 flex h-11 w-11 items-center justify-center rounded-full shadow-lg transition-all hover:scale-110 active:scale-95"
-        style={{ background: 'var(--nc-amber)', color: '#000' }}
-        title="Feedback / Report / Request"
+        ref={btnRef}
+        onMouseDown={onMouseDown}
+        className={`z-40 flex h-11 w-11 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-110 active:scale-95 select-none ${pos ? '' : 'fixed bottom-5 right-5'}`}
+        style={bubbleStyle}
+        title="Feedback / Report / Request (drag to move)"
         aria-label="Open feedback"
       >
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

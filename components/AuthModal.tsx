@@ -151,6 +151,10 @@ export default function AuthPanel({ onClose, rightOffset = 16, topOffset = 64 }:
           background:        'rgba(10,10,14,0.96)',
           backdropFilter:    'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
+          /* Thin amber gradient rim */
+          border: '1px solid transparent',
+          backgroundClip:   'padding-box',
+          boxShadow: '0 0 0 1px rgba(251,191,36,0.35), 0 0 18px rgba(251,191,36,0.08), 0 25px 50px rgba(0,0,0,0.7)',
         }}
       >
         {/* Semi-transparent close × */}

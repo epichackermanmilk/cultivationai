@@ -279,19 +279,38 @@ export default function ChatPage() {
   return (
     <div className="flex h-screen flex-col overflow-hidden" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
       {/* Header */}
-      <header className="shrink-0 flex items-center gap-3 border-b border-[var(--nc-border)] px-4 py-3" style={{ background: 'var(--nc-bg)' }}>
-        <Link href="/library" className="text-zinc-400 hover:text-zinc-100 transition text-sm">← Library</Link>
-        <div className="h-4 w-px bg-zinc-700" />
-        <h1 className="text-sm font-bold text-amber-400">NovelBrain</h1>
-        <span className="text-xs text-zinc-600">Multi-Novel Chat</span>
-        <div className="flex-1" />
-        <TokenWidget />
-        <button
-          onClick={() => setSideOpen(v => !v)}
-          className="rounded-lg border border-[var(--nc-border)] px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 transition"
-        >
-          {sideOpen ? 'Hide' : 'Show'} Library
-        </button>
+      <header className="shrink-0 sticky top-0 z-50 border-b border-[var(--nc-border)] bg-[var(--nc-bg)]/90 backdrop-blur">
+        <div className="mx-auto flex max-w-[1400px] items-center justify-between px-4 py-3">
+          <Link href="/library" className="group shrink-0">
+            <h1 className="text-xl font-bold tracking-tight text-amber-400 group-hover:text-amber-300 transition">NovelCodex</h1>
+            <p className="hidden sm:block text-xs text-zinc-500">Every secret, every character, every world — ask anything.</p>
+          </Link>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link href="/chat"
+              className="flex items-center rounded-lg border border-amber-500/60 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-400">
+              ✦ Multi-Novel Chat
+            </Link>
+            <Link href="/characters"
+              className="hidden sm:flex items-center rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
+              🎭 Characters
+            </Link>
+            <Link href="/recommend"
+              className="hidden sm:flex items-center rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
+              Recommend
+            </Link>
+            <Link href="/bookmarks"
+              className="hidden sm:flex items-center rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
+              Bookmarks
+            </Link>
+            <TokenWidget />
+            <button
+              onClick={() => setSideOpen(v => !v)}
+              className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
+            >
+              {sideOpen ? 'Hide' : 'Show'} Library
+            </button>
+          </div>
+        </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
@@ -371,7 +390,7 @@ export default function ChatPage() {
                 <button
                   onClick={() => {
                     const lines = messages.map(m =>
-                      `${m.role === 'user' ? 'You' : 'NovelBrain'}: ${m.content}`
+                      `${m.role === 'user' ? 'You' : 'NovelCodex'}: ${m.content}`
                     ).join('\n\n')
                     const a = document.createElement('a')
                     a.href = URL.createObjectURL(new Blob([lines], { type: 'text/plain' }))
