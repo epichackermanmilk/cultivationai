@@ -74,7 +74,7 @@ export default async function CharactersPage() {
               Library
             </Link>
             <Link href="/characters"
-              className="flex items-center whitespace-nowrap rounded-lg border border-amber-500/60 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-400">
+              className="hidden sm:flex items-center whitespace-nowrap rounded-lg border border-amber-500/60 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-400">
               🎭 Characters
             </Link>
             <Link href="/recommend"

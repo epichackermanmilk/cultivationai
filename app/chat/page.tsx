@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo, useRef } from 'react'
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import TokenWidget    from '@/components/TokenWidget'
 import FeedbackWidget from '@/components/FeedbackWidget'
@@ -244,6 +244,19 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input,    setInput]    = useState('')
   const [sideOpen, setSideOpen] = useState(true)
+  const touchStartX = useRef<number | null>(null)
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+  }, [])
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (touchStartX.current === null) return
+    const delta = e.changedTouches[0].clientX - touchStartX.current
+    touchStartX.current = null
+    if (delta > 50) setSideOpen(true)   // swipe right → open
+    if (delta < -50) setSideOpen(false) // swipe left  → close
+  }, [])
 
   useEffect(() => {
     fetch('/api/novels')
@@ -320,7 +333,7 @@ export default function ChatPage() {
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
         {/* Mobile backdrop — closes sidebar when tapping outside, sits below header */}
         {sideOpen && (
           <div

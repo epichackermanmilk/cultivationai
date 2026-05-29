@@ -36,6 +36,10 @@ html.light {
   --nc-amber2: #b45309;   /* amber-700 */
 }
 
+html, body {
+  overscroll-behavior-x: none;
+}
+
 body {
   background-color: var(--nc-bg);
   color: var(--nc-text);
