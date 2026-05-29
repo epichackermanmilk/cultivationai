@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://novelcodex.com'
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://novelcodex.org'
 
 // Fetches the novel list to generate dynamic sitemap entries.
 // Falls back to static pages only if the VPS is unreachable.
