@@ -337,7 +337,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col overflow-x-hidden"
+    <div className="relative min-h-screen flex flex-col overflow-x-hidden pb-16 sm:pb-0"
       style={{
         color: 'var(--nc-text)',
         background: 'var(--nc-bg)',

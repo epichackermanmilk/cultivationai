@@ -799,8 +799,9 @@ export default function Chat({ slug, title, author }: Props) {
         </div>
         <p className="mt-1.5 text-center text-xs text-zinc-600">
           {chatMode === 'character' && characterName
-            ? `10 tokens · talking to ${characterName} · Enter to send`
-            : '10 tokens per message · Enter to send · Shift+Enter for new line'}
+            ? <span>10 tokens · talking to <span className="text-amber-500/60">{characterName}</span></span>
+            : <span>10 tokens per message<span className="hidden sm:inline"> · Enter to send · Shift+Enter for new line</span></span>
+          }
         </p>
       </div>
     </div>

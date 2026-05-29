@@ -379,7 +379,7 @@ export default function LibraryPage() {
   )
 
   return (
-    <div className="relative min-h-screen" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
+    <div className="relative min-h-screen pb-16 sm:pb-0" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
       <ParticleCanvas />
 
       {/* Header */}
@@ -392,42 +392,33 @@ export default function LibraryPage() {
               <p className="text-xs text-zinc-500">Every secret, every character, every world — ask anything.</p>
             </div>
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/chat"
-              className="flex items-center rounded-lg whitespace-nowrap border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
+              className="hidden sm:flex items-center rounded-lg whitespace-nowrap border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
             >
               ✦ Multi-Novel Chat
             </Link>
             <Link
-              href="/library"
-              className="flex items-center rounded-lg whitespace-nowrap border border-amber-500/60 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-400 transition"
-            >
-              Library
-            </Link>
-            <Link
               href="/characters"
-              className="flex items-center gap-1.5 rounded-lg whitespace-nowrap border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
-              title="Character Chat"
+              className="hidden sm:flex items-center gap-1.5 rounded-lg whitespace-nowrap border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
             >
               🎭 Characters
             </Link>
             <Link
               href="/recommend"
-              className="flex items-center gap-1.5 rounded-lg whitespace-nowrap border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
-              title="Get recommendations"
+              className="hidden sm:flex items-center gap-1.5 rounded-lg whitespace-nowrap border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
             >
               Recommend
             </Link>
             <Link
               href="/bookmarks"
-              className="flex items-center gap-1.5 rounded-lg whitespace-nowrap border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
-              title="My Bookmarks"
+              className="hidden sm:flex items-center gap-1.5 rounded-lg whitespace-nowrap border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
             >
               Bookmarks
             </Link>
             <TokenWidget />
-            <span className="text-sm text-zinc-500">{novels.length.toLocaleString()} novels</span>
+            <span className="hidden sm:block text-sm text-zinc-500">{novels.length.toLocaleString()} novels</span>
           </div>
         </div>
       </header>

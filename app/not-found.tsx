@@ -3,7 +3,7 @@ import Link from 'next/link'
 export default function NotFound() {
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-6 text-center"
+      className="min-h-screen flex flex-col items-center justify-center px-6 text-center pb-16 sm:pb-0"
       style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}
     >
       <img src="/logo.png" alt="" className="h-20 w-20 object-contain mb-8 opacity-50" />
