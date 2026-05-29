@@ -287,19 +287,19 @@ export default function ChatPage() {
           </Link>
           <div className="flex items-center gap-2 sm:gap-3">
             <Link href="/chat"
-              className="flex items-center rounded-lg border border-amber-500/60 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-400">
+              className="flex items-center whitespace-nowrap rounded-lg border border-amber-500/60 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-400">
               ✦ Multi-Novel Chat
             </Link>
             <Link href="/characters"
-              className="hidden sm:flex items-center rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
+              className="hidden sm:flex items-center whitespace-nowrap rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
               🎭 Characters
             </Link>
             <Link href="/recommend"
-              className="hidden sm:flex items-center rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
+              className="hidden sm:flex items-center whitespace-nowrap rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
               Recommend
             </Link>
             <Link href="/bookmarks"
-              className="hidden sm:flex items-center rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
+              className="hidden sm:flex items-center whitespace-nowrap rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
               Bookmarks
             </Link>
             <TokenWidget />
@@ -342,12 +342,12 @@ export default function ChatPage() {
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.length === 0 && (
-              <div className="flex h-full flex-col items-center justify-center gap-4 text-center opacity-60">
-                <div className="text-4xl">✦</div>
-                <p className="text-sm text-zinc-400 max-w-sm">
+              <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
+                <div className="text-4xl opacity-60">✦</div>
+                <p className="text-sm max-w-sm" style={{ color: 'var(--nc-text2)' }}>
                   Select novels from the library panel, then ask anything across all of them at once.
                 </p>
-                <div className="mt-2 flex flex-col gap-2">
+                <div className="mt-2 flex flex-col gap-2 w-full max-w-md">
                   {[
                     'Who is the strongest main character across these novels?',
                     'Compare the cultivation systems in each novel',
@@ -356,9 +356,9 @@ export default function ChatPage() {
                     <button
                       key={q}
                       onClick={() => setInput(q)}
-                      className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 hover:border-amber-500/50 hover:text-zinc-200 transition"
+                      className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-2.5 text-xs font-medium text-amber-400/80 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition text-left"
                     >
-                      {q}
+                      ✦ {q}
                     </button>
                   ))}
                 </div>
