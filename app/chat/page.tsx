@@ -277,7 +277,7 @@ export default function ChatPage() {
 
   const sendDemo = () => {
     const text = input.trim()
-    if (!text) return
+    if (!text || selected.size === 0) return
     const userMsg: Message = { role: 'user', content: text }
     const asstMsg: Message = {
       role: 'assistant',
@@ -507,8 +507,8 @@ export default function ChatPage() {
               />
               <button
                 onClick={sendDemo}
-                disabled={!input.trim()}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-black transition hover:bg-amber-400 disabled:opacity-40"
+                disabled={!input.trim() || selected.size === 0}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-black transition hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />

@@ -265,6 +265,8 @@ export default function Chat({ slug, title, author }: Props) {
   async function send() {
     const text = input.trim()
     if (!text || streaming || embedState !== 'ready') return
+    // In book mode, require at least 10 characters (prevents trivial/accidental sends)
+    if (chatMode === 'book' && text.length < 10) return
     // In character mode, require a character name to be set
     if (chatMode === 'character' && !characterName.trim()) return
 
@@ -785,7 +787,12 @@ export default function Chat({ slug, title, author }: Props) {
           />
           <button
             onClick={send}
-            disabled={streaming || !input.trim() || (chatMode === 'character' && !characterName.trim())}
+            disabled={
+              streaming ||
+              !input.trim() ||
+              (chatMode === 'book' && input.trim().length < 10) ||
+              (chatMode === 'character' && !characterName.trim())
+            }
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-black transition hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {streaming ? (
@@ -798,9 +805,11 @@ export default function Chat({ slug, title, author }: Props) {
           </button>
         </div>
         <p className="mt-1.5 text-center text-xs text-zinc-600">
-          {chatMode === 'character' && characterName
-            ? <span>10 tokens · talking to <span className="text-amber-500/60">{characterName}</span></span>
-            : <span>10 tokens per message<span className="hidden sm:inline"> · Enter to send · Shift+Enter for new line</span></span>
+          {chatMode === 'book' && input.trim().length > 0 && input.trim().length < 10
+            ? <span className="text-amber-500/70">{10 - input.trim().length} more character{10 - input.trim().length !== 1 ? 's' : ''} needed</span>
+            : chatMode === 'character' && characterName
+              ? <span>10 tokens · talking to <span className="text-amber-500/60">{characterName}</span></span>
+              : <span>10 tokens per message<span className="hidden sm:inline"> · Enter to send · Shift+Enter for new line</span></span>
           }
         </p>
       </div>
