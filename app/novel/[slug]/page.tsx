@@ -45,13 +45,20 @@ export default async function NovelPage({ params }: Props) {
         <TokenWidget />
       </header>
 
-      {/* Mobile info strip — genres + chapter count, hidden on lg where sidebar shows */}
+      {/* Mobile info strip — genres + synopsis, hidden on lg where sidebar shows */}
       {novel && (
-        <div className="lg:hidden flex items-center gap-2 overflow-x-auto border-b border-[var(--nc-border)] px-4 py-2 shrink-0" style={{ background: 'var(--nc-bg2)' }}>
-          {novel.genres.slice(0, 4).map(g => (
-            <span key={g} className="shrink-0 rounded bg-zinc-800 px-2 py-0.5 text-xs text-amber-400">{g}</span>
-          ))}
-          <span className="shrink-0 text-xs text-zinc-500 ml-auto">{novel.total_chapters.toLocaleString()} ch</span>
+        <div className="lg:hidden shrink-0 border-b border-[var(--nc-border)]" style={{ background: 'var(--nc-bg2)' }}>
+          <div className="flex items-center gap-2 overflow-x-auto px-4 py-2">
+            {novel.genres.slice(0, 4).map(g => (
+              <span key={g} className="shrink-0 rounded bg-zinc-800 px-2 py-0.5 text-xs text-amber-400">{g}</span>
+            ))}
+            <span className="shrink-0 text-xs text-zinc-500 ml-auto">{novel.total_chapters.toLocaleString()} ch</span>
+          </div>
+          {novel.description && (
+            <div className="px-4 pb-3">
+              <DescriptionExpander text={novel.description} lines={3} />
+            </div>
+          )}
         </div>
       )}
 

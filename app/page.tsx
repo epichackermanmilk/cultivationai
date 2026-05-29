@@ -734,7 +734,7 @@ export default function LandingPage() {
                   Create Free Account
                 </button>
                 <Link href="/library"
-                  className="rounded-full border px-8 py-3.5 text-sm font-semibold transition hover:border-amber-500/50"
+                  className="rounded-full border px-8 py-3.5 text-sm font-semibold text-center transition hover:border-amber-500/50"
                   style={{ borderColor: 'var(--nc-border)', color: 'var(--nc-text2)' }}>
                   Browse first
                 </Link>

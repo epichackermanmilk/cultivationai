@@ -289,10 +289,9 @@ export default function ChatPage() {
             </div>
           </Link>
           <div className="flex items-center gap-2 sm:gap-3">
-            <Link href="/chat"
-              className="flex items-center whitespace-nowrap rounded-lg border border-amber-500/60 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-400">
+            <span className="hidden sm:flex items-center whitespace-nowrap rounded-lg border border-amber-500/60 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-400">
               ✦ Multi-Novel Chat
-            </Link>
+            </span>
             <Link href="/library"
               className="hidden sm:flex items-center whitespace-nowrap rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
               Library
@@ -312,38 +311,38 @@ export default function ChatPage() {
             <TokenWidget />
             <button
               onClick={() => setSideOpen(v => !v)}
-              className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
+              className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
             >
-              {sideOpen ? 'Hide' : 'Show'} Library
+              {/* Hamburger / X icon */}
+              {sideOpen ? (
+                <svg className="h-3.5 w-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                  <path d="M2 2l10 10M12 2L2 12" />
+                </svg>
+              ) : (
+                <svg className="h-3.5 w-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                  <path d="M2 4h10M2 7h10M2 10h10" />
+                </svg>
+              )}
+              <span className="hidden sm:inline">{sideOpen ? 'Hide' : 'Show'} Library</span>
             </button>
           </div>
         </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Mobile backdrop — closes sidebar when tapping outside */}
+        {/* Mobile backdrop — closes sidebar when tapping outside, sits below header */}
         {sideOpen && (
           <div
-            className="fixed inset-0 z-20 bg-black/60 sm:hidden"
+            className="fixed top-[57px] inset-x-0 bottom-0 z-20 bg-black/60 sm:hidden"
             onClick={() => setSideOpen(false)}
           />
         )}
-        {/* Novel selector sidebar — overlay on mobile, inline on desktop */}
+        {/* Novel selector sidebar — overlay on mobile (below header), inline on desktop */}
         {sideOpen && (
           <aside
-            className="fixed inset-y-0 left-0 z-30 flex w-[85vw] max-w-xs flex-col overflow-hidden border-r border-[var(--nc-border)] sm:relative sm:inset-auto sm:z-auto sm:w-72 sm:shrink-0"
+            className="fixed top-[57px] bottom-0 left-0 z-30 flex w-[85vw] max-w-xs flex-col overflow-hidden border-r border-[var(--nc-border)] sm:relative sm:top-auto sm:bottom-auto sm:z-auto sm:w-72 sm:shrink-0"
             style={{ background: 'var(--nc-bg2)' }}
           >
-            {/* Mobile close button */}
-            <div className="flex items-center justify-between border-b border-[var(--nc-border)] px-4 py-3 sm:hidden">
-              <span className="text-xs font-semibold text-amber-400">Select Novels</span>
-              <button
-                onClick={() => setSideOpen(false)}
-                className="text-zinc-400 hover:text-zinc-100 transition"
-              >
-                ✕
-              </button>
-            </div>
             {loading
               ? <div className="p-4 text-xs text-zinc-500 animate-pulse">Loading novels…</div>
               : <NovelSelector novels={novels} selected={selected} onToggle={toggle} />
