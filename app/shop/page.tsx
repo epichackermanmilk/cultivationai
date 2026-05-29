@@ -218,9 +218,12 @@ export default function ShopPage() {
       {/* ── Nav ──────────────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 border-b border-[var(--nc-border)] bg-[var(--nc-bg)]/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <Link href="/library" className="group shrink-0">
-            <span className="block text-xl font-bold tracking-tight text-amber-400 group-hover:text-amber-300 transition">NovelCodex</span>
-            <span className="hidden sm:block text-xs text-zinc-500">Every secret, every character, every world — ask anything.</span>
+          <Link href="/library" className="group shrink-0 flex items-center gap-3">
+            <img src="/logo.png" alt="" className="h-8 w-8 object-contain" />
+            <div>
+              <span className="block text-xl font-bold tracking-tight text-amber-400 group-hover:text-amber-300 transition">NovelCodex</span>
+              <span className="hidden sm:block text-xs text-zinc-500">Every secret, every character, every world — ask anything.</span>
+            </div>
           </Link>
           <div className="flex items-center gap-2 sm:gap-3">
             <Link href="/chat"
