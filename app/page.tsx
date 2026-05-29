@@ -586,11 +586,12 @@ export default function LandingPage() {
           </h2>
           <div className="grid grid-cols-5 gap-3 sm:gap-4">
             {COVERS.map((c, i) => (
-              <div key={i} className="overflow-hidden rounded-2xl shadow-2xl shadow-black/70 transition-transform duration-300 hover:scale-[1.03]"
+              <Link key={i} href={`/novel/${c.slug}`}
+                className="overflow-hidden rounded-2xl shadow-2xl shadow-black/70 transition-transform duration-300 hover:scale-[1.03] cursor-pointer block"
                 style={{ aspectRatio: '3/4' }}>
                 <img src={c.src} alt={c.alt} className="w-full h-full object-cover"
                   onError={e => { (e.target as HTMLImageElement).style.background = `hsl(${230 + i * 15},20%,12%)` }} />
-              </div>
+              </Link>
             ))}
           </div>
           <p className="text-center text-sm mt-10" style={{ color: 'var(--nc-text2)' }}>

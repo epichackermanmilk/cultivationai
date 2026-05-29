@@ -6,6 +6,7 @@ import { getBookmarks, serverToggleBookmark, toggleBookmark, invalidateBookmarkC
 import { useAuth } from '@/lib/auth-context'
 import TokenWidget    from '@/components/TokenWidget'
 import FeedbackWidget from '@/components/FeedbackWidget'
+import Footer         from '@/components/Footer'
 
 export default function BookmarksPage() {
   const { user, loading: authLoading } = useAuth()
@@ -178,6 +179,7 @@ export default function BookmarksPage() {
         )}
       </main>
 
+      <Footer />
       <FeedbackWidget />
     </div>
   )
