@@ -73,7 +73,13 @@ export default function AuthConfirmPage() {
 
         await refresh()
         setStatus('success')
-        setTimeout(() => router.replace('/'), 1800)
+        // Return to the page the user was on before triggering email auth, default to library
+        let returnTo = '/library'
+        try {
+          returnTo = sessionStorage.getItem('nc_return_to') ?? '/library'
+          sessionStorage.removeItem('nc_return_to')
+        } catch { /* ignore */ }
+        setTimeout(() => router.replace(returnTo), 1800)
       } catch (err: unknown) {
         setStatus('error')
         setMessage(err instanceof Error ? err.message : 'Something went wrong — please try again.')

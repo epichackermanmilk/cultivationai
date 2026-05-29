@@ -53,6 +53,13 @@ export default function ProfilePage() {
   const bothFilled = username.trim().length >= 3 && age.trim() !== ''
   const bonusPending = profile && !profile.onboarding_bonus_claimed && bothFilled
 
+  // Only enable Save if something actually changed from the loaded values
+  const isDirty = profile != null && (
+    username.trim() !== (profile.username ?? '') ||
+    emailConsent !== profile.email_marketing_consent ||
+    (profile.age == null && age.trim() !== '')  // age can only be set once
+  )
+
   async function doSave() {
     if (!user) return
     setSaving(true)
@@ -293,7 +300,7 @@ export default function ProfilePage() {
             }}
           />
           <p className="mt-1 text-xs" style={{ color: 'var(--nc-text2)' }}>
-            {hasAge ? '🔒 Age cannot be changed after it\'s set.' : 'Must be 13 or older to use NovelBrain'}
+            {hasAge ? '🔒 Age cannot be changed after it\'s set.' : 'Must be 13 or older to use NovelCodex'}
           </p>
         </div>
 
@@ -332,8 +339,8 @@ export default function ProfilePage() {
 
         <button
           type="submit"
-          disabled={saving}
-          className="w-full rounded-xl bg-amber-500 py-2.5 text-sm font-semibold text-black transition hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={saving || !isDirty}
+          className="w-full rounded-xl bg-amber-500 py-2.5 text-sm font-semibold text-black transition hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {saving ? 'Saving…' : 'Save Profile'}
         </button>

@@ -52,7 +52,13 @@ export default function AuthCallbackPage() {
         }
 
         await refresh()
-        router.replace('/')
+        // Return to the page the user was on before Google OAuth, default to library
+        let returnTo = '/'
+        try {
+          returnTo = sessionStorage.getItem('nc_return_to') ?? '/library'
+          sessionStorage.removeItem('nc_return_to')
+        } catch { /* ignore */ }
+        router.replace(returnTo)
       } catch {
         setStatus('error')
         setMessage('Network error — please try again')

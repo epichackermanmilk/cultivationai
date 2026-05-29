@@ -120,7 +120,8 @@ export default function AuthPanel({ onClose, rightOffset = 16, topOffset = 64 }:
 
   // ── Google OAuth ──────────────────────────────────────────────────────────
   const googleSignIn = () => {
-    // Supabase Google OAuth — requires Google provider enabled in Supabase dashboard
+    // Save the current page so we can return to it after OAuth completes
+    try { sessionStorage.setItem('nc_return_to', window.location.pathname + window.location.search) } catch { /* ignore */ }
     const base     = process.env.NEXT_PUBLIC_SUPABASE_URL
     const redirect = `${window.location.origin}/auth/callback`
     if (base) {
