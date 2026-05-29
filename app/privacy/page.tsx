@@ -1,8 +1,10 @@
 import Link from 'next/link'
+import TokenWidget from '@/components/TokenWidget'
+import Footer from '@/components/Footer'
 
 export const metadata = {
-  title: 'Privacy Policy — NovelBrain',
-  description: 'NovelBrain Privacy Policy — CCPA compliant.',
+  title: 'Privacy Policy — NovelCodex',
+  description: 'NovelCodex Privacy Policy — CCPA compliant.',
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -18,24 +20,35 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
-      <header className="border-b border-[var(--nc-border)] px-6 py-4">
-        <div className="mx-auto flex max-w-3xl items-center justify-between">
-          <Link href="/" className="text-xl font-bold text-amber-400">NovelBrain</Link>
-          <Link href="/library" className="text-sm" style={{ color: 'var(--nc-text2)' }}>← Library</Link>
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
+
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b border-[var(--nc-border)] bg-[var(--nc-bg)]/90 backdrop-blur">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+          <Link href="/library" className="group shrink-0">
+            <h1 className="text-xl font-bold tracking-tight text-amber-400 group-hover:text-amber-300 transition">NovelCodex</h1>
+            <p className="hidden sm:block text-xs text-zinc-500">Every secret, every character, every world — ask anything.</p>
+          </Link>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link href="/library"
+              className="hidden sm:flex items-center whitespace-nowrap rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
+              ← Library
+            </Link>
+            <TokenWidget />
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-6 py-12">
+      <main className="flex-1 mx-auto w-full max-w-3xl px-6 py-12">
         <h1 className="mb-2 text-3xl font-bold text-amber-400">Privacy Policy</h1>
         <p className="mb-8 text-sm" style={{ color: 'var(--nc-text2)' }}>
           Effective date: May 1, 2026 · Last updated: May 2026
         </p>
 
         <p className="mb-8 text-sm leading-relaxed" style={{ color: 'var(--nc-text)' }}>
-          NovelBrain (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) is committed to protecting your privacy.
+          NovelCodex (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) is committed to protecting your privacy.
           This Privacy Policy explains how we collect, use, disclose, and safeguard your information
-          when you visit <strong>novelbrain.ai</strong> (the &quot;Site&quot;). Please read this policy
+          when you visit <strong>novelcodex.org</strong> (the &quot;Site&quot;). Please read this policy
           carefully. By using the Site, you consent to the practices described here.
         </p>
 
@@ -48,8 +61,7 @@ export default function PrivacyPage() {
           <p><strong>Automatically collected data:</strong> Server logs may capture your IP address, browser
           type, and referring URL for security and analytics purposes. This data is retained for up to 90 days.</p>
           <p><strong>Cookies &amp; local storage:</strong> We use browser local storage to remember your
-          theme preference, bookmarked novels, and recently visited pages. No cross-site tracking cookies
-          are set.</p>
+          bookmarked novels and recently visited pages. No cross-site tracking cookies are set.</p>
         </Section>
 
         <Section title="2. How We Use Your Information">
@@ -64,7 +76,7 @@ export default function PrivacyPage() {
           <p>If you provide your email address, we may send you transactional messages (account creation,
           password reset). We will only send marketing emails if you explicitly opt in. You may unsubscribe
           from marketing emails at any time by clicking the unsubscribe link in any email or contacting us
-          at <a href="mailto:privacy@novelbrain.ai" className="text-amber-400 hover:underline">privacy@novelbrain.ai</a>.
+          at <a href="mailto:privacy@novelcodex.org" className="text-amber-400 hover:underline">privacy@novelcodex.org</a>.
           We comply with the CAN-SPAM Act and GDPR email consent requirements.</p>
         </Section>
 
@@ -82,8 +94,8 @@ export default function PrivacyPage() {
             exercising your CCPA rights.</li>
           </ul>
           <p>To exercise these rights, contact us at{' '}
-            <a href="mailto:privacy@novelbrain.ai" className="text-amber-400 hover:underline">
-              privacy@novelbrain.ai
+            <a href="mailto:privacy@novelcodex.org" className="text-amber-400 hover:underline">
+              privacy@novelcodex.org
             </a>{' '}
             or use the feedback widget on the Site. We will respond within 45 days.
           </p>
@@ -100,7 +112,7 @@ export default function PrivacyPage() {
             <li><strong>Supabase</strong> — database and authentication (EU/US data centers). See{' '}
               <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:underline">Supabase Privacy Policy</a>.</li>
             <li><strong>OpenAI</strong> — AI text generation for chat responses. Queries are sent to
-              OpenAI's API. See{' '}
+              OpenAI&apos;s API. See{' '}
               <a href="https://openai.com/privacy" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:underline">OpenAI Privacy Policy</a>.</li>
           </ul>
         </Section>
@@ -111,7 +123,7 @@ export default function PrivacyPage() {
           unique password for your account.</p>
         </Section>
 
-        <Section title="8. Children's Privacy">
+        <Section title="8. Children&apos;s Privacy">
           <p>The Site is not directed to children under 13. We do not knowingly collect personal
           information from children under 13. If you believe a child has provided us personal information,
           contact us immediately.</p>
@@ -126,23 +138,19 @@ export default function PrivacyPage() {
         <Section title="10. Contact Us">
           <p>
             Privacy inquiries:{' '}
-            <a href="mailto:privacy@novelbrain.ai" className="text-amber-400 hover:underline">
-              privacy@novelbrain.ai
+            <a href="mailto:privacy@novelcodex.org" className="text-amber-400 hover:underline">
+              privacy@novelcodex.org
             </a>
             <br />
             DMCA / content removal:{' '}
-            <a href="mailto:dmca@novelbrain.ai" className="text-amber-400 hover:underline">
-              dmca@novelbrain.ai
+            <a href="mailto:dmca@novelcodex.org" className="text-amber-400 hover:underline">
+              dmca@novelcodex.org
             </a>
           </p>
         </Section>
-
-        <div className="mt-12 flex gap-4 text-xs" style={{ color: 'var(--nc-text2)' }}>
-          <Link href="/about" className="hover:text-amber-400 transition">About</Link>
-          <Link href="/terms" className="hover:text-amber-400 transition">Terms of Service</Link>
-          <Link href="/library" className="hover:text-amber-400 transition">Library</Link>
-        </div>
       </main>
+
+      <Footer />
     </div>
   )
 }
