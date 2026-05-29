@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import SiteNav from '@/components/SiteNav'
-import Footer  from '@/components/Footer'
+import TokenWidget from '@/components/TokenWidget'
+import Footer      from '@/components/Footer'
 import { useAuth } from '@/lib/auth-context'
 
 const G: React.CSSProperties = {
@@ -228,7 +228,20 @@ export default function RecommendPage() {
 
   return (
     <div className="relative min-h-screen flex flex-col" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
-      <SiteNav maxWidth="max-w-3xl" />
+      {/* Header */}
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--nc-border)] px-6 py-4"
+        style={{ background: 'rgba(9,9,11,0.90)', backdropFilter: 'blur(12px)' }}>
+        <div className="flex items-center gap-6">
+          <Link href="/library">
+            <span className="text-lg font-bold" style={G}>NovelCodex</span>
+          </Link>
+          <nav className="hidden sm:flex items-center gap-4 text-xs">
+            <Link href="/library" className="transition hover:text-amber-400" style={{ color: 'var(--nc-text2)' }}>Library</Link>
+            <span className="font-medium text-amber-400">Discover</span>
+          </nav>
+        </div>
+        <TokenWidget />
+      </header>
 
       <main className="flex-1 mx-auto w-full max-w-3xl px-4 py-10">
         {/* Title */}

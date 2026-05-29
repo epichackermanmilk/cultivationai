@@ -1,9 +1,10 @@
 import Link from 'next/link'
 import { listNovels } from '@/lib/vps'
 import { FEATURED_CHARACTERS } from '@/lib/featured-characters'
-import SiteNav        from '@/components/SiteNav'
+import TokenWidget   from '@/components/TokenWidget'
+import ThemeToggle   from '@/components/ThemeToggle'
 import FeedbackWidget from '@/components/FeedbackWidget'
-import Footer         from '@/components/Footer'
+import Footer        from '@/components/Footer'
 
 // ── Readable novel names ──────────────────────────────────────────────────────
 const NOVEL_NAMES: Record<string, string> = {
@@ -54,7 +55,18 @@ export default async function CharactersPage() {
   return (
     <div className="min-h-screen" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
 
-      <SiteNav />
+      {/* Header */}
+      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-[var(--nc-border)] px-4 py-3"
+        style={{ background: 'var(--nc-bg)', backdropFilter: 'blur(8px)' }}>
+        <Link href="/library" className="text-zinc-400 hover:text-zinc-100 transition-colors text-sm">
+          ← Library
+        </Link>
+        <div className="h-4 w-px bg-zinc-700" />
+        <h1 className="text-sm font-semibold text-amber-400">Characters</h1>
+        <div className="flex-1" />
+        <TokenWidget />
+        <ThemeToggle />
+      </header>
 
       <main className="mx-auto max-w-6xl px-4 py-10">
 
