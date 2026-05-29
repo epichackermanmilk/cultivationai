@@ -290,6 +290,10 @@ export default function ChatPage() {
               className="flex items-center whitespace-nowrap rounded-lg border border-amber-500/60 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-400">
               ✦ Multi-Novel Chat
             </Link>
+            <Link href="/library"
+              className="hidden sm:flex items-center whitespace-nowrap rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
+              Library
+            </Link>
             <Link href="/characters"
               className="hidden sm:flex items-center whitespace-nowrap rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
               🎭 Characters
@@ -416,7 +420,13 @@ export default function ChatPage() {
               </div>
             )}
             {selected.size === 0 && (
-              <p className="mb-2 text-center text-xs text-amber-600/80">
+              <p className="mb-2 text-center text-xs font-medium"
+                style={{
+                  background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}>
                 ← Select at least one novel to start chatting
               </p>
             )}

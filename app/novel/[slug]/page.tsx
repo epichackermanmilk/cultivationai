@@ -3,7 +3,6 @@ import Chat from './Chat'
 import CoverImage from './CoverImage'
 import VisitTracker from './VisitTracker'
 import Link from 'next/link'
-import ThemeToggle          from '@/components/ThemeToggle'
 import TokenWidget          from '@/components/TokenWidget'
 import FeedbackWidget       from '@/components/FeedbackWidget'
 import DescriptionExpander  from '@/components/DescriptionExpander'
@@ -44,7 +43,6 @@ export default async function NovelPage({ params }: Props) {
           </span>
         )}
         <TokenWidget />
-        <ThemeToggle />
       </header>
 
       {/* Side panel + Chat */}

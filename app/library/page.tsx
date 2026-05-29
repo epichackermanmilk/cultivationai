@@ -397,6 +397,12 @@ export default function LibraryPage() {
               ✦ Multi-Novel Chat
             </Link>
             <Link
+              href="/library"
+              className="flex items-center rounded-lg whitespace-nowrap border border-amber-500/60 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-400 transition"
+            >
+              Library
+            </Link>
+            <Link
               href="/characters"
               className="flex items-center gap-1.5 rounded-lg whitespace-nowrap border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
               title="Character Chat"

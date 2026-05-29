@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
-import { useTheme } from '@/lib/theme-context'
 import AuthModal from './AuthModal'
 
 // ── Icon helpers ──────────────────────────────────────────────────────────────
@@ -27,17 +26,6 @@ const IcoSupport = () => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
   </svg>
 )
-const IcoSun = () => (
-  <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <circle cx="12" cy="12" r="4" strokeLinecap="round" />
-    <path strokeLinecap="round" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-  </svg>
-)
-const IcoMoon = () => (
-  <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-  </svg>
-)
 const IcoSignOut = () => (
   <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
@@ -50,7 +38,6 @@ const ROW_BORDER = { borderBottom: '1px solid var(--nc-border)' }
 
 export default function TokenWidget() {
   const { user, loading, logout } = useAuth()
-  const { theme, toggle: toggleTheme } = useTheme()
   const [showAuth,     setShowAuth]     = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
   const dropRef = useRef<HTMLDivElement>(null)
@@ -195,30 +182,6 @@ export default function TokenWidget() {
               <IcoSupport />
               <span className="text-sm font-medium">Support</span>
             </Link>
-
-            {/* Light / Dark Mode */}
-            <button
-              onClick={toggleTheme}
-              className={ROW}
-              style={{ ...ROW_BORDER, color: 'var(--nc-text)' }}
-            >
-              {theme === 'dark' ? <IcoSun /> : <IcoMoon />}
-              <span className="text-sm font-medium">
-                {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-              </span>
-              {/* iOS-style pill toggle */}
-              <span
-                className={`ml-auto flex h-5 w-9 shrink-0 items-center rounded-full px-0.5 transition-colors duration-200 ${
-                  theme === 'light' ? 'bg-amber-500' : 'bg-zinc-700'
-                }`}
-              >
-                <span
-                  className={`h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-                    theme === 'light' ? 'translate-x-4' : 'translate-x-0'
-                  }`}
-                />
-              </span>
-            </button>
 
             {/* Sign Out */}
             <button

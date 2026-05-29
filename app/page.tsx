@@ -17,16 +17,16 @@ const G: React.CSSProperties = {
 
 // ── Novel covers — 10 live scraped URLs ───────────────────────────────────────
 const COVERS = [
-  { src: 'https://static.novelbuddy.com/covers/against-the-gods.png',                                               alt: 'Against the Gods'                       },
-  { src: 'https://images.novelbin.me/novel/reverend-insanity.jpg',                                                  alt: 'Reverend Insanity'                      },
-  { src: 'https://images.novelbin.me/novel/shadow-slave.jpg',                                                       alt: 'Shadow Slave'                           },
-  { src: 'https://images.novelbin.me/novel/supreme-magus-novel.jpg',                                               alt: 'Supreme Magus'                          },
-  { src: 'https://images.novelbin.me/novel/reincarnation-of-the-strongest-sword-god.jpg',                          alt: 'Reincarnation of the Strongest Sword God'},
-  { src: 'https://static.novelbuddy.com/covers/tribulation-of-myriad-races.png',                                    alt: 'Tribulation of Myriad Races'            },
-  { src: 'https://images.novelbin.me/novel/the-first-legendary-beast-master.jpg',                                   alt: 'The First Legendary Beast Master'       },
-  { src: 'https://static.novelbuddy.com/covers/wizard-starting-with-the-knights-breathing-method.png',             alt: 'Wizard'                                 },
-  { src: 'https://images.novelbin.me/novel/tyrant-sky-martial-soul.jpg',                                            alt: 'Tyrant Sky Martial Soul'                },
-  { src: 'https://images.novelbin.me/novel/the-mech-touch.jpg',                                                     alt: 'The Mech Touch'                         },
+  { src: 'https://static.novelbuddy.com/covers/against-the-gods.png',                                               alt: 'Against the Gods',                        slug: 'against-the-gods'                              },
+  { src: 'https://images.novelbin.me/novel/reverend-insanity.jpg',                                                  alt: 'Reverend Insanity',                       slug: 'reverend-insanity'                             },
+  { src: 'https://images.novelbin.me/novel/shadow-slave.jpg',                                                       alt: 'Shadow Slave',                            slug: 'shadow-slave'                                  },
+  { src: 'https://images.novelbin.me/novel/supreme-magus-novel.jpg',                                               alt: 'Supreme Magus',                           slug: 'supreme-magus'                                 },
+  { src: 'https://images.novelbin.me/novel/reincarnation-of-the-strongest-sword-god.jpg',                          alt: 'Reincarnation of the Strongest Sword God', slug: 'reincarnation-of-the-strongest-sword-god'      },
+  { src: 'https://static.novelbuddy.com/covers/tribulation-of-myriad-races.png',                                    alt: 'Tribulation of Myriad Races',             slug: 'tribulation-of-myriad-races'                   },
+  { src: 'https://images.novelbin.me/novel/the-first-legendary-beast-master.jpg',                                   alt: 'The First Legendary Beast Master',        slug: 'the-first-legendary-beast-master'              },
+  { src: 'https://static.novelbuddy.com/covers/wizard-starting-with-the-knights-breathing-method.png',             alt: 'Wizard',                                  slug: 'wizard-starting-with-the-knights-breathing-method' },
+  { src: 'https://images.novelbin.me/novel/tyrant-sky-martial-soul.jpg',                                            alt: 'Tyrant Sky Martial Soul',                 slug: 'tyrant-sky-martial-soul'                       },
+  { src: 'https://images.novelbin.me/novel/the-mech-touch.jpg',                                                     alt: 'The Mech Touch',                          slug: 'the-mech-touch'                                },
 ]
 
 const COL_A = [COVERS[0], COVERS[2], COVERS[4], COVERS[6], COVERS[8]]
@@ -40,22 +40,26 @@ function CoverPanel() {
         <div className="flex-1 overflow-hidden">
           <div style={{ animation: 'nb-up 42s linear infinite', willChange: 'transform' }}>
             {[...COL_A, ...COL_A].map((c, i) => (
-              <img key={i} src={c.src} alt={c.alt}
-                className="mb-3 w-full rounded-xl object-cover shadow-xl"
-                style={{ aspectRatio: '3/4', display: 'block' }}
-                loading={i < 5 ? 'eager' : 'lazy'}
-                onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+              <Link key={i} href={`/novel/${c.slug}`} className="mb-3 block rounded-xl overflow-hidden shadow-xl transition-transform duration-300 hover:scale-[1.03] cursor-pointer">
+                <img src={c.src} alt={c.alt}
+                  className="w-full object-cover"
+                  style={{ aspectRatio: '3/4', display: 'block' }}
+                  loading={i < 5 ? 'eager' : 'lazy'}
+                  onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = 'none' }} />
+              </Link>
             ))}
           </div>
         </div>
         <div className="flex-1 overflow-hidden">
           <div style={{ animation: 'nb-down 36s linear infinite', willChange: 'transform' }}>
             {[...COL_B, ...COL_B].map((c, i) => (
-              <img key={i} src={c.src} alt={c.alt}
-                className="mb-3 w-full rounded-xl object-cover shadow-xl"
-                style={{ aspectRatio: '3/4', display: 'block' }}
-                loading={i < 5 ? 'eager' : 'lazy'}
-                onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+              <Link key={i} href={`/novel/${c.slug}`} className="mb-3 block rounded-xl overflow-hidden shadow-xl transition-transform duration-300 hover:scale-[1.03] cursor-pointer">
+                <img src={c.src} alt={c.alt}
+                  className="w-full object-cover"
+                  style={{ aspectRatio: '3/4', display: 'block' }}
+                  loading={i < 5 ? 'eager' : 'lazy'}
+                  onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = 'none' }} />
+              </Link>
             ))}
           </div>
         </div>
@@ -410,6 +414,10 @@ export default function LandingPage() {
           <Link href="/chat"
             className="hidden sm:flex items-center whitespace-nowrap rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
             ✦ Multi-Novel Chat
+          </Link>
+          <Link href="/library"
+            className="hidden sm:flex items-center whitespace-nowrap rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
+            Library
           </Link>
           <Link href="/characters"
             className="hidden sm:flex items-center whitespace-nowrap rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
