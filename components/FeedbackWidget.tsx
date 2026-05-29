@@ -92,7 +92,7 @@ export default function FeedbackWidget() {
       <button
         ref={btnRef}
         onMouseDown={onMouseDown}
-        className={`z-40 flex h-11 w-11 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-110 active:scale-95 select-none ${pos ? '' : 'fixed bottom-5 right-5'}`}
+        className={`z-40 flex h-11 w-11 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-110 active:scale-95 select-none ${pos ? '' : 'fixed right-4 sm:right-5 bottom-24 sm:bottom-5'}`}
         style={bubbleStyle}
         title="Feedback / Report / Request (drag to move)"
         aria-label="Open feedback"

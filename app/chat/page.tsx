@@ -309,21 +309,12 @@ export default function ChatPage() {
               Bookmarks
             </Link>
             <TokenWidget />
+            {/* Desktop-only toggle — mobile uses the left-edge arrow tab */}
             <button
               onClick={() => setSideOpen(v => !v)}
-              className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
+              className="hidden sm:flex items-center rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
             >
-              {/* Hamburger / X icon */}
-              {sideOpen ? (
-                <svg className="h-3.5 w-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-                  <path d="M2 2l10 10M12 2L2 12" />
-                </svg>
-              ) : (
-                <svg className="h-3.5 w-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-                  <path d="M2 4h10M2 7h10M2 10h10" />
-                </svg>
-              )}
-              <span className="hidden sm:inline">{sideOpen ? 'Hide' : 'Show'} Library</span>
+              {sideOpen ? 'Hide' : 'Show'} Library
             </button>
           </div>
         </div>
@@ -337,6 +328,42 @@ export default function ChatPage() {
             onClick={() => setSideOpen(false)}
           />
         )}
+
+        {/* Mobile-only left-edge arrow tab — slides right when sidebar is open */}
+        <button
+          onClick={() => setSideOpen(v => !v)}
+          className="sm:hidden fixed z-40 flex items-center justify-center"
+          style={{
+            top: 'calc(50dvh + 28px)',
+            transform: 'translateY(-50%)',
+            left: sideOpen ? 'min(85vw, 20rem)' : '0px',
+            height: '52px',
+            width: '18px',
+            borderRadius: '0 8px 8px 0',
+            background: 'var(--nc-bg2)',
+            border: '1px solid var(--nc-border)',
+            borderLeft: 'none',
+            transition: 'left 0.25s ease',
+            boxShadow: '2px 0 8px rgba(0,0,0,0.3)',
+          }}
+          aria-label={sideOpen ? 'Close library' : 'Open library'}
+        >
+          <svg
+            viewBox="0 0 6 10"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ width: 10, height: 10, color: 'var(--nc-text2)' }}
+          >
+            {sideOpen
+              ? <path d="M5 1L1 5L5 9" />
+              : <path d="M1 1L5 5L1 9" />
+            }
+          </svg>
+        </button>
+
         {/* Novel selector sidebar — overlay on mobile (below header), inline on desktop */}
         {sideOpen && (
           <aside
