@@ -3,8 +3,13 @@ import Stripe from 'stripe'
 import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 
+// Lazily initialised so the build doesn't fail when STRIPE_SECRET_KEY is absent
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' as any })
+let _stripe: Stripe | null = null
+function getStripe(): Stripe {
+  if (!_stripe) _stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' as any })
+  return _stripe
+}
 const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://novelcodex.org'
 
 const ONE_TIME = [
@@ -60,7 +65,7 @@ export async function POST(req: Request) {
         }
       }
 
-      const session = await stripe.checkout.sessions.create({
+      const session = await getStripe().checkout.sessions.create({
         mode: 'payment',
         payment_method_types: ['card'],
         line_items: [{
@@ -93,7 +98,7 @@ export async function POST(req: Request) {
       const s = SUBS.find(s => s.label === tier)
       if (!s) return NextResponse.json({ error: 'Unknown subscription tier' }, { status: 400 })
 
-      const session = await stripe.checkout.sessions.create({
+      const session = await getStripe().checkout.sessions.create({
         mode: 'subscription',
         payment_method_types: ['card'],
         line_items: [{

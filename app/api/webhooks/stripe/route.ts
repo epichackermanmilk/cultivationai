@@ -2,8 +2,13 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
+// Lazily initialised so the build doesn't fail when STRIPE_SECRET_KEY is absent
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' as any })
+let _stripe: Stripe | null = null
+function getStripe(): Stripe {
+  if (!_stripe) _stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' as any })
+  return _stripe
+}
 
 function admin() {
   return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!, {
@@ -57,7 +62,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    event = stripe.webhooks.constructEvent(payload, sig, secret)
+    event = getStripe().webhooks.constructEvent(payload, sig, secret)
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Webhook signature verification failed'
     return NextResponse.json({ error: msg }, { status: 400 })
@@ -79,7 +84,7 @@ export async function POST(req: Request) {
       const invoice = event.data.object as Stripe.Invoice & { subscription?: string; billing_reason?: string }
       // Only credit on renewal, not on the first (checkout.session.completed handles that)
       if (invoice.billing_reason === 'subscription_cycle' && invoice.subscription) {
-        const sub = await stripe.subscriptions.retrieve(invoice.subscription)
+        const sub = await getStripe().subscriptions.retrieve(invoice.subscription)
         const { user_id, tokens } = (sub.metadata ?? {}) as Record<string, string>
         if (user_id && tokens) {
           await creditTokens(user_id, parseInt(tokens, 10), invoice.id)

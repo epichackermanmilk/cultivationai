@@ -53,6 +53,19 @@ export default function Chat({ slug, title, author }: Props) {
   const pollRef                         = useRef<ReturnType<typeof setInterval> | null>(null)
   const embedStartRef                   = useRef<number | null>(null)
 
+  // Read ?char=NAME&mode=character from URL (set by /characters page links)
+  // Using window.location instead of useSearchParams to avoid Suspense requirement
+  const urlCharRef = useRef('')
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const char   = params.get('char') ?? ''
+    const mode   = params.get('mode')
+    if (char)           urlCharRef.current = char
+    if (char)           setCharName(char)
+    if (mode === 'character') setChatMode('character')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Check embedding status on mount (also resets history state on slug change)
   useEffect(() => {
     setMessages([])
@@ -91,9 +104,23 @@ export default function Chat({ slug, title, author }: Props) {
     fetch(`/api/character/${slug}`)
       .then(r => r.ok ? r.json() : {} as Record<string, unknown>)
       .then((data: Record<string, unknown>) => {
-        if (Array.isArray(data.featured))   setFeatured(data.featured as CharProfile[])
-        if (Array.isArray(data.community))  setCommunity(data.community as CharProfile[])
+        const featured:   CharProfile[] = Array.isArray(data.featured)   ? data.featured   as CharProfile[] : []
+        const community:  CharProfile[] = Array.isArray(data.community)  ? data.community  as CharProfile[] : []
+        if (Array.isArray(data.featured))   setFeatured(featured)
+        if (Array.isArray(data.community))  setCommunity(community)
         if (Array.isArray(data.characters)) setCharSugg(data.characters as string[])
+
+        // Auto-attach the rich profile if coming from /characters page (?char=NAME)
+        const urlChar = urlCharRef.current
+        if (urlChar) {
+          const allProfiles = [...featured, ...community]
+          const match = allProfiles.find(p => p.name.toLowerCase() === urlChar.toLowerCase())
+          if (match) {
+            setCharProf(match)
+            setCharName(match.name)  // normalise to the canonical casing
+          }
+          // If no profile match, the name is already set from the URL effect — treated as free-text
+        }
       })
       .catch(() => {})
       .finally(() => setCharLoading(false))
