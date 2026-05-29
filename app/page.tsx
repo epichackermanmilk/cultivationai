@@ -407,17 +407,21 @@ export default function LandingPage() {
           <span className="hidden sm:block text-xs mt-0.5" style={{ color: 'var(--nc-text2)' }}>AI-powered web novel reader</span>
         </Link>
         <div className="flex items-center gap-3">
-          <Link href="/library"
+          <Link href="/chat"
             className="hidden sm:flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400">
-            Library
+            ✦ Multi-Novel Chat
+          </Link>
+          <Link href="/characters"
+            className="hidden sm:flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400">
+            🎭 Characters
           </Link>
           <Link href="/recommend"
             className="hidden sm:flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400">
             Recommend
           </Link>
-          <Link href="/chat"
+          <Link href="/bookmarks"
             className="hidden sm:flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400">
-            ✦ Multi-Novel Chat
+            Bookmarks
           </Link>
           <TokenWidget />
         </div>

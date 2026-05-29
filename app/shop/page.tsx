@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Footer from '@/components/Footer'
+import TokenWidget from '@/components/TokenWidget'
+import Footer      from '@/components/Footer'
 import { useAuth } from '@/lib/auth-context'
 
 // ── Pricing data ──────────────────────────────────────────────────────────────
@@ -217,19 +218,28 @@ export default function ShopPage() {
       {/* ── Nav ──────────────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 border-b border-[var(--nc-border)] bg-[var(--nc-bg)]/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <Link href="/" className="group">
-            <span className="block text-xl font-bold tracking-tight" style={G}>NovelCodex</span>
+          <Link href="/library" className="group shrink-0">
+            <span className="block text-xl font-bold tracking-tight text-amber-400 group-hover:text-amber-300 transition">NovelCodex</span>
+            <span className="hidden sm:block text-xs text-zinc-500">Every secret, every character, every world — ask anything.</span>
           </Link>
-          <div className="flex items-center gap-3">
-            {user && (
-              <span className="flex items-center gap-1 text-sm font-medium text-amber-400">
-                <BoltIcon className="h-3.5 w-3.5" />
-                {user.tokens?.toLocaleString() ?? 0}
-              </span>
-            )}
-            <Link href="/library" className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-amber-500/50 hover:text-amber-400 transition">
-              {user ? 'Library' : 'Sign in'}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link href="/chat"
+              className="hidden sm:flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400">
+              ✦ Multi-Novel Chat
             </Link>
+            <Link href="/characters"
+              className="hidden sm:flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400">
+              🎭 Characters
+            </Link>
+            <Link href="/recommend"
+              className="hidden sm:flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400">
+              Recommend
+            </Link>
+            <Link href="/bookmarks"
+              className="hidden sm:flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400">
+              Bookmarks
+            </Link>
+            <TokenWidget />
           </div>
         </div>
       </header>

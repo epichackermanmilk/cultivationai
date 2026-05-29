@@ -56,16 +56,33 @@ export default async function CharactersPage() {
     <div className="min-h-screen" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
 
       {/* Header */}
-      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-[var(--nc-border)] px-4 py-3"
-        style={{ background: 'var(--nc-bg)', backdropFilter: 'blur(8px)' }}>
-        <Link href="/library" className="text-zinc-400 hover:text-zinc-100 transition-colors text-sm">
-          ← Library
-        </Link>
-        <div className="h-4 w-px bg-zinc-700" />
-        <h1 className="text-sm font-semibold text-amber-400">Characters</h1>
-        <div className="flex-1" />
-        <TokenWidget />
-        <ThemeToggle />
+      <header className="sticky top-0 z-50 border-b border-[var(--nc-border)] bg-[var(--nc-bg)]/90 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+          <Link href="/library" className="group shrink-0">
+            <h1 className="text-xl font-bold tracking-tight text-amber-400 group-hover:text-amber-300 transition">NovelCodex</h1>
+            <p className="hidden sm:block text-xs text-zinc-500">Every secret, every character, every world — ask anything.</p>
+          </Link>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link href="/chat"
+              className="hidden sm:flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400">
+              ✦ Multi-Novel Chat
+            </Link>
+            <Link href="/characters"
+              className="flex items-center rounded-lg border border-amber-500/60 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-400">
+              🎭 Characters
+            </Link>
+            <Link href="/recommend"
+              className="hidden sm:flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400">
+              Recommend
+            </Link>
+            <Link href="/bookmarks"
+              className="hidden sm:flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400">
+              Bookmarks
+            </Link>
+            <TokenWidget />
+            <ThemeToggle />
+          </div>
+        </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-10">

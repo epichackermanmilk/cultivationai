@@ -229,18 +229,32 @@ export default function RecommendPage() {
   return (
     <div className="relative min-h-screen flex flex-col" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
       {/* Header */}
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--nc-border)] px-6 py-4"
-        style={{ background: 'rgba(9,9,11,0.90)', backdropFilter: 'blur(12px)' }}>
-        <div className="flex items-center gap-6">
-          <Link href="/library">
-            <span className="text-lg font-bold" style={G}>NovelCodex</span>
+      <header className="sticky top-0 z-50 border-b border-[var(--nc-border)] bg-[var(--nc-bg)]/90 backdrop-blur">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
+          <Link href="/library" className="group shrink-0">
+            <h1 className="text-xl font-bold tracking-tight text-amber-400 group-hover:text-amber-300 transition">NovelCodex</h1>
+            <p className="hidden sm:block text-xs text-zinc-500">Every secret, every character, every world — ask anything.</p>
           </Link>
-          <nav className="hidden sm:flex items-center gap-4 text-xs">
-            <Link href="/library" className="transition hover:text-amber-400" style={{ color: 'var(--nc-text2)' }}>Library</Link>
-            <span className="font-medium text-amber-400">Discover</span>
-          </nav>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link href="/chat"
+              className="hidden sm:flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400">
+              ✦ Multi-Novel Chat
+            </Link>
+            <Link href="/characters"
+              className="hidden sm:flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400">
+              🎭 Characters
+            </Link>
+            <Link href="/recommend"
+              className="flex items-center rounded-lg border border-amber-500/60 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-400">
+              Recommend
+            </Link>
+            <Link href="/bookmarks"
+              className="hidden sm:flex items-center rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400">
+              Bookmarks
+            </Link>
+            <TokenWidget />
+          </div>
         </div>
-        <TokenWidget />
       </header>
 
       <main className="flex-1 mx-auto w-full max-w-3xl px-4 py-10">
