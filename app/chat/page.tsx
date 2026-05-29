@@ -368,12 +368,20 @@ export default function ChatPage() {
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
-                    msg.role === 'user' ? 'rounded-br-sm' : 'rounded-bl-sm'
+                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap border ${
+                    msg.role === 'user'
+                      ? 'rounded-br-sm border-violet-500/30'
+                      : 'rounded-bl-sm border-amber-500/25'
                   }`}
                   style={msg.role === 'user'
-                    ? { background: '#f59e0b', color: '#000' }
-                    : { background: 'var(--nc-bg3)', color: 'var(--nc-text)' }
+                    ? {
+                        background: 'linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(99,102,241,0.10) 100%)',
+                        color: 'var(--nc-text)',
+                      }
+                    : {
+                        background: 'linear-gradient(135deg, rgba(245,158,11,0.13) 0%, rgba(180,83,9,0.07) 100%)',
+                        color: 'var(--nc-text)',
+                      }
                   }
                 >
                   {msg.content}

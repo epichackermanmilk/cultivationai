@@ -606,10 +606,9 @@ export default function Chat({ slug, title, author }: Props) {
                 <button
                   key={q}
                   onClick={() => { setInput(q); inputRef.current?.focus() }}
-                  className="rounded-lg border border-[var(--nc-border)] px-3 py-1.5 text-xs hover:border-amber-500/50 transition"
-                  style={{ color: 'var(--nc-text2)' }}
+                  className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs font-medium text-amber-400/80 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition text-left"
                 >
-                  {q}
+                  ✦ {q}
                 </button>
               ))}
             </div>
@@ -620,14 +619,24 @@ export default function Chat({ slug, title, author }: Props) {
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
-              className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
-                msg.role === 'user' ? 'rounded-br-sm' : 'rounded-bl-sm'
-              } ${msg.isError ? 'border border-red-500/30' : ''}`}
+              className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap border ${
+                msg.role === 'user'
+                  ? 'rounded-br-sm border-violet-500/30'
+                  : msg.isError
+                    ? 'rounded-bl-sm border-red-500/30'
+                    : 'rounded-bl-sm border-amber-500/25'
+              }`}
               style={msg.role === 'user'
-                ? { background: '#f59e0b', color: '#000' }
+                ? {
+                    background: 'linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(99,102,241,0.10) 100%)',
+                    color: 'var(--nc-text)',
+                  }
                 : msg.isError
                   ? { background: 'var(--nc-bg3)', color: '#f87171' }
-                  : { background: 'var(--nc-bg3)', color: 'var(--nc-text)' }
+                  : {
+                      background: 'linear-gradient(135deg, rgba(245,158,11,0.13) 0%, rgba(180,83,9,0.07) 100%)',
+                      color: 'var(--nc-text)',
+                    }
               }
             >
               {msg.content}
