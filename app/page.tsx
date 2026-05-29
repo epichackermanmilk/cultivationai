@@ -385,8 +385,8 @@ export default function LandingPage() {
             </div>
             <div className="flex gap-3">
               <Link href="/library" onClick={dismissWelcome}
-                className="flex-1 rounded-full border py-2.5 text-sm font-medium text-center transition hover:border-amber-500/50"
-                style={{ borderColor: 'var(--nc-border)', color: 'var(--nc-text2)' }}>
+                className="flex-1 rounded-full px-8 py-3.5 text-sm font-bold text-white text-center transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
+                style={{ background: 'linear-gradient(135deg, #3f3f46 0%, #27272a 50%, #18181b 100%)', boxShadow: '0 8px 24px rgba(0,0,0,0.40)' }}>
                 Browse Library
               </Link>
               <button
