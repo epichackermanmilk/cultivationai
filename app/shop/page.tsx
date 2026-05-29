@@ -222,7 +222,7 @@ export default function ShopPage() {
             <img src="/logo.png" alt="" className="h-8 w-8 object-contain" />
             <div>
               <span className="block text-xl font-bold tracking-tight text-amber-400 group-hover:text-amber-300 transition">NovelCodex</span>
-              <span className="hidden sm:block text-xs text-zinc-500">Every secret, every character, every world — ask anything.</span>
+              <span className="hidden lg:block text-xs text-zinc-500">Every secret, every character, every world — ask anything.</span>
             </div>
           </Link>
           <div className="flex items-center gap-2 sm:gap-3">

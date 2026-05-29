@@ -58,7 +58,7 @@ export default function BookmarksPage() {
             <img src="/logo.png" alt="" className="h-8 w-8 object-contain" />
             <div>
               <h1 className="text-xl font-bold tracking-tight text-amber-400 group-hover:text-amber-300 transition">NovelCodex</h1>
-              <p className="hidden sm:block text-xs text-zinc-500">Every secret, every character, every world — ask anything.</p>
+              <p className="hidden lg:block text-xs text-zinc-500">Every secret, every character, every world — ask anything.</p>
             </div>
           </Link>
           <div className="flex items-center gap-2 sm:gap-3">
