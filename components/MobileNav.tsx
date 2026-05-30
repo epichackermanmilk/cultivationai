@@ -43,11 +43,13 @@ const TABS = [
     ),
   },
   {
-    href: '/bookmarks',
-    label: 'Saved',
+    href: '/games',
+    label: 'Games',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-        <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+        <rect x="2" y="7" width="20" height="14" rx="3" />
+        <path d="M16 2l-4 5-4-5" />
+        <path d="M9 13h6M12 10v6" />
       </svg>
     ),
   },
@@ -56,8 +58,9 @@ const TABS = [
 export default function MobileNav() {
   const pathname = usePathname()
 
-  // Hide on novel pages (full-screen chat — no bottom chrome needed)
+  // Hide on novel pages and game play pages (full-screen experience — no bottom chrome needed)
   if (pathname.startsWith('/novel/')) return null
+  if (pathname.startsWith('/games/') && pathname !== '/games') return null
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden border-t border-[var(--nc-border)]"

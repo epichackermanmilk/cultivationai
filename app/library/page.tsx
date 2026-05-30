@@ -406,6 +406,12 @@ export default function LibraryPage() {
               🎭 Characters
             </Link>
             <Link
+              href="/games"
+              className="hidden sm:flex items-center gap-1.5 rounded-lg whitespace-nowrap border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
+            >
+              🎮 Games
+            </Link>
+            <Link
               href="/recommend"
               className="hidden sm:flex items-center gap-1.5 rounded-lg whitespace-nowrap border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
             >
