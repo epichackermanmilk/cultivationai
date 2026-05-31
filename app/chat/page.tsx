@@ -291,18 +291,7 @@ export default function ChatPage() {
   return (
     <div className="flex h-screen flex-col overflow-hidden pb-16 sm:pb-0" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
       {/* Header */}
-      <SiteHeader
-        maxWidth="max-w-[1400px]"
-        rootClassName="shrink-0"
-        rightSlot={
-          <button
-            onClick={() => setSideOpen(v => !v)}
-            className="hidden sm:flex items-center rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
-          >
-            {sideOpen ? 'Hide' : 'Show'} Library
-          </button>
-        }
-      />
+      <SiteHeader maxWidth="max-w-[1400px]" rootClassName="shrink-0" />
 
       <div className="flex flex-1 overflow-hidden" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
         {/* Mobile backdrop — closes sidebar when tapping outside, sits below header */}
@@ -313,24 +302,27 @@ export default function ChatPage() {
           />
         )}
 
-        {/* Mobile-only left-edge arrow tab — slides right when sidebar is open */}
+        {/* Left-edge arrow tab — slides with the sidebar. Works on mobile AND desktop.
+            Closed: docked at far left. Open: sits at the sidebar's right edge
+            (85vw/20rem on mobile, 18rem/w-72 on desktop). */}
         <button
           onClick={() => setSideOpen(v => !v)}
-          className="sm:hidden fixed z-40 flex items-center justify-center"
+          className={`fixed z-40 flex items-center justify-center transition-[left] duration-200 ease-out ${
+            sideOpen ? 'left-[min(85vw,20rem)] sm:left-72' : 'left-0'
+          }`}
           style={{
             top: 'calc(50dvh + 28px)',
             transform: 'translateY(-50%)',
-            left: sideOpen ? 'min(85vw, 20rem)' : '0px',
-            height: '52px',
-            width: '18px',
+            height: '56px',
+            width: '20px',
             borderRadius: '0 8px 8px 0',
             background: 'var(--nc-bg2)',
             border: '1px solid var(--nc-border)',
             borderLeft: 'none',
-            transition: 'left 0.25s ease',
-            boxShadow: '2px 0 8px rgba(0,0,0,0.3)',
+            boxShadow: '2px 0 10px rgba(0,0,0,0.35)',
           }}
-          aria-label={sideOpen ? 'Close library' : 'Open library'}
+          aria-label={sideOpen ? 'Hide library panel' : 'Show library panel'}
+          title={sideOpen ? 'Hide library' : 'Show library'}
         >
           <svg
             viewBox="0 0 6 10"
@@ -339,7 +331,7 @@ export default function ChatPage() {
             strokeWidth={2}
             strokeLinecap="round"
             strokeLinejoin="round"
-            style={{ width: 10, height: 10, color: 'var(--nc-text2)' }}
+            style={{ width: 11, height: 11, color: 'var(--nc-text2)' }}
           >
             {sideOpen
               ? <path d="M5 1L1 5L5 9" />

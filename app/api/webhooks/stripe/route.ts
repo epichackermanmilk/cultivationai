@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { syncDiscordRoles } from '@/lib/discord'
+import { trackPurchase }    from '@/lib/ga4'
 
 // Lazily initialised so the build doesn't fail when STRIPE_SECRET_KEY is absent
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -78,6 +79,17 @@ export async function POST(req: Request) {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session
       const { user_id, tokens, mode, tier } = (session.metadata ?? {}) as Record<string, string>
+
+      // Fire a precise GA4 purchase event (real $ value) for any completed checkout
+      if (user_id && session.amount_total) {
+        trackPurchase({
+          userId:        user_id,
+          transactionId: session.id,
+          valueUsd:      session.amount_total / 100,   // cents → dollars
+          tier:          tier ?? 'unknown',
+          mode:          mode ?? 'unknown',
+        }).catch(() => {})
+      }
 
       if (user_id && mode === 'once' && tokens) {
         await creditTokens(user_id, parseInt(tokens, 10), session.id)
