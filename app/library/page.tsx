@@ -7,6 +7,7 @@ import BookmarkButton from '@/components/BookmarkButton'
 import RecentSection  from '@/components/RecentSection'
 import FeedbackWidget from '@/components/FeedbackWidget'
 import Footer         from '@/components/Footer'
+import AdSlot         from '@/components/AdSlot'
 
 interface Novel {
   slug: string
@@ -466,6 +467,9 @@ export default function LibraryPage() {
         </div>
 
         <RecentSection />
+
+        {/* Ad slot — hidden for subscribers + ad-free users */}
+        <AdSlot variant="banner" className="mb-6 -mx-4 rounded-none sm:mx-0 sm:rounded-xl" />
 
         {loading ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">

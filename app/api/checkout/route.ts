@@ -21,6 +21,11 @@ const ONE_TIME = [
   { label: 'Titan',   total: 20000, priceNum: 99.99 },
 ]
 
+// Non-token add-ons — these unlock features, not tokens
+const ADD_ONS = [
+  { label: 'AdFree', priceNum: 4.99, description: 'Remove all ads forever — no subscription required.' },
+]
+
 const WELCOME_WINDOW_MS = 7 * 24 * 60 * 60 * 1000   // 7 days
 const SUBS = [
   { label: 'Reader',  tokens: 700,  priceNum: 4.99 },
@@ -126,6 +131,39 @@ export async function POST(req: Request) {
           tokens: s.tokens.toString(),
           mode: 'sub',
           tier: s.label,
+        },
+        customer_email: user.email,
+        success_url: `${BASE}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url:  `${BASE}/shop`,
+      })
+
+      return NextResponse.json({ url: session.url })
+    }
+
+    if (mode === 'addon') {
+      const addon = ADD_ONS.find(a => a.label === tier)
+      if (!addon) return NextResponse.json({ error: 'Unknown add-on' }, { status: 400 })
+
+      const session = await getStripe().checkout.sessions.create({
+        mode: 'payment',
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `NovelCodex — ${addon.label === 'AdFree' ? 'Ad-Free Forever' : addon.label}`,
+              description: addon.description,
+            },
+            unit_amount: Math.round(addon.priceNum * 100),
+          },
+          quantity: 1,
+        }],
+        metadata: {
+          user_id:    user.id,
+          user_email: user.email ?? '',
+          tokens:     '0',
+          mode:       'addon',
+          tier:       addon.label,
         },
         customer_email: user.email,
         success_url: `${BASE}/shop/success?session_id={CHECKOUT_SESSION_ID}`,

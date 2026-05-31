@@ -425,6 +425,56 @@ export default function ShopPage() {
           </div>
         )}
 
+        {/* ── Ad-Free add-on ───────────────────────────────────────────────── */}
+        <div className="mb-12 rounded-2xl border border-zinc-700 overflow-hidden" style={{ background: 'var(--nc-bg2)' }}>
+          <div className="flex items-center justify-between gap-4 p-5 border-b border-zinc-800">
+            <div>
+              <h2 className="text-sm font-bold mb-0.5" style={{ color: 'var(--nc-text)' }}>
+                🚫 Remove Ads Forever
+              </h2>
+              <p className="text-xs" style={{ color: 'var(--nc-text2)' }}>
+                One-time purchase · No subscription needed · Permanent
+              </p>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="text-lg font-bold text-amber-400">$4.99</p>
+              <p className="text-xs text-zinc-500">one-time</p>
+            </div>
+          </div>
+          <div className="p-5">
+            <ul className="grid grid-cols-2 gap-2 mb-4">
+              {['No ads on Library', 'No ads on Games', 'Works across all devices', 'Never expires'].map(perk => (
+                <li key={perk} className="flex items-center gap-2 text-xs" style={{ color: 'var(--nc-text2)' }}>
+                  <span className="text-emerald-400">✓</span>
+                  {perk}
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs mb-4" style={{ color: 'var(--nc-text2)' }}>
+              Active subscribers are already ad-free for the duration of their subscription.
+              This purchase makes it permanent.
+            </p>
+            {user?.ads_disabled ? (
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-center text-sm font-semibold text-emerald-400">
+                ✓ You&apos;re already ad-free
+              </div>
+            ) : (
+              <button
+                onClick={() => handleBuy('AdFree', 'addon')}
+                disabled={!!loading || !user}
+                className="w-full rounded-xl border border-zinc-600 bg-zinc-700 py-2.5 text-sm font-semibold text-zinc-200 transition hover:bg-zinc-600 hover:border-zinc-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading === 'addon-AdFree' ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
+                    Redirecting…
+                  </span>
+                ) : user ? 'Remove Ads — $4.99' : 'Sign in to purchase'}
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* ── Saved payment methods placeholder ────────────────────────────── */}
         {user && (
           <div

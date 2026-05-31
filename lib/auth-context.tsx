@@ -9,6 +9,8 @@ export interface AuthUser {
   username:                string | null
   onboarding_bonus_claimed: boolean
   created_at:              string   // ISO timestamp — used for welcome deal countdown
+  ads_disabled:            boolean  // true = one-time ad-free purchase or manually granted
+  subscription_active:     boolean  // true = active subscriber (auto-cleared on cancel)
 }
 
 interface AuthCtx {

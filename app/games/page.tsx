@@ -2,6 +2,7 @@ import Link       from 'next/link'
 import TokenWidget  from '@/components/TokenWidget'
 import Footer       from '@/components/Footer'
 import FeedbackWidget from '@/components/FeedbackWidget'
+import AdSlot        from '@/components/AdSlot'
 
 export const metadata = {
   title: 'Games — NovelCodex',
@@ -63,40 +64,27 @@ const GAMES: Game[] = [
     gradient:    'linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(5,150,105,0.08) 100%)',
   },
   {
-    id:          'bad-quests',
-    title:       'The System Gives Bad Quests',
+    id:          'defective-system',
+    title:       'The Defective System',
     tagline:     'Quest received: slap the Sect Master.',
-    description: 'A parody game. The System has assigned you impossible, embarrassing, and deeply inadvisable quests. Survive as long as you can. Each failure is funnier than the last.',
+    description: 'The System has assigned you five impossible, embarrassing, and deeply inadvisable quests. Each one is worse than the last. Survive as long as you can. Each failure is funnier than the last.',
     cost:        '30 tokens',
     costNote:    'One run · ~10 min',
-    status:      'coming_soon',
-    href:        '#',
+    status:      'available',
+    href:        '/games/defective-system',
     icon:        '⚠️',
     accent:      'rose',
     gradient:    'linear-gradient(135deg, rgba(244,63,94,0.15) 0%, rgba(190,18,60,0.08) 100%)',
   },
   {
-    id:          'tower-climb',
-    title:       'Tower Climb Sprint',
-    tagline:     'Floor 50 in 30 turns. No exceptions.',
-    description: 'Every decision advances the clock. Fight, train, recruit, craft, or trade — but every floor costs something. Compete for the fewest turns taken. The leaderboard remembers.',
-    cost:        '50 tokens',
-    costNote:    'One attempt · Leaderboard',
-    status:      'coming_soon',
-    href:        '#',
-    icon:        '🗼',
-    accent:      'sky',
-    gradient:    'linear-gradient(135deg, rgba(14,165,233,0.15) 0%, rgba(2,132,199,0.08) 100%)',
-  },
-  {
     id:          'character-battle',
     title:       'Character Battle Debate',
     tagline:     'Pick your fighter. The lore decides.',
-    description: 'You pick a character from any indexed novel. The AI picks an opponent. A battle is simulated using real chapter text — power levels, techniques, and all. Powerscaling, settled.',
+    description: 'Pick any two characters from our library — same novel or cross-novel. Set a chapter range for each. A battle is simulated using real lore from the text. Powerscaling, settled.',
     cost:        '25 tokens',
     costNote:    'One match · ~5 min',
-    status:      'coming_soon',
-    href:        '#',
+    status:      'available',
+    href:        '/games/character-battle',
     icon:        '⚡',
     accent:      'orange',
     gradient:    'linear-gradient(135deg, rgba(249,115,22,0.15) 0%, rgba(194,65,12,0.08) 100%)',
@@ -177,6 +165,9 @@ export default function GamesPage() {
           </section>
         )}
 
+        {/* Ad slot */}
+        {soon.length > 0 && <AdSlot variant="banner" className="mb-10 rounded-xl" />}
+
         {/* Coming soon */}
         <section>
           <h3 className="mb-5 text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--nc-text2)' }}>
@@ -194,8 +185,8 @@ export default function GamesPage() {
           style={{ background: 'var(--nc-bg2)' }}>
           <p className="text-sm font-semibold" style={{ color: 'var(--nc-text)' }}>More games in development</p>
           <p className="mt-1.5 max-w-sm mx-auto text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
-            Each game is built around cultivation novel lore. Upcoming: Murim Investigation, Hidden Traitor,
-            Heavenly Auction, and more. Community scenario submissions coming soon.
+            Each game is built around cultivation novel lore. Upcoming: Regressor Challenge, Murim Investigation,
+            Hidden Traitor, Heavenly Auction, and more. Community scenarios coming soon.
           </p>
         </div>
 
