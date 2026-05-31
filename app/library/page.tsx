@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react'
-import Link from 'next/link'
-import TokenWidget    from '@/components/TokenWidget'
+import Link          from 'next/link'
+import SiteHeader    from '@/components/SiteHeader'
 import BookmarkButton from '@/components/BookmarkButton'
 import RecentSection  from '@/components/RecentSection'
 import FeedbackWidget from '@/components/FeedbackWidget'
@@ -383,52 +383,11 @@ export default function LibraryPage() {
     <div className="relative min-h-screen pb-16 sm:pb-0" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
       <ParticleCanvas />
 
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-[var(--nc-border)] bg-[var(--nc-bg)]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-          <Link href="/library" className="group flex items-center gap-3">
-            <img src="/logo.png" alt="" className="h-8 w-8 object-contain" />
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-amber-400 group-hover:text-amber-300 transition">NovelCodex</h1>
-              <p className="hidden lg:block text-xs text-zinc-500">Every secret, every character, every world — ask anything.</p>
-            </div>
-          </Link>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              href="/chat"
-              className="hidden sm:flex items-center rounded-lg whitespace-nowrap border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
-            >
-              ✦ Multi-Novel Chat
-            </Link>
-            <Link
-              href="/characters"
-              className="hidden sm:flex items-center gap-1.5 rounded-lg whitespace-nowrap border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
-            >
-              🎭 Characters
-            </Link>
-            <Link
-              href="/games"
-              className="hidden sm:flex items-center gap-1.5 rounded-lg whitespace-nowrap border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
-            >
-              🎮 Games
-            </Link>
-            <Link
-              href="/recommend"
-              className="hidden sm:flex items-center gap-1.5 rounded-lg whitespace-nowrap border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
-            >
-              Recommend
-            </Link>
-            <Link
-              href="/bookmarks"
-              className="hidden sm:flex items-center gap-1.5 rounded-lg whitespace-nowrap border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
-            >
-              Bookmarks
-            </Link>
-            <TokenWidget />
-            <span className="hidden sm:block text-sm text-zinc-500">{novels.length.toLocaleString()} novels</span>
-          </div>
-        </div>
-      </header>
+      <SiteHeader rightSlot={
+        novels.length > 0
+          ? <span className="hidden sm:block text-xs text-zinc-600">{novels.length.toLocaleString()} novels</span>
+          : undefined
+      } />
 
       <main className="relative z-10 mx-auto max-w-7xl px-4 py-8">
         {/* Search + Filter */}

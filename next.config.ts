@@ -38,12 +38,18 @@ const nextConfig: NextConfig = {
             key:   'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",  // Next.js requires unsafe-eval for HMR
+              // Next.js requires unsafe-eval in dev; Google Analytics/AdSense require external scripts
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://pagead2.googlesyndication.com https://adservice.google.com https://www.google-analytics.com https://js.stripe.com",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https:",
-              "connect-src 'self' https://*.supabase.co https://api.openai.com",
+              "img-src 'self' data: blob: https:",
+              // Analytics, AdSense, Supabase, Stripe
+              "connect-src 'self' https://*.supabase.co https://api.openai.com https://region1.google-analytics.com https://www.google-analytics.com https://stats.g.doubleclick.net https://pagead2.googlesyndication.com https://api.stripe.com",
               "font-src 'self' https://fonts.gstatic.com",
+              // AdSense serves ads in iframes
+              "frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://js.stripe.com",
               "frame-ancestors 'none'",
+              // AdSense requires sandbox workers
+              "worker-src blob:",
             ].join('; '),
           },
         ],
