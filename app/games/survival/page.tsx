@@ -14,7 +14,9 @@ interface PastRun { runNumber: number; turnsReached: number; deathReason: string
 interface Player { name: string; background: string; cultivationLevel: string; startingPosition: string }
 interface Turn   { turn: number; action: string; narration: string }
 
-const MAX_TURNS = 50
+const MAX_TURNS    = 50
+const MAX_ATTEMPTS = 5     // matches server cap
+const GAME_COST    = 120
 
 const ARC_PRESETS = [
   { label: 'Opening Arc',   from: 1,   to: 50  },
@@ -120,7 +122,7 @@ export default function SurvivalPage() {
       const d = await r.json()
       if (!r.ok) { setError(d.error ?? 'Failed to start.'); return }
 
-      updateTokens(user.tokens - 150)
+      updateTokens(user.tokens - GAME_COST)
       setSessionId(d.sessionId)
       setPlayer(d.player)
       setOpeningText(d.openingNarration)
@@ -222,7 +224,7 @@ export default function SurvivalPage() {
           <div className="flex items-center gap-3">
             {(phase === 'active' || phase === 'dead') && (
               <span className="text-xs text-zinc-500">
-                {selectedNovel?.title} · Turn {currentTurn}/{MAX_TURNS}
+                Attempt {runNumber}/{MAX_ATTEMPTS} · Turn {Math.min(currentTurn, MAX_TURNS)}/{MAX_TURNS}
               </span>
             )}
             <TokenWidget />
@@ -313,9 +315,9 @@ export default function SurvivalPage() {
               <div className="rounded-xl border border-zinc-800 p-4" style={{ background: 'var(--nc-bg2)' }}>
                 <ul className="space-y-1.5 text-xs" style={{ color: 'var(--nc-text2)' }}>
                   <li className="flex gap-2"><span className="text-emerald-400 shrink-0">▸</span>You wake up as a side character — present in the story, not the MC.</li>
-                  <li className="flex gap-2"><span className="text-emerald-400 shrink-0">▸</span>Survive 50 turns to win. Death means you can try again — same fee covers all attempts.</li>
+                  <li className="flex gap-2"><span className="text-emerald-400 shrink-0">▸</span>Survive 50 turns to win. Death lets you try again — up to {MAX_ATTEMPTS} attempts per session.</li>
                   <li className="flex gap-2"><span className="text-emerald-400 shrink-0">▸</span>The AI pulls real chapter context to keep events lore-accurate.</li>
-                  <li className="flex gap-2"><span className="text-emerald-400 shrink-0 font-bold">💎</span><span className="font-semibold text-emerald-400">150 tokens — all attempts included.</span></li>
+                  <li className="flex gap-2"><span className="text-emerald-400 shrink-0 font-bold">💎</span><span className="font-semibold text-emerald-400">{GAME_COST} tokens — all {MAX_ATTEMPTS} attempts included.</span></li>
                 </ul>
               </div>
 
@@ -331,7 +333,7 @@ export default function SurvivalPage() {
                   style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', boxShadow: canStart ? '0 6px 20px rgba(16,185,129,0.25)' : 'none' }}>
                   {starting ? (
                     <><span className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent inline-block mr-2" />Generating your character…</>
-                  ) : '📖 Enter the Novel — 150 tokens'}
+                  ) : `📖 Enter the Novel — ${GAME_COST} tokens`}
                 </button>
               )}
             </div>
@@ -424,16 +426,41 @@ export default function SurvivalPage() {
 
             {/* Dead state */}
             {phase === 'dead' && !streaming && (
-              <div className="rounded-2xl border border-rose-500/30 bg-rose-500/5 p-5 text-center">
-                <p className="text-xs font-bold uppercase tracking-wider text-rose-400 mb-2">You Died</p>
-                {deathReason && <p className="text-sm mb-4" style={{ color: 'var(--nc-text2)' }}>Cause: {deathReason}</p>}
-                <p className="text-xs mb-4 text-zinc-600">You survived {turns.length} of {MAX_TURNS} turns.</p>
-                <button onClick={tryAgain} disabled={restarting}
-                  className="rounded-xl px-8 py-3 text-sm font-bold text-black transition hover:-translate-y-0.5 disabled:opacity-50"
-                  style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
-                  {restarting ? '…' : `📖 Try Again — Attempt ${runNumber + 1}`}
-                </button>
-              </div>
+              runNumber >= MAX_ATTEMPTS ? (
+                /* Attempts exhausted */
+                <div className="rounded-2xl border border-zinc-700 bg-zinc-900/50 p-5 text-center">
+                  <div className="mb-3 text-4xl select-none">☠️</div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">Out of Attempts</p>
+                  <p className="text-sm mb-4" style={{ color: 'var(--nc-text2)' }}>
+                    You used all {MAX_ATTEMPTS} attempts and couldn&apos;t survive this arc. The novel&apos;s world
+                    is unforgiving — try a different novel or an earlier arc where you know the plot better.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <button onClick={() => { setPhase('select'); setSessionId(null); setTurns([]); setPlayer(null); setSelectedNovel(null); setNovelQuery('') }}
+                      className="rounded-xl px-8 py-3 text-sm font-bold text-black transition hover:-translate-y-0.5"
+                      style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
+                      Enter Another Novel — {GAME_COST} tokens
+                    </button>
+                    <Link href="/games" className="rounded-xl border border-zinc-700 px-8 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-800 transition text-center">
+                      Back to Games
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-rose-500/30 bg-rose-500/5 p-5 text-center">
+                  <p className="text-xs font-bold uppercase tracking-wider text-rose-400 mb-2">You Died</p>
+                  {deathReason && <p className="text-sm mb-2" style={{ color: 'var(--nc-text2)' }}>Cause: {deathReason}</p>}
+                  <p className="text-xs mb-1 text-zinc-600">You survived {turns.length} of {MAX_TURNS} turns.</p>
+                  <p className="text-xs mb-4 text-emerald-400/80">
+                    {MAX_ATTEMPTS - runNumber} {MAX_ATTEMPTS - runNumber === 1 ? 'attempt' : 'attempts'} remaining
+                  </p>
+                  <button onClick={tryAgain} disabled={restarting}
+                    className="rounded-xl px-8 py-3 text-sm font-bold text-black transition hover:-translate-y-0.5 disabled:opacity-50"
+                    style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
+                    {restarting ? '…' : `📖 Try Again — Attempt ${runNumber + 1}`}
+                  </button>
+                </div>
+              )
             )}
 
             {/* Action input */}
@@ -478,7 +505,7 @@ export default function SurvivalPage() {
               <button onClick={() => { setPhase('select'); setSessionId(null); setTurns([]); setPlayer(null); setSelectedNovel(null); setNovelQuery('') }}
                 className="rounded-xl px-8 py-3 text-sm font-bold text-black transition hover:-translate-y-0.5"
                 style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
-                Enter Another Novel — 150 tokens
+                Enter Another Novel — {GAME_COST} tokens
               </button>
               <Link href="/games" className="rounded-xl border border-zinc-700 px-8 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-800 transition text-center">
                 Back to Games

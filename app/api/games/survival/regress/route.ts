@@ -1,6 +1,6 @@
 // POST /api/games/survival/regress
 // Archives the current (dead) run, resets to turn 1 with fresh situation.
-// No token charge — all runs covered by the 150 initial fee.
+// No token charge — all attempts covered by the initial fee, capped at MAX_ATTEMPTS.
 
 import { NextResponse } from 'next/server'
 import { cookies }      from 'next/headers'
@@ -8,6 +8,8 @@ import { createClient } from '@supabase/supabase-js'
 import OpenAI           from 'openai'
 import { parseJsonBody, sanitizeText } from '@/lib/sanitize'
 import type { SurvivalState }         from '../start/route'
+
+export const MAX_ATTEMPTS = 5   // total tries per session
 
 function admin() {
   return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!, {
@@ -40,6 +42,14 @@ export async function POST(req: Request) {
 
   const state = row.state as SurvivalState
   if (state.phase === 'active') return NextResponse.json({ error: 'Run is still active' }, { status: 400 })
+
+  // ── Enforce the attempt cap ────────────────────────────────────────────────
+  if (state.runNumber >= MAX_ATTEMPTS) {
+    return NextResponse.json(
+      { error: 'No attempts left — you could not survive this arc.', code: 'ATTEMPTS_EXHAUSTED', maxAttempts: MAX_ATTEMPTS },
+      { status: 403 },
+    )
+  }
 
   // Generate a slightly different opening for the new attempt
   let newOpeningNarration = `You find yourself back at the beginning. The same world, the same arc — but this time, you know a little more about how things unfold.`
@@ -84,5 +94,7 @@ Write a 2-3 sentence transmigration opening for their NEXT attempt. Acknowledge 
     runNumber:        newState.runNumber,
     pastRuns:         newState.pastRuns,
     player:           newState.player,
+    maxAttempts:      MAX_ATTEMPTS,
+    attemptsLeft:     MAX_ATTEMPTS - newState.runNumber,
   })
 }

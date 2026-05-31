@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   title: "NovelCodex",
   description: "Every secret, every character, every world — ask anything.",
   other: {
-    "google-adsense-account": "ca-pub-6042477932346476",
+    "google-adsense-account": "ca-pub-1350938260860067",
   },
 };
 
@@ -37,7 +37,7 @@ export default function RootLayout({
       {/* Google AdSense */}
       <Script
         async
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6042477932346476"
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1350938260860067"
         crossOrigin="anonymous"
         strategy="afterInteractive"
       />

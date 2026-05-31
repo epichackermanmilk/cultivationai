@@ -11,7 +11,6 @@
 import { useState, useRef, useEffect } from 'react'
 import Link        from 'next/link'
 import Footer      from '@/components/Footer'
-import TokenWidget from '@/components/TokenWidget'
 
 const MOCK_NOVELS = [
   { title: 'Reverend Insanity', author: 'Gu Zhen Ren', genres: ['Xianxia', 'Cultivation'] },
@@ -46,8 +45,8 @@ function RefinedHeader() {
 
   return (
     <header className="border-b border-[var(--nc-border)] bg-[var(--nc-bg)]">
-      {/* Row 1 — logo · search + filters · token widget */}
-      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5">
+      {/* Row 1 — logo (far left) · search + filters (centered) · sign-in (far right) */}
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-3 py-2.5">
         <Link href="/library" className="group shrink-0 flex items-center gap-2.5">
           <img src="/logo.png" alt="" className="h-7 w-7 object-contain" />
           <div>
@@ -56,8 +55,8 @@ function RefinedHeader() {
           </div>
         </Link>
 
-        {/* Search + Filters (the filter the library already has, kept intact) */}
-        <div className="flex flex-1 max-w-2xl items-center gap-2">
+        {/* Search + Filters (the filter the library already has, kept intact) — centered */}
+        <div className="flex flex-1 max-w-2xl mx-auto items-center gap-2">
           <div className="flex flex-1 items-stretch rounded-xl overflow-hidden border border-zinc-700 focus-within:border-amber-500/60 transition">
             <input
               type="text"
@@ -111,15 +110,21 @@ function RefinedHeader() {
           </div>
         </div>
 
-        {/* Token widget — shows token balance when signed in, "Login / Register" when not */}
-        <div className="shrink-0">
-          <TokenWidget />
-        </div>
+        {/* Sign-in box — sized to match the Filters button, pushed to the far right.
+            (In production this is the live TokenWidget: token balance when signed
+            in, this Login / Register box when signed out.) */}
+        <button className="shrink-0 flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-medium text-zinc-300 hover:border-amber-500/50 hover:text-amber-400 transition">
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" strokeLinecap="round" />
+          </svg>
+          Login / Register
+        </button>
       </div>
 
-      {/* Row 2 — page navigation (no genre dropdown) */}
+      {/* Row 2 — page navigation (centered, no genre dropdown) */}
       <div className="border-t border-zinc-800/60">
-        <div className="mx-auto flex max-w-7xl items-center gap-1 px-4 py-1.5">
+        <div className="mx-auto flex max-w-7xl items-center justify-center gap-1 px-4 py-1.5">
           {NAV.map((label, i) => (
             <button key={label}
               className={`shrink-0 rounded-md px-2.5 py-1.5 text-xs font-medium transition whitespace-nowrap ${
@@ -150,7 +155,8 @@ export default function HeaderPreviewPage() {
         <div className="rounded-2xl border border-zinc-800 p-5 mb-6" style={{ background: 'var(--nc-bg2)' }}>
           <p className="text-sm font-bold text-amber-400 mb-2">What changed from the first draft</p>
           <ul className="text-xs leading-relaxed space-y-1.5" style={{ color: 'var(--nc-text2)' }}>
-            <li>✓ <strong className="text-zinc-300">Token widget kept</strong> — top-right. Signed-in users see their balance + shop; signed-out users see &ldquo;Login / Register.&rdquo; (It&apos;s the same <code>TokenWidget</code> used site-wide, so it&apos;s fully accounted for.)</li>
+            <li>✓ <strong className="text-zinc-300">Sign-in box</strong> — far right, sized to match the Filters button. Shown here as &ldquo;Login / Register&rdquo;; in production this is the live <code>TokenWidget</code> — it shows your token balance + shop when signed in, this box when signed out. So the token count IS accounted for.</li>
+            <li>✓ <strong className="text-zinc-300">Logo pushed left, nav centered</strong> — logo + tagline hug the far left, the page-nav row is centered.</li>
             <li>✓ <strong className="text-zinc-300">Filters kept</strong> — the library&apos;s existing genre/status/sort panel now lives next to the search bar.</li>
             <li>✓ <strong className="text-zinc-300">Browse-Genre dropdown removed</strong> — redundant with Filters.</li>
             <li>✓ <strong className="text-zinc-300">Mobile unaffected</strong> — this header is hidden on phones; the bottom tab bar handles mobile navigation.</li>

@@ -21,6 +21,7 @@ interface Disaster { name: string; description: string; hint: string }
 interface Turn { turn: number; action: string; narration: string }
 
 const MAX_TURNS = 30
+const MAX_RUNS  = 6   // total lives per session (matches server cap)
 
 // ─────────────────────────────────────────────────────────────────────────────
 export default function RegressorPage() {
@@ -178,7 +179,7 @@ export default function RegressorPage() {
           <div className="flex items-center gap-3">
             {(phase === 'active' || phase === 'run_end') && (
               <span className="text-xs text-zinc-500">
-                Life {currentRun} · Day {Math.min(currentTurn, MAX_TURNS)}/{MAX_TURNS}
+                Life {currentRun}/{MAX_RUNS} · Day {Math.min(currentTurn, MAX_TURNS)}/{MAX_TURNS}
               </span>
             )}
             <TokenWidget />
@@ -207,9 +208,9 @@ export default function RegressorPage() {
               {[
                 'The AI generates a unique disaster — a threat only you know is coming.',
                 'Each turn: describe your action. The AI narrates the result.',
-                'If you die or the 30-day clock expires: the run ends.',
-                'Your memories carry forward. Each life you know more.',
-                'Figure out the root cause. Stop the disaster. Win.',
+                'If you die or the 30-day clock expires: the life ends.',
+                `You get ${MAX_RUNS} lives. Memories carry forward — each life you know more.`,
+                'Figure out the root cause. Stop the disaster before your lives run out.',
               ].map(s => (
                 <div key={s} className="flex items-start gap-2 text-xs" style={{ color: 'var(--nc-text2)' }}>
                   <span className="text-violet-400 shrink-0 mt-0.5">▸</span>{s}
@@ -346,19 +347,44 @@ export default function RegressorPage() {
 
             {/* Run end state */}
             {phase === 'run_end' && !streaming && (
-              <div className="rounded-2xl border border-rose-500/30 bg-rose-500/5 p-5 text-center">
-                <p className="text-xs font-bold uppercase tracking-wider text-rose-400 mb-2">Life {currentRun} Ended</p>
-                <p className="text-sm mb-4" style={{ color: 'var(--nc-text2)' }}>
-                  You reached Day {currentTurn}. These memories will follow you into your next life.
-                </p>
-                <button onClick={regress} disabled={regressLoading}
-                  className="rounded-xl px-8 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 disabled:opacity-50"
-                  style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)' }}>
-                  {regressLoading
-                    ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent inline-block mr-2" />Processing memories…</>
-                    : '⚔️ Regress — Begin Life ' + (currentRun + 1)}
-                </button>
-              </div>
+              currentRun >= MAX_RUNS ? (
+                /* Lives exhausted — campaign over */
+                <div className="rounded-2xl border border-zinc-700 bg-zinc-900/50 p-5 text-center">
+                  <div className="mb-3 text-4xl select-none">⏳</div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">The Cycle Ends</p>
+                  <p className="text-sm mb-4" style={{ color: 'var(--nc-text2)' }}>
+                    You&apos;ve lived all {MAX_RUNS} lives. The heavens grant no more regressions —
+                    the disaster claims this timeline. Begin a new cycle to try a fresh disaster.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <button onClick={() => { setPhase('lobby'); setDisaster(null); setTurns([]); setPastRuns([]); setCurrentRun(1); setCurrentTurn(1) }}
+                      className="rounded-xl px-8 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5"
+                      style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)' }}>
+                      New Disaster — 75 tokens
+                    </button>
+                    <Link href="/games" className="rounded-xl border border-zinc-700 px-8 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-800 transition text-center">
+                      Back to Games
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-rose-500/30 bg-rose-500/5 p-5 text-center">
+                  <p className="text-xs font-bold uppercase tracking-wider text-rose-400 mb-2">Life {currentRun} Ended</p>
+                  <p className="text-sm mb-1" style={{ color: 'var(--nc-text2)' }}>
+                    You reached Day {currentTurn}. These memories will follow you into your next life.
+                  </p>
+                  <p className="text-xs mb-4 text-violet-400/80">
+                    {MAX_RUNS - currentRun} {MAX_RUNS - currentRun === 1 ? 'life' : 'lives'} remaining
+                  </p>
+                  <button onClick={regress} disabled={regressLoading}
+                    className="rounded-xl px-8 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 disabled:opacity-50"
+                    style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)' }}>
+                    {regressLoading
+                      ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent inline-block mr-2" />Processing memories…</>
+                      : '⚔️ Regress — Begin Life ' + (currentRun + 1)}
+                  </button>
+                </div>
+              )
             )}
 
             {/* Action input */}

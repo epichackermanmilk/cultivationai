@@ -1,6 +1,7 @@
 // POST /api/games/regressor/regress
 // Ends the current run, generates lessons learned, prepares the next run.
 // No token charge — all runs are covered by the initial 75-token fee.
+// Capped at MAX_RUNS lives (the regression fantasy, bounded).
 
 import { NextResponse } from 'next/server'
 import { cookies }      from 'next/headers'
@@ -8,6 +9,8 @@ import { createClient } from '@supabase/supabase-js'
 import OpenAI           from 'openai'
 import { parseJsonBody, sanitizeText } from '@/lib/sanitize'
 import type { RegressorState }         from '../start/route'
+
+export const MAX_RUNS = 6   // total lives per session (run 1 + up to 5 regressions)
 
 function admin() {
   return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!, {
@@ -42,6 +45,14 @@ export async function POST(req: Request) {
 
   const state = row.state as RegressorState
   if (state.phase !== 'run_end') return NextResponse.json({ error: 'Run is still active' }, { status: 400 })
+
+  // ── Enforce the run cap ────────────────────────────────────────────────────
+  if (state.currentRun >= MAX_RUNS) {
+    return NextResponse.json(
+      { error: 'No regressions left — your cycle of lives has ended.', code: 'RUNS_EXHAUSTED', maxRuns: MAX_RUNS },
+      { status: 403 },
+    )
+  }
 
   const runSummary = state.turns
     .map(t => `Day ${t.turn}: ${t.action} → ${t.narration.slice(0, 150)}`)
@@ -101,6 +112,8 @@ Be specific to what actually happened. These memories will guide them next time.
     disaster:     state.disaster,
     worldContext: state.worldContext,
     pastRuns:     newState.pastRuns,
+    maxRuns:      MAX_RUNS,
+    runsLeft:     MAX_RUNS - (state.currentRun + 1),
   })
 }
 
