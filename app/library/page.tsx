@@ -468,9 +468,6 @@ export default function LibraryPage() {
 
         <RecentSection />
 
-        {/* Ad slot — hidden for subscribers + ad-free users */}
-        <AdSlot variant="banner" className="mb-6 -mx-4 rounded-none sm:mx-0 sm:rounded-xl" />
-
         {loading ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {Array.from({ length: 24 }).map((_, i) => (
@@ -485,9 +482,17 @@ export default function LibraryPage() {
                 {query ? ` for "${query}"` : ''}
               </p>
             )}
+            {/* Grid with ads injected every 24 cards (≈4 rows at 6-col, 8 rows at 3-col) */}
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-              {visibleNovels.map(novel => (
-                <NovelCard key={novel.slug} novel={novel} />
+              {visibleNovels.map((novel, index) => (
+                <>
+                  {index > 0 && index % 24 === 0 && (
+                    <div key={`ad-${index}`} className="col-span-full">
+                      <AdSlot variant="banner" className="rounded-xl my-1" />
+                    </div>
+                  )}
+                  <NovelCard key={novel.slug} novel={novel} />
+                </>
               ))}
             </div>
             {filtered.length === 0 && (

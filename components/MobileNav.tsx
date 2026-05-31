@@ -60,7 +60,7 @@ export default function MobileNav() {
 
   // Hide on novel pages and game play pages (full-screen experience — no bottom chrome needed)
   if (pathname.startsWith('/novel/')) return null
-  if (pathname.startsWith('/games/') && pathname !== '/games') return null
+  if (pathname.startsWith('/games/')) return null
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden border-t border-[var(--nc-border)]"
