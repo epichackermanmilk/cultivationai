@@ -4,6 +4,7 @@ import { FEATURED_CHARACTERS } from '@/lib/featured-characters'
 import SiteHeader  from '@/components/SiteHeader'
 import FeedbackWidget from '@/components/FeedbackWidget'
 import Footer        from '@/components/Footer'
+import AdSlot        from '@/components/AdSlot'
 
 // ── Readable novel names ──────────────────────────────────────────────────────
 const NOVEL_NAMES: Record<string, string> = {
@@ -84,8 +85,11 @@ export default async function CharactersPage() {
           ))}
         </div>
 
+        {/* Ad slot — below the roster, well clear of the cards */}
+        <AdSlot variant="banner" className="mt-10 rounded-xl" />
+
         {/* Community note */}
-        <div className="mt-12 rounded-2xl border border-[var(--nc-border)] p-6 text-center"
+        <div className="mt-10 rounded-2xl border border-[var(--nc-border)] p-6 text-center"
           style={{ background: 'var(--nc-bg2)' }}>
           <p className="text-sm font-semibold" style={{ color: 'var(--nc-text)' }}>More characters coming</p>
           <p className="mt-1.5 max-w-sm mx-auto text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>

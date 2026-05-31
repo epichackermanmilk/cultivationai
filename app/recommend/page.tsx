@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link        from 'next/link'
 import SiteHeader from '@/components/SiteHeader'
 import Footer      from '@/components/Footer'
+import AdSlot      from '@/components/AdSlot'
 import { useAuth } from '@/lib/auth-context'
 
 const G: React.CSSProperties = {
@@ -389,6 +390,9 @@ export default function RecommendPage() {
               style={{ color: 'var(--nc-text2)' }}>
               {loading ? 'Searching…' : 'Try Again  (10 tokens)'}
             </button>
+
+            {/* Ad slot — only shown alongside results, never over the input */}
+            {results.length > 0 && <AdSlot variant="banner" className="mt-6 rounded-xl" />}
           </div>
         )}
       </main>

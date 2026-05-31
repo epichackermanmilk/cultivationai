@@ -8,6 +8,7 @@ import Link          from 'next/link'
 import TokenWidget          from '@/components/TokenWidget'
 import FeedbackWidget       from '@/components/FeedbackWidget'
 import DescriptionExpander  from '@/components/DescriptionExpander'
+import AdSlot               from '@/components/AdSlot'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -233,6 +234,9 @@ export default async function NovelPage({ params }: Props) {
                   </div>
                 </div>
               )}
+
+              {/* Ad slot — bottom of the sidebar, far from the chat panel */}
+              <AdSlot variant="feed" />
             </div>
           ) : (
             <div className="p-4 flex flex-col gap-3">
