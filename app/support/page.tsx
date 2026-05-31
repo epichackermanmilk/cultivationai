@@ -16,7 +16,7 @@ const CATEGORIES = [
 const QUICK_ANSWERS = [
   {
     q: 'How do I unlock a novel?',
-    a: 'Go to any novel page and click "Unlock" — it costs 50 tokens to process the novel, then 10 tokens per message.',
+    a: 'Go to any novel page and click "Unlock" — it\'s completely free. You only spend tokens (10 per message) when you actually chat.',
   },
   {
     q: 'Where can I get more tokens?',

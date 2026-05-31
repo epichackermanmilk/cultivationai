@@ -202,13 +202,9 @@ export default function Chat({ slug, title, author }: Props) {
     try {
       const res = await fetch(`/api/embed/${slug}`, { method: 'POST' })
       if (res.status === 401) {
+        // Sign-in required to unlock (prevents anonymous embed abuse)
         setEmbedState('not_embedded')
-        return
-      }
-      if (res.status === 402) {
-        // Not enough tokens — stay on the gate screen with a message
-        setEmbedState('not_embedded')
-        setEmbedError('Not enough tokens to unlock this novel. Visit the shop to get more.')
+        setEmbedError('Please sign in to unlock this novel — it\'s free.')
         return
       }
       // If already embedded (200 with embedded:true), jump straight to ready
@@ -216,12 +212,8 @@ export default function Chat({ slug, title, author }: Props) {
         const data = await res.json()
         if (data.embedded || data.status === 'done') {
           setEmbedState('ready')
-          // Update token display if server returned remaining balance
-          if (data.tokensRemaining !== undefined) updateTokens(data.tokensRemaining)
           return
         }
-        // Update token display for the deduction
-        if (data.tokensRemaining !== undefined) updateTokens(data.tokensRemaining)
       }
     } catch { /* handled by poll */ }
     setEmbedState('embedding')
@@ -430,23 +422,16 @@ export default function Chat({ slug, title, author }: Props) {
           We&apos;ll process all chapters and build a searchable knowledge base so you can chat with the story.
           This takes a few minutes.
         </p>
-        {embedError ? (
-          <div className="flex max-w-xs flex-col items-center gap-3">
-            <p className="text-sm text-red-400">{embedError}</p>
-            <a href="/shop"
-              className="rounded-lg bg-amber-500 px-6 py-2.5 text-sm font-semibold text-black hover:bg-amber-400 transition-colors">
-              Get More Tokens →
-            </a>
-          </div>
-        ) : (
-          <button
-            onClick={startEmbed}
-            className="rounded-lg bg-amber-500 px-6 py-2.5 text-sm font-semibold text-black hover:bg-amber-400 transition-colors"
-          >
-            Unlock &ldquo;{title}&rdquo;
-          </button>
+        {embedError && (
+          <p className="max-w-xs text-sm text-red-400">{embedError}</p>
         )}
-        <p className="text-xs text-zinc-600">Costs 50 tokens to unlock · 10 tokens per message after</p>
+        <button
+          onClick={startEmbed}
+          className="rounded-lg bg-amber-500 px-6 py-2.5 text-sm font-semibold text-black hover:bg-amber-400 transition-colors"
+        >
+          Unlock &ldquo;{title}&rdquo; — Free
+        </button>
+        <p className="text-xs text-zinc-600">Free to unlock · 10 tokens per message</p>
       </div>
     )
   }

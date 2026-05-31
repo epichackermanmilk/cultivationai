@@ -22,9 +22,11 @@ interface SiteHeaderProps {
   rightSlot?: React.ReactNode
   /** Override the inner max-width (default max-w-7xl) */
   maxWidth?: string
+  /** Extra classes appended to the <header> root (e.g. "shrink-0" for flex layouts) */
+  rootClassName?: string
 }
 
-export default function SiteHeader({ rightSlot, maxWidth = 'max-w-7xl' }: SiteHeaderProps) {
+export default function SiteHeader({ rightSlot, maxWidth = 'max-w-7xl', rootClassName = '' }: SiteHeaderProps) {
   const pathname = usePathname()
 
   function active(href: string, exact = false) {
@@ -33,7 +35,7 @@ export default function SiteHeader({ rightSlot, maxWidth = 'max-w-7xl' }: SiteHe
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[var(--nc-border)] bg-[var(--nc-bg)]/90 backdrop-blur">
+    <header className={`sticky top-0 z-50 border-b border-[var(--nc-border)] bg-[var(--nc-bg)]/90 backdrop-blur ${rootClassName}`}>
       <div className={`mx-auto flex ${maxWidth} items-center justify-between px-4 py-3`}>
 
         {/* Logo */}

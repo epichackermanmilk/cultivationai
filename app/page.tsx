@@ -134,7 +134,7 @@ function UnlockMockup() {
       <div className="px-4 pb-4">
         <button className="w-full rounded-xl py-2.5 text-xs font-bold text-black"
           style={{ background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)' }}>
-          Unlock for Chat — 50 tokens
+          Unlock for Chat — Free
         </button>
       </div>
       <div className="border-t px-4 py-3 space-y-1.5" style={{ borderColor: 'var(--nc-border)' }}>
@@ -232,8 +232,8 @@ const FAQ = [
     items: [
       { q: 'What is NovelCodex?', a: 'NovelCodex is an AI-powered reading companion for xianxia, cultivation, and wuxia web novels. Ask any question about a story and get accurate, source-grounded answers drawn directly from the indexed chapters.' },
       { q: 'Who is NovelCodex for?', a: 'Anyone who reads web novels — whether you want to catch up after a long break, settle a debate about cultivation realms, or find out if a character survives without reading 800 chapters.' },
-      { q: 'Is NovelCodex free to use?', a: 'Yes. You get 100 free tokens on signup with no credit card required. Additional tokens can be purchased whenever you need them.' },
-      { q: 'How do I get started?', a: 'Create a free account, browse the library, click "Unlock for Chat" on any novel, and start asking questions.' },
+      { q: 'Is NovelCodex free to use?', a: 'Yes. You get 50 free tokens on signup with no credit card required (40 instantly, plus 10 more when you add your name and age). Unlocking novels is completely free — you only spend tokens when you chat. Additional tokens can be purchased whenever you need them.' },
+      { q: 'How do I get started?', a: 'Create a free account, browse the library, click "Unlock" on any novel (it\'s free), and start asking questions.' },
     ],
   },
   {
@@ -248,9 +248,9 @@ const FAQ = [
   {
     category: 'Tokens & Billing',
     items: [
-      { q: 'What are tokens?', a: 'Tokens are the currency for AI chat. Each message costs approximately 10 tokens. Unlocking a novel for chat also costs tokens (typically 50–100 depending on length).' },
+      { q: 'What are tokens?', a: 'Tokens are the currency for AI chat. Each message costs 10 tokens. Unlocking a novel is completely free — you only spend tokens when you actually chat with the story.' },
       { q: 'Do tokens expire?', a: 'Never. Tokens you purchase are yours indefinitely — no subscription required, no monthly reset.' },
-      { q: 'What payment options are available?', a: 'Token purchases and subscriptions are coming soon. Currently all users receive 100 free tokens on signup.' },
+      { q: 'What payment options are available?', a: 'New users receive 50 free tokens on signup. You can buy more tokens any time from the shop with a one-time purchase, or subscribe for a monthly token allowance at a lower per-token rate.' },
       { q: 'What is the subscription?', a: 'Subscriptions offer a monthly token allowance at a lower per-token cost than one-time purchases — ideal for readers who use NovelCodex daily.' },
     ],
   },
@@ -369,7 +369,7 @@ export default function LandingPage() {
             <div className="mb-6 space-y-3">
               {([
                 ['Browse', 'Search thousands of web novels'],
-                ['Unlock', 'Activate AI on any novel with tokens'],
+                ['Unlock', 'Activate AI on any novel — free'],
                 ['Ask',    'Chat with the book — characters, lore, anything'],
               ] as [string, string][]).map(([title, desc], idx) => (
                 <div key={title} className="flex items-start gap-3">
@@ -397,7 +397,7 @@ export default function LandingPage() {
               </button>
             </div>
             <p className="mt-3 text-center text-xs" style={{ color: 'var(--nc-text2)' }}>
-              100 free tokens · No credit card required
+              50 free tokens · No credit card required
             </p>
           </div>
         </div>
@@ -416,7 +416,7 @@ export default function LandingPage() {
         <div className="flex items-center gap-3">
           <Link href="/chat"
             className="hidden sm:flex items-center whitespace-nowrap rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
-            ✦ Multi-Novel Chat
+            ✦ Chat
           </Link>
           <Link href="/library"
             className="hidden sm:flex items-center whitespace-nowrap rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
@@ -475,7 +475,7 @@ export default function LandingPage() {
             )}
           </div>
           <p className="mt-3 text-xs" style={{ color: 'var(--nc-text2)' }}>
-            100 free tokens on signup · No credit card required
+            50 free tokens on signup · No credit card required
           </p>
         </div>
         <div className="absolute right-0 top-0 hidden h-full w-1/2 md:block">
@@ -541,7 +541,7 @@ export default function LandingPage() {
               Activate AI on any novel in seconds
             </h3>
             <p className="text-lg leading-relaxed mb-6" style={{ color: 'var(--nc-text2)' }}>
-              Spend tokens to unlock a novel. NovelCodex reads every chapter and builds a searchable AI knowledge base — characters, realms, factions, everything.
+              Unlock any novel for free. NovelCodex reads every chapter and builds a searchable AI knowledge base — characters, realms, factions, everything. You only spend tokens when you chat.
             </p>
             <Link href="/shop"
               className="inline-flex items-center gap-2 text-sm font-semibold transition hover:opacity-80" style={G}>
@@ -721,7 +721,7 @@ export default function LandingPage() {
               Start for free today.
             </h2>
             <p className="text-base" style={{ color: 'var(--nc-text2)' }}>
-              100 tokens on signup. No credit card. No commitment.
+              50 free tokens on signup. No credit card. No commitment.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 shrink-0">

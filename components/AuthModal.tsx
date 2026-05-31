@@ -331,7 +331,7 @@ export default function AuthPanel({ onClose, rightOffset = 16, topOffset = 64 }:
             </button>
 
             <p className="text-center text-xs" style={{ color: 'rgba(113,113,122,0.7)' }}>
-              🎁 100 free tokens on sign-up
+              🎁 50 free tokens on sign-up
             </p>
           </div>
         )}

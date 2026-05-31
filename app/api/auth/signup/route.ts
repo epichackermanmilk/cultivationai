@@ -10,7 +10,7 @@ const COOKIE_OPTS = {
   sameSite: 'lax',
   secure:   process.env.NODE_ENV === 'production',
 } as const
-const WELCOME_TOKENS = 100
+const WELCOME_TOKENS = 40   // +10 more granted when the user completes their profile (name + age) = 50 total
 
 function admin() {
   return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!, {
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Username already taken — please choose another' }, { status: 409 })
   }
 
-  // Create user — auto-confirm email, seed 100 tokens in metadata
+  // Create user — auto-confirm email, seed welcome tokens in metadata
   const { data: created, error: createErr } = await sb.auth.admin.createUser({
     email,
     password,
@@ -99,7 +99,7 @@ export async function POST(req: Request) {
       await resend.emails.send({
         from: 'NovelCodex <noreply@novelcodex.org>',
         to: email,
-        subject: 'Welcome to NovelCodex — your 100 free tokens are ready',
+        subject: 'Welcome to NovelCodex — your free tokens are ready',
         html: `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Welcome to NovelCodex</title></head>
@@ -116,7 +116,7 @@ export async function POST(req: Request) {
         <!-- Hero -->
         <tr><td style="background:#18181b;border:1px solid #27272a;border-radius:16px;padding:40px 36px;">
           <h1 style="margin:0 0 12px;font-size:28px;font-weight:800;color:#fafafa;line-height:1.2;">
-            Your 100 free tokens<br/>are waiting.
+            Your free tokens<br/>are waiting.
           </h1>
           <p style="margin:0 0 28px;font-size:15px;line-height:1.6;color:#a1a1aa;">
             Welcome to NovelCodex — the AI reading companion for web novel fans.
@@ -127,7 +127,7 @@ export async function POST(req: Request) {
           <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
             ${[
               ['Browse', 'Search thousands of web novels across every genre'],
-              ['Unlock', 'Activate AI on any novel with your free tokens'],
+              ['Unlock', 'Activate AI on any novel — free, no token cost'],
               ['Ask',    'Chat with the book — characters, lore, spoilers'],
             ].map(([title, desc]) => `
             <tr><td style="padding:8px 0;border-bottom:1px solid #27272a;">

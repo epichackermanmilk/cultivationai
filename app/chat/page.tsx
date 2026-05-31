@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react'
-import Link from 'next/link'
-import TokenWidget    from '@/components/TokenWidget'
+import SiteHeader     from '@/components/SiteHeader'
 import FeedbackWidget from '@/components/FeedbackWidget'
 
 interface Novel {
@@ -292,50 +291,18 @@ export default function ChatPage() {
   return (
     <div className="flex h-screen flex-col overflow-hidden pb-16 sm:pb-0" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
       {/* Header */}
-      <header className="shrink-0 sticky top-0 z-50 border-b border-[var(--nc-border)] bg-[var(--nc-bg)]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-[1400px] items-center justify-between px-4 py-3">
-          <Link href="/library" className="group shrink-0 flex items-center gap-3">
-            <img src="/logo.png" alt="" className="h-8 w-8 object-contain" />
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-amber-400 group-hover:text-amber-300 transition">NovelCodex</h1>
-              <p className="hidden lg:block text-xs text-zinc-500">Every secret, every character, every world — ask anything.</p>
-            </div>
-          </Link>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span className="hidden sm:flex items-center whitespace-nowrap rounded-lg border border-amber-500/60 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-400">
-              ✦ Multi-Novel Chat
-            </span>
-            <Link href="/library"
-              className="hidden sm:flex items-center whitespace-nowrap rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
-              Library
-            </Link>
-            <Link href="/characters"
-              className="hidden sm:flex items-center whitespace-nowrap rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
-              🎭 Characters
-            </Link>
-            <Link href="/games"
-              className="hidden sm:flex items-center whitespace-nowrap rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
-              🎮 Games
-            </Link>
-            <Link href="/recommend"
-              className="hidden sm:flex items-center whitespace-nowrap rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
-              Recommend
-            </Link>
-            <Link href="/bookmarks"
-              className="hidden sm:flex items-center whitespace-nowrap rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400">
-              Bookmarks
-            </Link>
-            <TokenWidget />
-            {/* Desktop-only toggle — mobile uses the left-edge arrow tab */}
-            <button
-              onClick={() => setSideOpen(v => !v)}
-              className="hidden sm:flex items-center rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
-            >
-              {sideOpen ? 'Hide' : 'Show'} Library
-            </button>
-          </div>
-        </div>
-      </header>
+      <SiteHeader
+        maxWidth="max-w-[1400px]"
+        rootClassName="shrink-0"
+        rightSlot={
+          <button
+            onClick={() => setSideOpen(v => !v)}
+            className="hidden sm:flex items-center rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-400/75 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition"
+          >
+            {sideOpen ? 'Hide' : 'Show'} Library
+          </button>
+        }
+      />
 
       <div className="flex flex-1 overflow-hidden" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
         {/* Mobile backdrop — closes sidebar when tapping outside, sits below header */}

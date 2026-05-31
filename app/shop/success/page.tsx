@@ -1,12 +1,39 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
+// Declare gtag for TypeScript
+declare global {
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    gtag?: (...args: any[]) => void
+  }
+}
+
 function SuccessContent() {
-  const params = useSearchParams()
+  const params    = useSearchParams()
   const sessionId = params.get('session_id')
+
+  // ── GA4 purchase event (fires once on mount) ──────────────────────────────
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.gtag || !sessionId) return
+
+    // We don't know the exact amount without a server lookup,
+    // so we fire a generic purchase event. For precise revenue tracking
+    // pass `value` from the Stripe session server-side.
+    window.gtag('event', 'purchase', {
+      transaction_id: sessionId,
+      currency:       'USD',
+      // value is unknown client-side — set up server-side GA4 MP for precise revenue
+      items: [{
+        item_id:   'tokens',
+        item_name: 'NovelCodex Tokens',
+        quantity:  1,
+      }],
+    })
+  }, [sessionId])
 
   return (
     <div className="mx-auto max-w-lg px-4 py-16 text-center">

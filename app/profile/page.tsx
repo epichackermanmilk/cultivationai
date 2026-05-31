@@ -513,17 +513,17 @@ export default function ProfilePage() {
       <div className="mt-6 grid grid-cols-2 gap-3">
         <a
           href="/library"
-          className="flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm transition hover:border-amber-500/40"
-          style={{ borderColor: 'var(--nc-border)', color: 'var(--nc-text2)' }}
+          className="flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold text-black transition hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0"
+          style={{ background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)' }}
         >
-          ← Back to library
+          ← Library
         </a>
         <a
           href="/chat"
-          className="flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm transition hover:border-amber-500/40"
-          style={{ borderColor: 'var(--nc-border)', color: 'var(--nc-text2)' }}
+          className="flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold text-black transition hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0"
+          style={{ background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)' }}
         >
-          ⚡ Start chatting
+          ⚡ Start Chatting
         </a>
       </div>
     </div>

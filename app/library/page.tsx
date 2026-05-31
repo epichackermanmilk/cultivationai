@@ -383,11 +383,7 @@ export default function LibraryPage() {
     <div className="relative min-h-screen pb-16 sm:pb-0" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
       <ParticleCanvas />
 
-      <SiteHeader rightSlot={
-        novels.length > 0
-          ? <span className="hidden sm:block text-xs text-zinc-600">{novels.length.toLocaleString()} novels</span>
-          : undefined
-      } />
+      <SiteHeader />
 
       <main className="relative z-10 mx-auto max-w-7xl px-4 py-8">
         {/* Search + Filter */}
