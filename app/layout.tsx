@@ -19,6 +19,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "NovelCodex",
   description: "Every secret, every character, every world — ask anything.",
+  other: {
+    "google-adsense-account": "ca-pub-6042477932346476",
+  },
 };
 
 export default function RootLayout({
@@ -31,6 +34,13 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      {/* Google AdSense */}
+      <Script
+        async
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6042477932346476"
+        crossOrigin="anonymous"
+        strategy="afterInteractive"
+      />
       {/* Google Analytics */}
       <Script
         src="https://www.googletagmanager.com/gtag/js?id=G-RN9SR0DZ6R"

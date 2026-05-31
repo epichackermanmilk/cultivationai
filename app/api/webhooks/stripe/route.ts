@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
+import { syncDiscordRoles } from '@/lib/discord'
 
 // Lazily initialised so the build doesn't fail when STRIPE_SECRET_KEY is absent
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -28,10 +29,14 @@ async function creditTokens(userId: string, tokens: number, reference: string) {
   if (existing) return
 
   // Get current balance and add tokens
-  const { data: profile } = await sb.from('profiles').select('tokens').eq('id', userId).single()
-  const current = (profile?.tokens as number) ?? 0
+  const { data: profile } = await sb.from('profiles').select('tokens, tokens_ever_purchased').eq('id', userId).single()
+  const current      = (profile?.tokens as number) ?? 0
+  const everPurchased = (profile?.tokens_ever_purchased as number) ?? 0
 
-  await sb.from('profiles').update({ tokens: current + tokens }).eq('id', userId)
+  await sb.from('profiles').update({
+    tokens:                current + tokens,
+    tokens_ever_purchased: everPurchased + tokens,
+  }).eq('id', userId)
 
   // Record the transaction (best-effort — table may not exist yet)
   try {
@@ -76,13 +81,16 @@ export async function POST(req: Request) {
 
       if (user_id && mode === 'once' && tokens) {
         await creditTokens(user_id, parseInt(tokens, 10), session.id)
+        syncDiscordRoles(user_id).catch(() => {})
       }
 
       // Subscription initial payment — also credit tokens + mark sub active
       if (user_id && mode === 'sub' && tokens) {
         await creditTokens(user_id, parseInt(tokens, 10), session.id)
         const sb = admin()
-        await sb.from('profiles').update({ subscription_active: true, ads_disabled: true }).eq('id', user_id)
+        const subTier = (session.metadata?.tier as string | undefined)?.toLowerCase() ?? null
+        await sb.from('profiles').update({ subscription_active: true, ads_disabled: true, subscription_tier: subTier }).eq('id', user_id)
+        syncDiscordRoles(user_id).catch(() => {})
       }
 
       // Ad-free add-on purchase
@@ -104,6 +112,7 @@ export async function POST(req: Request) {
           // Ensure sub active flag is set (may have been cleared if sub lapsed)
           const sb = admin()
           await sb.from('profiles').update({ subscription_active: true, ads_disabled: true }).eq('id', user_id)
+          syncDiscordRoles(user_id).catch(() => {})
         }
       }
     }
@@ -115,7 +124,8 @@ export async function POST(req: Request) {
       if (user_id) {
         const sb = admin()
         // Only clear subscription_active — ads_disabled stays true if they bought it separately
-        await sb.from('profiles').update({ subscription_active: false }).eq('id', user_id)
+        await sb.from('profiles').update({ subscription_active: false, subscription_tier: null }).eq('id', user_id)
+        syncDiscordRoles(user_id).catch(() => {})
         // If they didn't buy ad-free separately, re-enable ads
         const { data: profile } = await sb.from('profiles').select('ads_disabled').eq('id', user_id).maybeSingle()
         // ads_disabled stays if they specifically purchased it (we can't tell here easily).

@@ -11,6 +11,9 @@ export interface AuthUser {
   created_at:              string   // ISO timestamp — used for welcome deal countdown
   ads_disabled:            boolean  // true = one-time ad-free purchase or manually granted
   subscription_active:     boolean  // true = active subscriber (auto-cleared on cancel)
+  discord_user_id:         string | null
+  discord_verified:        boolean
+  tokens_ever_purchased:   number
 }
 
 interface AuthCtx {
