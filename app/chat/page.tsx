@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react'
 import SiteHeader     from '@/components/SiteHeader'
 import FeedbackWidget from '@/components/FeedbackWidget'
+import { useAuth }    from '@/lib/auth-context'
 
 interface Novel {
   slug: string
@@ -237,11 +238,14 @@ function NovelSelector({
 
 // ── Main chat page ────────────────────────────────────────────────────────────
 export default function ChatPage() {
+  const { user, updateTokens } = useAuth()
   const [novels,   setNovels]   = useState<Novel[]>([])
   const [loading,  setLoading]  = useState(true)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [messages, setMessages] = useState<Message[]>([])
   const [input,    setInput]    = useState('')
+  const [sending,  setSending]  = useState(false)
+  const [chatError, setChatError] = useState('')
   const [sideOpen, setSideOpen] = useState(true)
   const touchStartX = useRef<number | null>(null)
 
@@ -274,18 +278,59 @@ export default function ChatPage() {
 
   const selectedNovels = novels.filter(n => selected.has(n.slug))
 
-  const sendDemo = () => {
+  const sendDemo = async () => {
     const text = input.trim()
-    if (!text || selected.size === 0) return
-    const userMsg: Message = { role: 'user', content: text }
-    const asstMsg: Message = {
-      role: 'assistant',
-      content: selected.size === 0
-        ? '⚠️ No novels selected. Add some novels from the panel on the left first.'
-        : `[PROTOTYPE — no AI connected yet]\n\nYou asked about ${selected.size} novel${selected.size !== 1 ? 's' : ''}: ${selectedNovels.map(n => n.title).join(', ')}.\n\nIn production this will search across all selected novels' chapters and synthesise an answer.`,
-    }
-    setMessages(prev => [...prev, userMsg, asstMsg])
+    if (!text || selected.size === 0 || sending) return
+    if (!user) { setChatError('Sign in to chat.'); return }
+
+    setChatError('')
+    setSending(true)
     setInput('')
+
+    // history BEFORE we append the new turn
+    const priorHistory = messages.map(m => ({ role: m.role, content: m.content }))
+    const asstIndex = messages.length + 1   // index of the assistant message we're about to add
+
+    setMessages(prev => [...prev, { role: 'user', content: text }, { role: 'assistant', content: '' }])
+
+    try {
+      const r = await fetch('/api/chat/multi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          novels:  selectedNovels.map(n => ({ slug: n.slug, title: n.title })),
+          history: priorHistory,
+        }),
+      })
+
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}))
+        const msg = r.status === 402
+          ? '⚡ You\'re out of tokens. Visit the shop to get more and keep chatting.'
+          : (d.error ?? 'Something went wrong. Please try again.')
+        setMessages(prev => { const a = [...prev]; a[asstIndex] = { role: 'assistant', content: msg }; return a })
+        setSending(false)
+        return
+      }
+
+      const remaining = r.headers.get('X-Tokens-Remaining')
+      if (remaining !== null) { const n = parseInt(remaining, 10); if (!isNaN(n)) updateTokens(n) }
+
+      const reader  = r.body!.getReader()
+      const decoder = new TextDecoder()
+      let full = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        full += decoder.decode(value, { stream: true })
+        setMessages(prev => { const a = [...prev]; a[asstIndex] = { role: 'assistant', content: full }; return a })
+      }
+    } catch {
+      setMessages(prev => { const a = [...prev]; a[asstIndex] = { role: 'assistant', content: 'Network error — please try again.' }; return a })
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -465,20 +510,26 @@ export default function ChatPage() {
                   : 'Select novels first…'
                 }
                 rows={1}
-                className="flex-1 resize-none rounded-2xl border border-[var(--nc-border)] px-4 py-3.5 text-sm placeholder-zinc-500 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition max-h-40 overflow-y-auto"
+                disabled={sending}
+                className="flex-1 resize-none rounded-2xl border border-[var(--nc-border)] px-4 py-3.5 text-sm placeholder-zinc-500 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition max-h-40 overflow-y-auto disabled:opacity-60"
                 style={{ background: 'var(--nc-bg2)', color: 'var(--nc-text)', fieldSizing: 'content' } as React.CSSProperties}
               />
               <button
                 onClick={sendDemo}
-                disabled={!input.trim() || selected.size === 0}
+                disabled={!input.trim() || selected.size === 0 || sending}
                 className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-black transition hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-                </svg>
+                {sending ? (
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent" />
+                ) : (
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                  </svg>
+                )}
               </button>
             </div>
-            <p className="mt-1.5 text-center text-xs text-zinc-600">Enter to send · Shift+Enter for new line</p>
+            {chatError && <p className="mt-1.5 text-center text-xs text-rose-400">{chatError}</p>}
+            <p className="mt-1.5 text-center text-xs text-zinc-600">15 tokens per message · Enter to send · Shift+Enter for new line</p>
           </div>
         </div>
       </div>
