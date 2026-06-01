@@ -102,12 +102,49 @@ export async function POST(req: Request) {
     ? `${characterName} ${message}`
     : message
 
+  // Detect broad "summarize / overview / first arc" style questions. Pure top-k
+  // semantic search handles these poorly — the query ("summarize the first arc")
+  // doesn't resemble story prose, so the nearest chunks are scattered or empty.
+  // For these we retrieve a CHRONOLOGICAL narrative spine instead so the model
+  // has coherent, sequential material to synthesize from.
+  const BROAD_RE = /\b(summar|recap|overview|tl;?dr|first arc|early chapter|beginning|opening|so far|what happens|what'?s? (it|this) about|main plot|story so far|synops|whole (story|book|novel|thing)|entire (story|book|novel)|key events|main events|main characters|premise|plot)\b/i
+  const isBroad = !characterName && BROAD_RE.test(message)
+  const wantsEarly = /\b(first arc|early|beginning|start|opening|so far|initial)\b/i.test(message)
+
   const embRes = await openai.embeddings.create({
     model: 'text-embedding-3-small',
     input: embeddingQuery,
   })
   const queryEmbedding = embRes.data[0].embedding
-  const chunks = await matchChunks(queryEmbedding, slug, 6)
+  let chunks = await matchChunks(queryEmbedding, slug, isBroad ? 10 : 6)
+
+  if (isBroad) {
+    // Pull chapters in reading order and merge them with the semantic matches.
+    // "First arc / beginning" → earliest chapters; otherwise sample across the book.
+    try {
+      const { data: chrono } = await sb
+        .from('chunks')
+        .select('text, chapter_number, chapter_title')
+        .eq('slug', slug)
+        .order('chapter_number', { ascending: true })
+        .order('chunk_index',    { ascending: true })
+        .limit(wantsEarly ? 18 : 60)
+      if (chrono && chrono.length) {
+        let extra = chrono.slice(0, 18)
+        if (!wantsEarly && chrono.length > 18) {
+          const step = Math.max(1, Math.floor(chrono.length / 18))
+          extra = chrono.filter((_, i) => i % step === 0).slice(0, 18)
+        }
+        const seen = new Set(chunks.map(c => `${c.chapter_number}:${c.text.slice(0, 40)}`))
+        for (const e of extra) {
+          const k = `${e.chapter_number}:${e.text.slice(0, 40)}`
+          if (!seen.has(k)) { chunks.push({ ...e, similarity: 0 }); seen.add(k) }
+        }
+      }
+    } catch { /* fall back to semantic-only */ }
+    // Present in reading order so the summary flows chronologically.
+    chunks.sort((a, b) => a.chapter_number - b.chapter_number)
+  }
 
   if (chunks.length === 0) {
     const notFoundMsg = characterName
@@ -117,7 +154,7 @@ export async function POST(req: Request) {
   }
 
   const context = chunks
-    .map(c => `[Ch.${c.chapter_number} — ${c.chapter_title}]\n${c.text}`)
+    .map(c => `[Ch.${c.chapter_number} — ${c.chapter_title}]\n${isBroad ? c.text.slice(0, 700) : c.text}`)
     .join('\n\n---\n\n')
 
   // ── Build system prompt (book assistant OR character roleplay) ─────────────
@@ -191,10 +228,13 @@ ${context}`
 
   } else {
     // ── Book assistant mode — pure Q&A ──────────────────────────────────────
+    const broadNote = isBroad
+      ? `\nThe reader is asking for a summary/overview. The passages below are drawn in READING ORDER from the relevant part of the story. Synthesize across them into a flowing, coherent summary — connect events chronologically rather than answering with isolated facts. It's fine to generalize the throughline of the arc; you do not need a passage for every sentence. Aim for a few tight paragraphs.\n`
+      : ''
     systemPrompt = `You are an AI assistant for readers of the novel "${title}" by ${author}.
 Answer questions using ONLY the passages provided below. Be specific and reference chapter details when relevant.
-If something isn't covered in the passages, say so honestly rather than guessing.
-
+If something genuinely isn't covered in the passages, say so honestly rather than inventing — but do your best to synthesize what the passages do show before giving up.
+${broadNote}
 Relevant passages:
 ${context}`
   }
@@ -203,7 +243,7 @@ ${context}`
     model:          'gpt-4o-mini',
     stream:         true,
     stream_options: { include_usage: true },
-    max_tokens:     800,
+    max_tokens:     isBroad ? 1100 : 800,
     temperature:    characterName ? 0.7 : 0.3,  // more expressive in roleplay mode
     messages:    [
       { role: 'system', content: systemPrompt },

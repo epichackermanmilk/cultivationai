@@ -11,6 +11,7 @@ import { NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { createClient } from '@supabase/supabase-js'
 import { getFeaturedCharacters, type CharacterProfile } from '@/lib/featured-characters'
+import { triggerEmbed } from '@/lib/vps'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
@@ -64,11 +65,16 @@ export async function GET(_req: Request, { params }: RouteContext) {
   if (needsSynthesis) {
     try {
       const { data: chunks } = await sb
-        .from('novel_chunks')
+        .from('chunks')
         .select('text')
         .eq('slug', slug)
         .order('chapter_number', { ascending: true })
         .limit(25)
+
+      if (!chunks || chunks.length === 0) {
+        // Not indexed yet — silently start it so community profiles appear soon.
+        triggerEmbed(slug).catch(() => {})
+      }
 
       if (chunks && chunks.length > 0) {
         const excerpt = chunks

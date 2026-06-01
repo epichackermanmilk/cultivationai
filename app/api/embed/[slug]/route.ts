@@ -13,7 +13,7 @@ const VPS_BASE   = process.env.VPS_API_URL
 const VPS_KEY    = process.env.VPS_API_KEY
 const vpsHeaders = { 'X-Api-Key': VPS_KEY!, 'Content-Type': 'application/json' }
 
-// Unlocking a novel is FREE — users only pay 10 tokens per chat message.
+// Indexing a novel is FREE and automatic — users only pay 10 tokens per chat message.
 // Sign-in is still required so anonymous traffic can't trigger expensive embeds.
 
 // Only allow safe slug characters (alphanumeric + hyphen, 1-120 chars)
@@ -36,7 +36,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ slug: 
   // Auth required — embedding is an expensive server-side operation
   const cookieStore = await cookies()
   const token = cookieStore.get('nc_session')?.value
-  if (!token) return NextResponse.json({ error: 'Sign in to unlock novels' }, { status: 401 })
+  if (!token) return NextResponse.json({ error: 'Sign in to chat with novels' }, { status: 401 })
 
   const sb = admin()
   const { data: { user }, error: authErr } = await sb.auth.getUser(token)

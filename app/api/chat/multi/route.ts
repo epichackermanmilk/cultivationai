@@ -70,8 +70,8 @@ export async function POST(req: Request) {
   const embRes = await openai.embeddings.create({ model: 'text-embedding-3-small', input: message })
   const queryEmbedding = embRes.data[0].embedding
 
-  // For each novel: if it's indexed, retrieve passages; if not, auto-unlock it
-  // (kick off the embed in the background) so it's ready next time.
+  // For each novel: if it's indexed, retrieve passages; if not, silently start
+  // indexing it (kick off the embed in the background) so it's ready next time.
   const stillIndexing: string[] = []
   const perNovel = await Promise.all(novels.map(async n => {
     const title = n.title || n.slug

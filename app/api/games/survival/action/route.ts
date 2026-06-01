@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     const windowTo   = Math.min(state.chapterTo, targetChapter + 15)
 
     const { data: chunks } = await sb
-      .from('novel_chunks')
+      .from('chunks')
       .select('text, chapter_number')
       .eq('slug', state.novelSlug)
       .gte('chapter_number', windowFrom)

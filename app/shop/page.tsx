@@ -25,7 +25,7 @@ const SUBS = [
     vsBundle: 550,
     savingPct: 27,
     highlight: false,
-    perks: ['700 tokens / month', 'Multi-novel chat unlocked', 'Ad-free everywhere', 'Discord: custom color role + your own private channel', 'Cancel anytime'],
+    perks: ['700 tokens / month', 'Multi-novel chat included', 'Ad-free everywhere', 'Discord: custom color role + your own private channel', 'Cancel anytime'],
     badge: null,
   },
   {
@@ -35,13 +35,13 @@ const SUBS = [
     vsBundle: 1200,
     savingPct: 33,
     highlight: true,
-    perks: ['1,600 tokens / month', 'Multi-novel chat unlocked', 'Ad-free everywhere', 'Discord: custom color role + your own private channel', 'Early access to new features', 'Priority support', 'Cancel anytime'],
+    perks: ['1,600 tokens / month', 'Multi-novel chat included', 'Ad-free everywhere', 'Discord: custom color role + your own private channel', 'Early access to new features', 'Priority support', 'Cancel anytime'],
     badge: 'Best sub',
   },
 ]
 
 const FAQ = [
-  { q: 'What are tokens?', a: 'Tokens are the in-app currency for every AI feature. Each feature has a fixed price: asking a question in regular novel chat costs 10 tokens, and using the Recommender costs 10 tokens. Unlocking a novel for AI chat is completely free — you only spend tokens when you actually chat. We keep prices fixed so you always know exactly what you\'re spending — no surprise per-word billing.' },
+  { q: 'What are tokens?', a: 'Tokens are the in-app currency for every AI feature. Each feature has a fixed price: asking a question in regular novel chat costs 10 tokens, and using the Recommender costs 10 tokens. Every novel in the library is ready to chat with for free — you only spend tokens when you actually chat. We keep prices fixed so you always know exactly what you\'re spending — no surprise per-word billing.' },
   { q: 'Do tokens expire?', a: 'No. Tokens you purchase never expire and carry over indefinitely.' },
   { q: 'Can I get a refund?', a: 'We offer refunds within 7 days of purchase if you have not used any tokens from that purchase. Contact us at hello@novelcodex.ai.' },
   { q: 'How do subscriptions work?', a: 'Subscriptions bill monthly and deposit tokens into your account on each renewal cycle. You can cancel anytime from your Stripe billing portal.' },

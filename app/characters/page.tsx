@@ -93,8 +93,8 @@ export default async function CharactersPage() {
           style={{ background: 'var(--nc-bg2)' }}>
           <p className="text-sm font-semibold" style={{ color: 'var(--nc-text)' }}>More characters coming</p>
           <p className="mt-1.5 max-w-sm mx-auto text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
-            Community characters are auto-generated when any novel is unlocked. Every novel in the library
-            gets its own character roster — just unlock it and they appear in Character Chat mode.
+            Community characters are auto-generated for every novel. Each story in the library
+            gets its own character roster — open any novel and they appear in Character Chat mode.
           </p>
           <Link href="/library"
             className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10

@@ -14,7 +14,7 @@ const FACTS: string[] = [
   'The “trash who is secretly a genius” is one of the genre’s oldest, most loved setups.',
   'Tip: You can chat with characters from your favorite novels in Character mode.',
   'Tip: Multi-Novel Chat lets you compare power systems across different stories at once.',
-  'Tip: Unlocking a novel for chat is completely free — you only spend tokens when you ask.',
+  'Tip: Every novel is ready to chat the moment you pick it — you only spend tokens when you ask.',
   'Tip: Try the Trivia Gauntlet to see how well you really know your novels.',
   'Many isekai heroes “transmigrate” — waking up inside the body of a side character.',
   'A “regressor” dies and returns to the past, keeping their memories to do it all over.',

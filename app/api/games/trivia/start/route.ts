@@ -7,6 +7,7 @@ import { cookies }      from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 import OpenAI           from 'openai'
 import { parseJsonBody, sanitizeText } from '@/lib/sanitize'
+import { triggerEmbed } from '@/lib/vps'
 
 const TOKENS_PER_QUESTION = 2
 const VALID_COUNTS = [5, 10, 15, 20]
@@ -82,10 +83,14 @@ export async function POST(req: Request) {
   await sb.from('profiles').update({ tokens: profile.tokens - cost }).eq('id', user.id)
 
   // ── Gather RAG context from the chosen novels ───────────────────────────────
+  // Every novel a user picks is, from their POV, available. If we don't yet have
+  // its content indexed, we silently kick off indexing in the background and ask
+  // them to try again in a moment — no "unlock" step is ever surfaced.
   const contextBlocks: string[] = []
+  const indexing: string[] = []
   for (const n of novels) {
     try {
-      let q = sb.from('novel_chunks')
+      let q = sb.from('chunks')
         .select('text, chapter_number')
         .eq('slug', n.slug)
         .order('chapter_number', { ascending: true })
@@ -101,15 +106,26 @@ export async function POST(req: Request) {
           `### Novel: ${n.title}\n` +
           picked.map(c => `[Ch.${c.chapter_number}] ${c.text.slice(0, 450)}`).join('\n')
         )
+      } else {
+        // No content yet — start indexing silently.
+        indexing.push(n.title || n.slug)
+        triggerEmbed(n.slug).catch(() => {})
       }
-    } catch { /* skip novel with no chunks */ }
+    } catch {
+      indexing.push(n.title || n.slug)
+      triggerEmbed(n.slug).catch(() => {})
+    }
   }
 
   if (contextBlocks.length === 0) {
-    // No indexed content for any chosen novel — refund.
+    // Nothing ready yet — refund and let them retry once indexing finishes.
     await sb.from('profiles').update({ tokens: profile.tokens }).eq('id', user.id)
+    const names = indexing.slice(0, 3).join(', ') || 'your novels'
     return NextResponse.json(
-      { error: 'None of the chosen novels are indexed yet. Unlock them (free) on their novel page first, then try again.' },
+      {
+        error: `Getting ${names} ready for the first time — this usually takes a minute or two. Try again shortly. (You weren't charged.)`,
+        code: 'INDEXING',
+      },
       { status: 422 },
     )
   }

@@ -25,7 +25,7 @@ const SUBS = [
     vsBundle: 550,
     savingPct: 27,
     highlight: false,
-    perks: ['700 tokens / month', 'Multi-novel chat unlocked', 'Cancel anytime'],
+    perks: ['700 tokens / month', 'Multi-novel chat included', 'Cancel anytime'],
     badge: null,
   },
   {
@@ -36,7 +36,7 @@ const SUBS = [
     vsBundle: 1200,
     savingPct: 33,
     highlight: true,
-    perks: ['1,600 tokens / month', 'Multi-novel chat unlocked', 'Early access to new features', 'Priority support', 'Cancel anytime'],
+    perks: ['1,600 tokens / month', 'Multi-novel chat included', 'Early access to new features', 'Priority support', 'Cancel anytime'],
     badge: 'Best sub',
   },
 ]

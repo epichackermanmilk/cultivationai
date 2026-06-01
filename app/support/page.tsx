@@ -15,8 +15,8 @@ const CATEGORIES = [
 
 const QUICK_ANSWERS = [
   {
-    q: 'How do I unlock a novel?',
-    a: 'Go to any novel page and click "Unlock" — it\'s completely free. You only spend tokens (10 per message) when you actually chat.',
+    q: 'How do I start chatting with a novel?',
+    a: 'Just pick any novel and start asking — every novel in the library is ready to use. You only spend tokens (10 per message) when you actually chat.',
   },
   {
     q: 'Where can I get more tokens?',

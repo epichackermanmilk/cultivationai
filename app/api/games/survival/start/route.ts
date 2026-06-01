@@ -7,6 +7,7 @@ import { cookies }      from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 import OpenAI           from 'openai'
 import { parseJsonBody, sanitizeText } from '@/lib/sanitize'
+import { triggerEmbed } from '@/lib/vps'
 
 const GAME_COST = 50
 const MAX_TURNS = 50
@@ -88,11 +89,13 @@ export async function POST(req: Request) {
   }
   await sb.from('profiles').update({ tokens: profile.tokens - GAME_COST }).eq('id', user.id)
 
-  // Pull opening chapter context via RAG (text search, no embedding needed)
+  // Pull opening chapter context via RAG (text search, no embedding needed).
+  // If the novel isn't indexed yet, silently kick off indexing for next time —
+  // the scenario still generates now via faithful improvisation, no blocking.
   let chapterContext = ''
   try {
     const { data: chunks } = await sb
-      .from('novel_chunks')
+      .from('chunks')
       .select('text, chapter_number')
       .eq('slug', novelSlug)
       .gte('chapter_number', chapterFrom)
@@ -101,8 +104,12 @@ export async function POST(req: Request) {
       .limit(6)
     if (chunks && chunks.length > 0) {
       chapterContext = chunks.map(c => `[Ch. ${c.chapter_number}]\n${c.text.slice(0, 500)}`).join('\n\n')
+    } else {
+      triggerEmbed(novelSlug).catch(() => {})
     }
-  } catch { /* non-fatal */ }
+  } catch {
+    triggerEmbed(novelSlug).catch(() => {})
+  }
 
   // Generate player identity + opening scene
   const systemPrompt = `You are setting up a xianxia immersive fiction experience.

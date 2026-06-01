@@ -7,6 +7,7 @@ import { cookies }      from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 import OpenAI           from 'openai'
 import { parseJsonBody, sanitizeText } from '@/lib/sanitize'
+import { triggerEmbed } from '@/lib/vps'
 
 const GAME_COST = 20
 const MAX_CHAPTER_CHUNKS = 8   // chunks per fighter for battle context
@@ -125,7 +126,7 @@ export async function POST(req: Request) {
     let chapterContext = ''
     try {
       let query = sb
-        .from('novel_chunks')
+        .from('chunks')
         .select('text, chapter_number, chapter_title')
         .eq('slug', novelSlug)
         .ilike('text', `%${name.split(' ')[0]}%`)   // search by first name token
@@ -142,8 +143,13 @@ export async function POST(req: Request) {
         chapterContext = chunks
           .map(c => `[Ch. ${c.chapter_number}${c.chapter_title ? ` — ${c.chapter_title}` : ''}]\n${c.text.slice(0, 400)}`)
           .join('\n\n')
+      } else {
+        // Not indexed yet — kick off silent indexing so the next battle is grounded.
+        triggerEmbed(novelSlug).catch(() => {})
       }
-    } catch { /* non-fatal */ }
+    } catch {
+      triggerEmbed(novelSlug).catch(() => {})
+    }
 
     return {
       name,

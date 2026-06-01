@@ -204,7 +204,7 @@ export default function Chat({ slug, title, author }: Props) {
         // Sign-in required to index (prevents anonymous embed abuse)
         setEmbedState('not_embedded')
         pendingTextRef.current = null
-        setMessages(prev => [...prev, { role: 'assistant', content: 'Please sign in to chat with this novel — it&apos;s free to unlock.', isError: true }])
+        setMessages(prev => [...prev, { role: 'assistant', content: 'Please sign in to chat with this novel — it&apos;s free.', isError: true }])
         return
       }
       // If already embedded (200 with embedded:true), jump straight to ready

@@ -127,7 +127,7 @@ export async function POST(req: Request) {
           <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
             ${[
               ['Browse', 'Search thousands of web novels across every genre'],
-              ['Unlock', 'Activate AI on any novel — free, no token cost'],
+              ['Pick',   'Choose any novel — every one is ready instantly, free'],
               ['Ask',    'Chat with the book — characters, lore, spoilers'],
             ].map(([title, desc]) => `
             <tr><td style="padding:8px 0;border-bottom:1px solid #27272a;">

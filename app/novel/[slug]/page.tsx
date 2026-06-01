@@ -255,7 +255,7 @@ export default async function NovelPage({ params, searchParams }: Props) {
               <div className="h-4 w-3/4 rounded bg-zinc-800 animate-pulse" />
               <div className="h-3 w-1/2 rounded bg-zinc-800 animate-pulse" />
               <p className="mt-4 text-xs text-zinc-500 leading-relaxed">
-                This novel is currently being indexed. Details will appear here shortly — you can still unlock and chat below.
+                Loading this novel&apos;s details — they&apos;ll appear here shortly. You can start chatting below.
               </p>
             </div>
           )}
