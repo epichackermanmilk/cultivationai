@@ -308,7 +308,7 @@ export default function ChatPage() {
         <button
           onClick={() => setSideOpen(v => !v)}
           className={`fixed z-40 flex items-center justify-center transition-[left] duration-200 ease-out ${
-            sideOpen ? 'left-[min(85vw,20rem)] sm:left-72' : 'left-0'
+            sideOpen ? 'left-[min(85vw,20rem)] sm:left-80' : 'left-0'
           }`}
           style={{
             top: 'calc(50dvh + 28px)',
@@ -343,7 +343,7 @@ export default function ChatPage() {
         {/* Novel selector sidebar — overlay on mobile (below header), inline on desktop */}
         {sideOpen && (
           <aside
-            className="fixed top-[57px] bottom-0 left-0 z-30 flex w-[85vw] max-w-xs flex-col overflow-hidden border-r border-[var(--nc-border)] sm:relative sm:top-auto sm:bottom-auto sm:z-auto sm:w-72 sm:shrink-0"
+            className="fixed top-[57px] bottom-0 left-0 z-30 flex w-[85vw] max-w-xs flex-col overflow-hidden border-r border-[var(--nc-border)] sm:relative sm:top-auto sm:bottom-auto sm:z-auto sm:w-80 sm:shrink-0"
             style={{ background: 'var(--nc-bg2)' }}
           >
             {loading
@@ -376,7 +376,7 @@ export default function ChatPage() {
                 <p className="text-sm max-w-sm" style={{ color: 'var(--nc-text2)' }}>
                   Select novels from the library panel, then ask anything across all of them at once.
                 </p>
-                <div className="mt-2 flex flex-col gap-2 w-full max-w-md">
+                <div className="mt-2 flex flex-col gap-3 w-full max-w-xl">
                   {[
                     'Who is the strongest main character across these novels?',
                     'Compare the cultivation systems in each novel',
@@ -385,7 +385,7 @@ export default function ChatPage() {
                     <button
                       key={q}
                       onClick={() => setInput(q)}
-                      className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-2.5 text-xs font-medium text-amber-400/80 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition text-left"
+                      className="rounded-3xl border border-amber-500/30 bg-amber-500/5 px-6 py-4 text-sm font-medium text-amber-400/80 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition text-left leading-relaxed"
                     >
                       ✦ {q}
                     </button>
@@ -420,7 +420,7 @@ export default function ChatPage() {
           </div>
 
           {/* Input */}
-          <div className="shrink-0 border-t border-[var(--nc-border)] p-3" style={{ background: 'var(--nc-bg)' }}>
+          <div className="shrink-0 border-t border-[var(--nc-border)] p-4" style={{ background: 'var(--nc-bg)' }}>
             {/* Export */}
             {messages.length > 0 && (
               <div className="mb-2 flex justify-end">
@@ -455,7 +455,7 @@ export default function ChatPage() {
                 ← Select at least one novel to start chatting
               </p>
             )}
-            <div className="flex items-end gap-2">
+            <div className="flex items-end gap-2.5">
               <textarea
                 value={input}
                 onChange={e => setInput(e.target.value)}
@@ -465,15 +465,15 @@ export default function ChatPage() {
                   : 'Select novels first…'
                 }
                 rows={1}
-                className="flex-1 resize-none rounded-xl border border-[var(--nc-border)] px-3 py-2.5 text-sm placeholder-zinc-500 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition max-h-32 overflow-y-auto"
+                className="flex-1 resize-none rounded-2xl border border-[var(--nc-border)] px-4 py-3.5 text-sm placeholder-zinc-500 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition max-h-40 overflow-y-auto"
                 style={{ background: 'var(--nc-bg2)', color: 'var(--nc-text)', fieldSizing: 'content' } as React.CSSProperties}
               />
               <button
                 onClick={sendDemo}
                 disabled={!input.trim() || selected.size === 0}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-black transition hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-black transition hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
                 </svg>
               </button>

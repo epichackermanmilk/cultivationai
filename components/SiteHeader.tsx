@@ -6,9 +6,10 @@
 // Game-play pages and the novel reader use their own minimal headers.
 
 import Link            from 'next/link'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import TokenWidget     from '@/components/TokenWidget'
+import { FilterPanel, type Filters, type NovelLike, DEFAULT_FILTERS, filtersToParams, hasActiveFilters } from '@/components/LibraryFilters'
 
 const NAV: { href: string; label: string; exact?: boolean }[] = [
   { href: '/library',    label: 'Library', exact: true },
@@ -19,13 +20,7 @@ const NAV: { href: string; label: string; exact?: boolean }[] = [
   { href: '/bookmarks',  label: 'Bookmarks' },
 ]
 
-// Genre quick-filters — navigate to the library with the genre pre-applied.
-const GENRES = [
-  'Action', 'Adventure', 'Comedy', 'Cultivation', 'Drama', 'Fantasy',
-  'Game', 'Harem', 'Horror', 'Isekai', 'Martial Arts', 'Mature',
-  'Mystery', 'Romance', 'Sci-fi', 'Slice of Life', 'System', 'Tragedy',
-  'Wuxia', 'Xianxia', 'Xuanhuan',
-]
+interface HeaderNovel extends NovelLike { genres: string[]; total_chapters: number }
 
 interface SiteHeaderProps {
   /** Extra element rendered before the TokenWidget */
@@ -42,7 +37,22 @@ export default function SiteHeader({ rightSlot, maxWidth = 'max-w-7xl', rootClas
 
   const [query, setQuery]           = useState('')
   const [filterOpen, setFilterOpen] = useState(false)
+  const [filters, setFilters]       = useState<Filters>(DEFAULT_FILTERS)
+  const [novels, setNovels]         = useState<HeaderNovel[]>([])
   const filterRef = useRef<HTMLDivElement>(null)
+
+  // Load novels once (for genre list + live preview count in the filter panel)
+  useEffect(() => {
+    fetch('/api/novels').then(r => r.json()).then((d: HeaderNovel[] | { novels?: HeaderNovel[] }) => {
+      setNovels(Array.isArray(d) ? d : (d.novels ?? []))
+    }).catch(() => {})
+  }, [])
+
+  const allGenres = useMemo(() => {
+    const s = new Set<string>()
+    novels.forEach(n => (n.genres ?? []).forEach(g => s.add(g)))
+    return [...s].sort()
+  }, [novels])
 
   useEffect(() => {
     function h(e: MouseEvent) {
@@ -63,9 +73,11 @@ export default function SiteHeader({ rightSlot, maxWidth = 'max-w-7xl', rootClas
     router.push(q ? `/library?q=${encodeURIComponent(q)}` : '/library')
   }
 
-  function pickGenre(g: string) {
-    setFilterOpen(false)
-    router.push(`/library?genre=${encodeURIComponent(g)}`)
+  // Applying filters from the header navigates to the library with the params encoded.
+  function applyFilters(f: Filters) {
+    setFilters(f)
+    const params = filtersToParams(f, query.trim() || undefined)
+    router.push(params ? `/library?${params}` : '/library')
   }
 
   return (
@@ -105,11 +117,15 @@ export default function SiteHeader({ rightSlot, maxWidth = 'max-w-7xl', rootClas
             </button>
           </form>
 
-          {/* Filters — genre quick-jump dropdown (hidden on the smallest screens) */}
+          {/* Filters — the SAME panel as the library; applying navigates to /library */}
           <div ref={filterRef} className="relative shrink-0 hidden sm:block">
             <button
               onClick={() => setFilterOpen(o => !o)}
-              className="flex h-full items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-medium text-zinc-400 transition hover:border-zinc-500 hover:text-zinc-200"
+              className={`flex h-full items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-medium transition ${
+                filterOpen || hasActiveFilters(filters)
+                  ? 'border-amber-500 bg-amber-500/10 text-amber-400'
+                  : 'border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200'
+              }`}
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M7 8h10M11 12h2M9 16h6" />
@@ -117,22 +133,13 @@ export default function SiteHeader({ rightSlot, maxWidth = 'max-w-7xl', rootClas
               Filters
             </button>
             {filterOpen && (
-              <div className="absolute z-50 top-full right-0 mt-1.5 w-64 rounded-xl border border-[var(--nc-border)] shadow-2xl overflow-hidden p-3"
-                style={{ background: 'var(--nc-bg2)' }}>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Jump to a genre</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {GENRES.map(g => (
-                    <button key={g} onClick={() => pickGenre(g)}
-                      className="rounded-full border border-zinc-700 px-2.5 py-1 text-xs text-zinc-400 transition hover:border-amber-500/60 hover:text-amber-400">
-                      {g}
-                    </button>
-                  ))}
-                </div>
-                <Link href="/library" onClick={() => setFilterOpen(false)}
-                  className="mt-3 block text-center text-[11px] text-zinc-500 hover:text-amber-400 transition">
-                  Open full filters in Library →
-                </Link>
-              </div>
+              <FilterPanel
+                allGenres={allGenres}
+                novels={novels}
+                filters={filters}
+                onChange={applyFilters}
+                onClose={() => setFilterOpen(false)}
+              />
             )}
           </div>
         </div>
