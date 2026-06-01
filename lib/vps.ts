@@ -1,3 +1,5 @@
+import { cleanGenres } from '@/lib/genres'
+
 const BASE = process.env.VPS_API_URL!
 const KEY  = process.env.VPS_API_KEY!
 
@@ -17,7 +19,8 @@ export async function listNovels(): Promise<NovelMeta[]> {
   const res = await fetch(`${BASE}/novels`, { headers, next: { revalidate: 60 } })
   if (!res.ok) throw new Error(`VPS /novels failed: ${res.status}`)
   const data = await res.json()
-  return data.novels as NovelMeta[]
+  const novels = data.novels as NovelMeta[]
+  return novels.map(n => ({ ...n, genres: cleanGenres(n.genres) }))
 }
 
 export async function triggerEmbed(slug: string) {
@@ -42,7 +45,8 @@ export async function getNovelMeta(slug: string): Promise<NovelMeta | null> {
   try {
     const res = await fetch(`${BASE}/novels/${slug}/meta`, { headers, next: { revalidate: 60 } })
     if (!res.ok) return null
-    return await res.json() as NovelMeta
+    const n = await res.json() as NovelMeta
+    return { ...n, genres: cleanGenres(n.genres) }
   } catch {
     return null
   }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { cleanGenres } from '@/lib/genres'
 
 const VPS_BASE = process.env.VPS_API_URL
 const VPS_KEY  = process.env.VPS_API_KEY
@@ -51,7 +52,12 @@ export async function GET() {
   }).then(async res => {
     if (!res.ok) throw new Error(`VPS ${res.status}`)
     const data = await res.json()
-    const novels: unknown[] = Array.isArray(data) ? data : (data.novels ?? [])
+    const raw: unknown[] = Array.isArray(data) ? data : (data.novels ?? [])
+    // Normalize genres (merge casing/typo variants, drop junk) for all consumers
+    const novels = raw.map(n => {
+      const nn = n as { genres?: string[] }
+      return { ...nn, genres: cleanGenres(nn.genres) }
+    })
     cache = { data: novels, ts: Date.now() }
     return novels
   }).finally(() => { _inflight = null })
