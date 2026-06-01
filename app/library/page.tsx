@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, useMemo, useRef, useCallback } from 'react'
+import { useEffect, useState, useMemo, useRef, useCallback, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link          from 'next/link'
 import SiteHeader    from '@/components/SiteHeader'
 import BookmarkButton from '@/components/BookmarkButton'
@@ -296,6 +297,19 @@ function FilterPanel({ allGenres, novels, filters, onChange, onClose }: {
 
 const PAGE_SIZE = 28 // multiple of grid columns for clean rows
 
+// Reads ?q= / ?genre= from the URL (set by the header search) and pushes it into
+// the library's query state. Wrapped in Suspense per Next's useSearchParams rule.
+function SearchParamSync({ onParam }: { onParam: (q: string) => void }) {
+  const sp = useSearchParams()
+  const q = sp.get('q') ?? ''
+  const genre = sp.get('genre') ?? ''
+  useEffect(() => {
+    const value = q || genre
+    if (value) onParam(value)
+  }, [q, genre, onParam])
+  return null
+}
+
 // ── Library page ──────────────────────────────────────────────────────────────
 export default function LibraryPage() {
   const [novels,       setNovels]       = useState<Novel[]>([])
@@ -381,6 +395,7 @@ export default function LibraryPage() {
 
   return (
     <div className="relative min-h-screen pb-16 sm:pb-0" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
+      <Suspense fallback={null}><SearchParamSync onParam={setQuery} /></Suspense>
       <ParticleCanvas />
 
       <SiteHeader />
