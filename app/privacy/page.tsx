@@ -99,28 +99,62 @@ export default function PrivacyPage() {
             <li><strong>OpenAI</strong> — AI text generation for chat responses. Queries are sent to
               OpenAI&apos;s API. See{' '}
               <a href="https://openai.com/privacy" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:underline">OpenAI Privacy Policy</a>.</li>
+            <li><strong>Stripe</strong> — payment processing for token purchases and subscriptions. We never
+              store your full card details. See{' '}
+              <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:underline">Stripe Privacy Policy</a>.</li>
+            <li><strong>Google Analytics</strong> — anonymized traffic and usage analytics. See{' '}
+              <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:underline">Google Privacy Policy</a>.</li>
+            <li><strong>Google AdSense</strong> — third-party advertising. See the cookies section below.</li>
           </ul>
         </Section>
 
-        <Section title="7. Security">
+        <Section title="7. Cookies &amp; Advertising">
+          <p>We use cookies and similar technologies for three purposes:</p>
+          <ul className="ml-4 list-disc space-y-1">
+            <li><strong>Strictly necessary</strong> — a secure, httpOnly session cookie keeps you signed in.
+              This is required for the Site to function and cannot be disabled.</li>
+            <li><strong>Analytics</strong> — Google Analytics cookies (e.g. <code>_ga</code>) help us understand
+              traffic and improve the Site. Only set after you accept cookies.</li>
+            <li><strong>Advertising</strong> — Google AdSense and its partners (including Google&apos;s
+              DoubleClick) use cookies to serve and measure ads. Google may use the{' '}
+              <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:underline">advertising cookie</a>{' '}
+              to serve ads based on your visits to this and other sites.</li>
+          </ul>
+          <p className="mt-3">
+            When you first visit, a cookie banner lets you <strong>Accept</strong> or <strong>Decline</strong>{' '}
+            non-essential cookies. We use Google Consent Mode — if you decline, analytics and advertising
+            cookies are not set, and ads (if shown) are non-personalized. You can change your choice any time
+            by clearing your browser&apos;s site data. You may also opt out of personalized Google advertising
+            at{' '}
+            <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:underline">Google Ads Settings</a>{' '}
+            or{' '}
+            <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:underline">aboutads.info</a>.
+          </p>
+          <p className="mt-3">
+            Subscribers and users who purchase the ad-free upgrade do not see ads, and no advertising cookies
+            are set for them.
+          </p>
+        </Section>
+
+        <Section title="8. Security">
           <p>We implement industry-standard security measures including HTTPS, rate limiting, input
           validation, and httpOnly session cookies. No system is 100% secure; please use a strong,
           unique password for your account.</p>
         </Section>
 
-        <Section title="8. Children&apos;s Privacy">
+        <Section title="9. Children&apos;s Privacy">
           <p>The Site is not directed to children under 13. We do not knowingly collect personal
           information from children under 13. If you believe a child has provided us personal information,
           contact us immediately.</p>
         </Section>
 
-        <Section title="9. Changes to This Policy">
+        <Section title="10. Changes to This Policy">
           <p>We may update this Privacy Policy periodically. We will notify registered users of material
           changes by email or by a prominent notice on the Site. Continued use of the Site after changes
           constitutes acceptance of the updated policy.</p>
         </Section>
 
-        <Section title="10. Contact Us">
+        <Section title="11. Contact Us">
           <p>
             Privacy inquiries:{' '}
             <a href="mailto:privacy@novelcodex.org" className="text-amber-400 hover:underline">

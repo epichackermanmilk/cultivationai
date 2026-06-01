@@ -45,13 +45,13 @@ function RefinedHeader() {
 
   return (
     <header className="border-b border-[var(--nc-border)] bg-[var(--nc-bg)]">
-      {/* Row 1 — logo (far left) · search + filters (centered) · sign-in (far right) */}
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-3 py-2.5">
-        <Link href="/library" className="group shrink-0 flex items-center gap-2.5">
-          <img src="/logo.png" alt="" className="h-7 w-7 object-contain" />
+      {/* Row 1 — logo (flush far left) · search + filters (centered) · sign-in (flush far right) */}
+      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
+        <Link href="/library" className="group shrink-0 flex items-center gap-3">
+          <img src="/logo.png" alt="" className="h-10 w-10 object-contain" />
           <div>
-            <span className="block text-base font-bold tracking-tight text-amber-400 group-hover:text-amber-300 transition">NovelCodex</span>
-            <span className="hidden lg:block text-[10px] text-zinc-600 leading-none">Every secret, every character, every world</span>
+            <span className="block text-2xl font-bold tracking-tight text-amber-400 group-hover:text-amber-300 transition leading-none">NovelCodex</span>
+            <span className="hidden lg:block text-xs text-zinc-600 leading-none mt-1">Every secret, every character, every world</span>
           </div>
         </Link>
 
@@ -156,7 +156,7 @@ export default function HeaderPreviewPage() {
           <p className="text-sm font-bold text-amber-400 mb-2">What changed from the first draft</p>
           <ul className="text-xs leading-relaxed space-y-1.5" style={{ color: 'var(--nc-text2)' }}>
             <li>✓ <strong className="text-zinc-300">Sign-in box</strong> — far right, sized to match the Filters button. Shown here as &ldquo;Login / Register&rdquo;; in production this is the live <code>TokenWidget</code> — it shows your token balance + shop when signed in, this box when signed out. So the token count IS accounted for.</li>
-            <li>✓ <strong className="text-zinc-300">Logo pushed left, nav centered</strong> — logo + tagline hug the far left, the page-nav row is centered.</li>
+            <li>✓ <strong className="text-zinc-300">Bigger logo, flush far left</strong> — NovelCodex + icon enlarged and pushed all the way left; sign-in box all the way right.</li>
             <li>✓ <strong className="text-zinc-300">Filters kept</strong> — the library&apos;s existing genre/status/sort panel now lives next to the search bar.</li>
             <li>✓ <strong className="text-zinc-300">Browse-Genre dropdown removed</strong> — redundant with Filters.</li>
             <li>✓ <strong className="text-zinc-300">Mobile unaffected</strong> — this header is hidden on phones; the bottom tab bar handles mobile navigation.</li>
@@ -181,8 +181,52 @@ export default function HeaderPreviewPage() {
             </div>
           ))}
         </div>
+        {/* ── Footer comparison ─────────────────────────────────────────── */}
+        <div className="mt-12">
+          <p className="mb-1 text-sm font-bold text-amber-400">Footer comparison</p>
+          <p className="mb-5 text-xs" style={{ color: 'var(--nc-text2)' }}>
+            Two layouts to compare. Both put NovelCodex flush far-left.
+          </p>
+
+          {/* Variant A — brand left, links left (inline row, all left-aligned) */}
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500">Option A — links inline, all left-aligned</p>
+          <footer className="mb-8 rounded-xl border border-zinc-800 px-4 py-6"
+            style={{ background: 'var(--nc-bg2)' }}>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-8">
+              <div className="flex items-center gap-2.5 shrink-0">
+                <img src="/logo.png" alt="" className="h-6 w-6 object-contain opacity-70" />
+                <span className="text-xs font-semibold text-zinc-500">© 2026 NovelCodex</span>
+              </div>
+              <nav className="flex flex-wrap gap-x-5 gap-y-2 text-xs" style={{ color: 'var(--nc-text2)' }}>
+                {['About', 'Support', 'Privacy', 'Terms', 'Contact'].map(l => (
+                  <span key={l} className="hover:text-amber-400 transition cursor-pointer">{l}</span>
+                ))}
+              </nav>
+            </div>
+          </footer>
+
+          {/* Variant B — links stacked underneath the brand */}
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500">Option B — links underneath NovelCodex</p>
+          <footer className="rounded-xl border border-zinc-800 px-4 py-6"
+            style={{ background: 'var(--nc-bg2)' }}>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2.5">
+                <img src="/logo.png" alt="" className="h-7 w-7 object-contain opacity-80" />
+                <span className="text-sm font-bold text-amber-400">NovelCodex</span>
+              </div>
+              <nav className="flex flex-wrap gap-x-5 gap-y-2 text-xs" style={{ color: 'var(--nc-text2)' }}>
+                {['About', 'Support', 'Privacy', 'Terms', 'Contact'].map(l => (
+                  <span key={l} className="hover:text-amber-400 transition cursor-pointer">{l}</span>
+                ))}
+              </nav>
+              <span className="text-[11px] text-zinc-600">© 2026 NovelCodex. All rights reserved.</span>
+            </div>
+          </footer>
+        </div>
       </div>
 
+      {/* The current live footer, for reference */}
+      <p className="mx-auto max-w-4xl px-4 text-[10px] font-bold uppercase tracking-widest text-zinc-600">↓ Current live footer (for reference)</p>
       <Footer />
     </div>
   )

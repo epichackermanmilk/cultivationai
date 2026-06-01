@@ -55,7 +55,7 @@ const GAMES: Game[] = [
     title:       'Survival in the Novel',
     tagline:     'You woke up inside the story. Now survive it.',
     description: 'Pick a novel from the library. Wake up inside its world, armed only with your knowledge of the plot. The more you have read, the longer you live. Reach the end of the arc — or die trying.',
-    cost:        '120 tokens',
+    cost:        '100 tokens',
     costNote:    'Flagship · 5 attempts',
     status:      'available',
     href:        '/games/survival',

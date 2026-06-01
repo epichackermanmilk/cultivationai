@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/lib/theme-context";
 import { AuthProvider }  from "@/lib/auth-context";
 import MobileNav        from "@/components/MobileNav";
+import CookieConsent    from "@/components/CookieConsent";
 import Script           from "next/script";
 
 const geistSans = Geist({
@@ -34,6 +35,21 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      {/* Consent Mode v2 — default everything DENIED until the user accepts the
+          cookie banner. Must run before GA / AdSense so they respect the choice. */}
+      <Script id="consent-default" strategy="beforeInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('consent', 'default', {
+            ad_storage: 'denied',
+            analytics_storage: 'denied',
+            ad_user_data: 'denied',
+            ad_personalization: 'denied',
+            wait_for_update: 500
+          });
+        `}
+      </Script>
       {/* Google AdSense */}
       <Script
         async
@@ -48,8 +64,6 @@ export default function RootLayout({
       />
       <Script id="google-analytics" strategy="afterInteractive">
         {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
           gtag('config', 'G-RN9SR0DZ6R');
         `}
@@ -59,6 +73,7 @@ export default function RootLayout({
           <AuthProvider>
             {children}
             <MobileNav />
+            <CookieConsent />
           </AuthProvider>
         </ThemeProvider>
       </body>

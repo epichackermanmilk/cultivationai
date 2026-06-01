@@ -1,5 +1,5 @@
 // POST /api/games/survival/start
-// 120 tokens flat — covers up to MAX_ATTEMPTS tries at the chosen arc.
+// 100 tokens flat — covers up to MAX_ATTEMPTS tries at the chosen arc.
 // Picks a novel + arc range, generates the player's identity + opening scene.
 
 import { NextResponse } from 'next/server'
@@ -8,7 +8,7 @@ import { createClient } from '@supabase/supabase-js'
 import OpenAI           from 'openai'
 import { parseJsonBody, sanitizeText } from '@/lib/sanitize'
 
-const GAME_COST = 120
+const GAME_COST = 100
 const MAX_TURNS = 50
 
 function admin() {
