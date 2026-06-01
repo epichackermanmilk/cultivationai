@@ -16,7 +16,7 @@ const NAV: { href: string; label: string; exact?: boolean }[] = [
   { href: '/chat',       label: 'Chat' },
   { href: '/characters', label: 'Characters' },
   { href: '/games',      label: 'Games' },
-  { href: '/recommend',  label: 'Discover' },
+  { href: '/recommend',  label: 'Recommend' },
   { href: '/bookmarks',  label: 'Bookmarks' },
 ]
 

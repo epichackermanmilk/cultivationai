@@ -12,6 +12,7 @@ import AdSlot               from '@/components/AdSlot'
 
 interface Props {
   params: Promise<{ slug: string }>
+  searchParams: Promise<{ char?: string; mode?: string }>
 }
 
 // ── SEO metadata per novel ────────────────────────────────────────────────────
@@ -57,8 +58,12 @@ function sb() {
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
-export default async function NovelPage({ params }: Props) {
+export default async function NovelPage({ params, searchParams }: Props) {
   const { slug } = await params
+  const sp = await searchParams
+  // Came from the characters page? Send "Back" there instead of the library.
+  const backHref  = sp?.mode === 'character' || sp?.char ? '/characters' : '/library'
+  const backLabel = backHref === '/characters' ? '← Characters' : '← Back'
 
   let novels: Awaited<ReturnType<typeof listNovels>> = []
   let novel = null
@@ -123,8 +128,8 @@ export default async function NovelPage({ params }: Props) {
 
       {/* Header */}
       <header className="flex shrink-0 items-center gap-3 border-b border-[var(--nc-border)] px-4 py-3" style={{ background: 'var(--nc-bg)' }}>
-        <Link href="/library" className="text-zinc-400 hover:text-zinc-100 transition-colors text-sm">
-          ← Back
+        <Link href={backHref} className="text-zinc-400 hover:text-zinc-100 transition-colors text-sm whitespace-nowrap">
+          {backLabel}
         </Link>
         <div className="h-4 w-px bg-zinc-700" />
         <div className="min-w-0 flex-1">

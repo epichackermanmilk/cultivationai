@@ -42,8 +42,10 @@ export default function FeedbackWidget() {
       if (!dragging.current) return
       const dx = ev.clientX - dragStart.current.mx
       const dy = ev.clientY - dragStart.current.my
+      // Keep the bubble below the sticky header so it can't be dragged out of reach
+      const TOP_LIMIT = 100
       const nx = Math.max(0, Math.min(window.innerWidth  - 44, dragStart.current.bx + dx))
-      const ny = Math.max(0, Math.min(window.innerHeight - 44, dragStart.current.by + dy))
+      const ny = Math.max(TOP_LIMIT, Math.min(window.innerHeight - 44, dragStart.current.by + dy))
       setPos({ x: nx, y: ny })
     }
     const onUp = (ev: MouseEvent) => {

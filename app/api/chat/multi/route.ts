@@ -3,7 +3,8 @@
 // span all of them at once. Streams the answer; charges 15 tokens on success.
 
 import OpenAI            from 'openai'
-import { matchChunks }   from '@/lib/supabase'
+import { matchChunks, isNovelEmbedded } from '@/lib/supabase'
+import { triggerEmbed }  from '@/lib/vps'
 import { parseJsonBody, sanitizeText } from '@/lib/sanitize'
 import { NextResponse }  from 'next/server'
 import { cookies }       from 'next/headers'
@@ -17,7 +18,7 @@ function admin() {
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 const MULTI_CHAT_COST = 15
-const MAX_NOVELS = 6
+const MAX_NOVELS = 10
 const CHUNKS_PER_NOVEL = 4
 
 export async function POST(req: Request) {
@@ -69,18 +70,32 @@ export async function POST(req: Request) {
   const embRes = await openai.embeddings.create({ model: 'text-embedding-3-small', input: message })
   const queryEmbedding = embRes.data[0].embedding
 
+  // For each novel: if it's indexed, retrieve passages; if not, auto-unlock it
+  // (kick off the embed in the background) so it's ready next time.
+  const stillIndexing: string[] = []
   const perNovel = await Promise.all(novels.map(async n => {
+    const title = n.title || n.slug
     try {
+      const embedded = await isNovelEmbedded(n.slug)
+      if (!embedded) {
+        triggerEmbed(n.slug).catch(() => {})   // fire-and-forget auto-unlock
+        stillIndexing.push(title)
+        return { title, chunks: [] }
+      }
       const chunks = await matchChunks(queryEmbedding, n.slug, CHUNKS_PER_NOVEL)
-      return { title: n.title || n.slug, chunks }
+      return { title, chunks }
     } catch {
-      return { title: n.title || n.slug, chunks: [] }
+      return { title, chunks: [] }
     }
   }))
 
   const withContent = perNovel.filter(p => p.chunks.length > 0)
+
+  // Nothing ready yet — we just kicked off indexing. Don't charge; tell them to retry.
   if (withContent.length === 0) {
-    const msg = "I couldn't find relevant passages in the selected novels. Some of them may not be unlocked yet — open each on its novel page (it's free) so I can read it, then try again."
+    const names = stillIndexing.length ? stillIndexing.join(', ') : 'the selected novels'
+    const msg = `I'm now reading ${names} for you — this takes a few minutes the first time. ` +
+                `Ask your question again shortly and I'll have them indexed. (You weren't charged for this.)`
     return new Response(msg, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } })
   }
 
@@ -91,10 +106,13 @@ export async function POST(req: Request) {
   ).join('\n\n———\n\n')
 
   const novelList = withContent.map(p => `"${p.title}"`).join(', ')
+  const indexingNote = stillIndexing.length
+    ? `\nNote: ${stillIndexing.join(', ')} ${stillIndexing.length === 1 ? 'is' : 'are'} still being indexed and not yet available — if the question needs ${stillIndexing.length === 1 ? 'it' : 'them'}, briefly mention they'll be ready in a few minutes.\n`
+    : ''
 
   const systemPrompt = `You are NovelCodex, an AI assistant that answers questions spanning MULTIPLE web novels at once.
 The reader has selected these novels: ${novelList}.
-
+${indexingNote}
 Answer using ONLY the passages provided below, which are grouped by novel. When a question compares novels (power scaling, characters, cultivation systems, themes), draw on the relevant novels and make the comparison explicit. Always attribute facts to the specific novel they come from.
 
 If the passages don't cover something, say so honestly rather than guessing. Be specific and cite chapter details when useful.

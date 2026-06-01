@@ -502,7 +502,7 @@ export default function ShopPage() {
               Ready to start?
             </h3>
             <p className="mb-5 text-sm" style={{ color: 'var(--nc-text2)' }}>
-              Create a free account and get 100 welcome tokens to explore NovelCodex.
+              Create a free account and get 50 welcome tokens to explore NovelCodex.
             </p>
             <Link
               href="/library"

@@ -529,7 +529,7 @@ export default function ChatPage() {
               </button>
             </div>
             {chatError && <p className="mt-1.5 text-center text-xs text-rose-400">{chatError}</p>}
-            <p className="mt-1.5 text-center text-xs text-zinc-600">15 tokens per message · Enter to send · Shift+Enter for new line</p>
+            <p className="mt-1.5 text-center text-xs text-zinc-600">Every message costs 15 tokens — make each one count · Enter to send · Shift+Enter for new line</p>
           </div>
         </div>
       </div>
