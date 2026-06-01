@@ -516,14 +516,14 @@ export default function ProfilePage() {
           className="flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold text-black transition hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0"
           style={{ background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)' }}
         >
-          ← Library
+          Library
         </a>
         <a
           href="/chat"
           className="flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold text-black transition hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0"
           style={{ background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)' }}
         >
-          ⚡ Start Chatting
+          Start Chatting
         </a>
       </div>
     </div>
