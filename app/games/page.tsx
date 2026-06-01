@@ -89,6 +89,19 @@ const GAMES: Game[] = [
     accent:      'orange',
     gradient:    'linear-gradient(135deg, rgba(249,115,22,0.15) 0%, rgba(194,65,12,0.08) 100%)',
   },
+  {
+    id:          'trivia',
+    title:       'Trivia Gauntlet',
+    tagline:     'Do you really know your novels?',
+    description: 'Pick up to 10 novels. We ask random questions pulled from across them — without telling you which is which. Typos and close answers still count. Get a letter grade and prove your mastery.',
+    cost:        'From 10 tokens',
+    costNote:    '2 tokens/question · 5–20 Qs',
+    status:      'available',
+    href:        '/games/trivia',
+    icon:        '🧠',
+    accent:      'sky',
+    gradient:    'linear-gradient(135deg, rgba(14,165,233,0.15) 0%, rgba(2,132,199,0.08) 100%)',
+  },
 ]
 
 const accentClasses: Record<string, { border: string; text: string; badge: string; glow: string }> = {
