@@ -106,7 +106,9 @@ export async function syncDiscordRoles(supabaseUserId: string): Promise<void> {
   const discordId  = profile.discord_user_id
   const tokensEver = (profile.tokens_ever_purchased as number) ?? 0
   const subActive  = !!profile.subscription_active
-  const subTier    = (profile.subscription_tier as string | null) ?? null
+  // The Stripe webhook stores the tier lowercased ('scholar' / 'reader'), so
+  // compare case-insensitively here — otherwise Scholar subs never get the role.
+  const subTier    = ((profile.subscription_tier as string | null) ?? '').toLowerCase()
 
   // ── Determine desired NC roles ────────────────────────────────────────────────
   const desired = new Set<string>()
@@ -115,7 +117,7 @@ export async function syncDiscordRoles(supabaseUserId: string): Promise<void> {
   desired.add(DISCORD_ROLES.NovelCodex)
 
   // Subscription roles (mutually upgrade — Scholar gets both)
-  if (subActive && subTier === 'Scholar') {
+  if (subActive && subTier === 'scholar') {
     desired.add(DISCORD_ROLES.Scholar)
     desired.add(DISCORD_ROLES.Reader)  // Scholar is a superset
   } else if (subActive) {
