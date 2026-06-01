@@ -47,7 +47,6 @@ export default function Chat({ slug, title, author }: Props) {
   const [charSuggestions, setCharSugg]  = useState<string[]>([])  // backward compat
   const [charInput, setCharInput]       = useState('')
   const [charLoading, setCharLoading]   = useState(false)
-  const [embedError, setEmbedError]     = useState<string | null>(null)
   // ── Character memory: rolling summary of older messages ────────────────────
   // Avoids the "amnesiac at message 9" problem in long roleplay sessions.
   // We summarise all but the last 8 messages every 16 messages, keeping context
@@ -60,6 +59,7 @@ export default function Chat({ slug, title, author }: Props) {
   const inputRef                        = useRef<HTMLTextAreaElement>(null)
   const pollRef                         = useRef<ReturnType<typeof setInterval> | null>(null)
   const embedStartRef                   = useRef<number | null>(null)
+  const pendingTextRef                  = useRef<string | null>(null)
 
   // Read ?char=NAME&mode=character from URL (set by /characters page links)
   // Using window.location instead of useSearchParams to avoid Suspense requirement
@@ -80,7 +80,6 @@ export default function Chat({ slug, title, author }: Props) {
     setHistLoaded(false)
     setEmbedPct(0)
     setEmbedEta(null)
-    setEmbedError(null)
     checkEmbed()
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -202,9 +201,10 @@ export default function Chat({ slug, title, author }: Props) {
     try {
       const res = await fetch(`/api/embed/${slug}`, { method: 'POST' })
       if (res.status === 401) {
-        // Sign-in required to unlock (prevents anonymous embed abuse)
+        // Sign-in required to index (prevents anonymous embed abuse)
         setEmbedState('not_embedded')
-        setEmbedError('Please sign in to unlock this novel — it\'s free.')
+        pendingTextRef.current = null
+        setMessages(prev => [...prev, { role: 'assistant', content: 'Please sign in to chat with this novel — it&apos;s free to unlock.', isError: true }])
         return
       }
       // If already embedded (200 with embedded:true), jump straight to ready
@@ -254,13 +254,9 @@ export default function Chat({ slug, title, author }: Props) {
     }, 2500)
   }
 
-  async function send() {
-    const text = input.trim()
-    if (!text || streaming || embedState !== 'ready') return
-    // In book mode, require at least 10 characters (prevents trivial/accidental sends)
-    if (chatMode === 'book' && text.length < 10) return
-    // In character mode, require a character name to be set
-    if (chatMode === 'character' && !characterName.trim()) return
+  // Core send — assumes the novel is already indexed.
+  async function sendText(text: string) {
+    if (!text || streaming) return
 
     const userMsg: Message      = { role: 'user',      content: text }
     const assistantMsg: Message = { role: 'assistant', content: '' }
@@ -395,6 +391,37 @@ export default function Chat({ slug, title, author }: Props) {
     }
   }
 
+  // No-friction entry point. If the novel isn't indexed yet, kick off indexing
+  // and auto-send the message the moment it's ready — no separate unlock step.
+  function send() {
+    const text = input.trim()
+    if (!text || streaming) return
+    if (chatMode === 'book' && text.length < 10) return
+    if (chatMode === 'character' && !characterName.trim()) return
+
+    if (embedState === 'ready') {
+      setInput('')
+      sendText(text)
+      return
+    }
+    // Queue the message and start (or wait on) indexing.
+    pendingTextRef.current = text
+    setInput('')
+    if (embedState === 'not_embedded' || embedState === 'unknown' || embedState === 'error') {
+      startEmbed()
+    }
+  }
+
+  // When indexing finishes, flush the queued message automatically.
+  useEffect(() => {
+    if (embedState === 'ready' && pendingTextRef.current) {
+      const t = pendingTextRef.current
+      pendingTextRef.current = null
+      sendText(t)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [embedState])
+
   function onKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -407,31 +434,6 @@ export default function Chat({ slug, title, author }: Props) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <div className="animate-pulse text-sm text-zinc-500">Checking novel status…</div>
-      </div>
-    )
-  }
-
-  if (embedState === 'not_embedded') {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-        <div className="text-4xl">📖</div>
-        <h2 className="text-lg font-semibold text-zinc-100">
-          Ready to unlock this novel?
-        </h2>
-        <p className="max-w-xs text-sm text-zinc-400">
-          We&apos;ll process all chapters and build a searchable knowledge base so you can chat with the story.
-          This takes a few minutes.
-        </p>
-        {embedError && (
-          <p className="max-w-xs text-sm text-red-400">{embedError}</p>
-        )}
-        <button
-          onClick={startEmbed}
-          className="rounded-lg bg-amber-500 px-6 py-2.5 text-sm font-semibold text-black hover:bg-amber-400 transition-colors"
-        >
-          Unlock &ldquo;{title}&rdquo; — Free
-        </button>
-        <p className="text-xs text-zinc-600">Free to unlock · 10 tokens per message</p>
       </div>
     )
   }
