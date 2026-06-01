@@ -93,7 +93,7 @@ export default function DefectiveSystemPage() {
       }
 
       // Deduct tokens optimistically
-      updateTokens(user.tokens - 30)
+      updateTokens(user.tokens - 25)
 
       setSessionId(d.sessionId)
       setSurvivedCount(0)
@@ -307,7 +307,7 @@ export default function DefectiveSystemPage() {
                 <li>• You may submit any response. The System does not care if it is good.</li>
                 <li>• Judgment is final. Appeals are not a supported feature.</li>
                 <li>• Point values carry no practical benefit.</li>
-                <li>• <span className="text-rose-400 font-semibold">Cost: 30 tokens (flat, regardless of how quickly you perish).</span></li>
+                <li>• <span className="text-rose-400 font-semibold">Cost: 25 tokens (flat, regardless of how quickly you perish).</span></li>
               </ul>
             </div>
 
@@ -333,7 +333,7 @@ export default function DefectiveSystemPage() {
                     Initialising…
                   </>
                 ) : (
-                  <>Accept Assignment — 30 tokens</>
+                  <>Accept Assignment — 25 tokens</>
                 )}
               </button>
             )}
@@ -531,7 +531,7 @@ export default function DefectiveSystemPage() {
                 className="rounded-xl px-8 py-3 text-sm font-bold text-black transition hover:-translate-y-0.5"
                 style={{ background: 'linear-gradient(135deg, #f43f5e 0%, #be185d 100%)' }}
               >
-                Accept New Assignment — 30 tokens
+                Accept New Assignment — 25 tokens
               </button>
               <Link
                 href="/games"

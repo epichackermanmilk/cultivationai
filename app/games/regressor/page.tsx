@@ -71,7 +71,7 @@ export default function RegressorPage() {
       })
       const d = await r.json()
       if (!r.ok) { setError(d.error ?? 'Failed to start.'); return }
-      updateTokens(user.tokens - 75)
+      updateTokens(user.tokens - 50)
       setSessionId(d.sessionId)
       setDisaster(d.disaster)
       setWorldContext(d.worldContext)
@@ -219,7 +219,7 @@ export default function RegressorPage() {
             </div>
 
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-1.5">
-              <span className="text-xs font-bold text-violet-400">75 tokens · All runs included</span>
+              <span className="text-xs font-bold text-violet-400">50 tokens · 6 lives included</span>
             </div>
 
             {error && <p className="mb-4 text-sm text-rose-400">{error}</p>}
@@ -234,7 +234,7 @@ export default function RegressorPage() {
                 style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)', boxShadow: '0 6px 20px rgba(124,58,237,0.3)' }}>
                 {starting ? (
                   <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Generating Disaster…</>
-                ) : '⚔️ Begin — 75 tokens'}
+                ) : '⚔️ Begin — 50 tokens'}
               </button>
             )}
           </div>
@@ -360,7 +360,7 @@ export default function RegressorPage() {
                     <button onClick={() => { setPhase('lobby'); setDisaster(null); setTurns([]); setPastRuns([]); setCurrentRun(1); setCurrentTurn(1) }}
                       className="rounded-xl px-8 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5"
                       style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)' }}>
-                      New Disaster — 75 tokens
+                      New Disaster — 50 tokens
                     </button>
                     <Link href="/games" className="rounded-xl border border-zinc-700 px-8 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-800 transition text-center">
                       Back to Games
@@ -448,7 +448,7 @@ export default function RegressorPage() {
               <button onClick={() => { setPhase('lobby'); setDisaster(null); setTurns([]); setPastRuns([]); setCurrentRun(1); setCurrentTurn(1) }}
                 className="rounded-xl px-8 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5"
                 style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)' }}>
-                New Disaster — 75 tokens
+                New Disaster — 50 tokens
               </button>
               <Link href="/games" className="rounded-xl border border-zinc-700 px-8 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-800 transition text-center">
                 Back to Games

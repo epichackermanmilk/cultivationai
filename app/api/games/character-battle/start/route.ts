@@ -8,7 +8,7 @@ import { createClient } from '@supabase/supabase-js'
 import OpenAI           from 'openai'
 import { parseJsonBody, sanitizeText } from '@/lib/sanitize'
 
-const GAME_COST = 25
+const GAME_COST = 20
 const MAX_CHAPTER_CHUNKS = 8   // chunks per fighter for battle context
 
 function admin() {

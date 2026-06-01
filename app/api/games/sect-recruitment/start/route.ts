@@ -23,7 +23,7 @@ import OpenAI             from 'openai'
 import { parseJsonBody, sanitizeText } from '@/lib/sanitize'
 import { pickArchetypes, SECT_PRESETS, type Treatment } from '@/lib/games/archetypes'
 
-const GAME_COST = 50
+const GAME_COST = 25
 
 function admin() {
   return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!, {

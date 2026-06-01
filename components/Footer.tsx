@@ -4,7 +4,8 @@ export default function Footer() {
   return (
     <footer className="border-t border-[var(--nc-border)] mt-12 px-4 pt-6 pb-6 sm:py-8"
       style={{ background: 'var(--nc-bg2)' }}>
-      <div className={`mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-4`}>
+      {/* Option A — brand far left, links left-aligned right after it */}
+      <div className="mx-auto max-w-7xl flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:gap-8">
 
         {/* Brand */}
         <div className="flex items-center gap-2.5 shrink-0">
@@ -15,7 +16,7 @@ export default function Footer() {
         </div>
 
         {/* Links */}
-        <nav className="flex flex-wrap justify-center sm:justify-end gap-x-5 gap-y-2 text-xs" style={{ color: 'var(--nc-text2)' }}>
+        <nav className="flex flex-wrap justify-center sm:justify-start gap-x-5 gap-y-2 text-xs" style={{ color: 'var(--nc-text2)' }}>
           <Link href="/about"   className="hover:text-amber-400 transition">About</Link>
           <Link href="/support" className="hover:text-amber-400 transition">Support</Link>
           <Link href="/privacy" className="hover:text-amber-400 transition">Privacy</Link>

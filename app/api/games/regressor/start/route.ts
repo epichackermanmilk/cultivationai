@@ -8,7 +8,7 @@ import { createClient } from '@supabase/supabase-js'
 import OpenAI           from 'openai'
 import { parseJsonBody, sanitizeText } from '@/lib/sanitize'
 
-const GAME_COST  = 75
+const GAME_COST  = 50
 const MAX_TURNS  = 30
 
 function admin() {

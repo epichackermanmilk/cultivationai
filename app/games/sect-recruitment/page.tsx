@@ -296,7 +296,7 @@ export default function SectRecruitmentPage() {
               style={{ background: 'var(--nc-bg2)' }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold" style={{ color: 'var(--nc-text)' }}>One session — 50 tokens</p>
+                  <p className="text-sm font-semibold" style={{ color: 'var(--nc-text)' }}>One session — 25 tokens</p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--nc-text2)' }}>
                     8 applicants · 2 questions each · ~15 minutes · No per-turn charges
                   </p>
@@ -325,7 +325,7 @@ export default function SectRecruitmentPage() {
                 disabled={loading}
                 className="w-full rounded-xl bg-amber-500 py-3.5 text-sm font-bold text-black hover:bg-amber-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Preparing the hall…' : 'Begin Recruitment — 50 tokens'}
+                {loading ? 'Preparing the hall…' : 'Begin Recruitment — 25 tokens'}
               </button>
             )}
           </div>

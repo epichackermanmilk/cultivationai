@@ -16,7 +16,7 @@ interface Turn   { turn: number; action: string; narration: string }
 
 const MAX_TURNS    = 50
 const MAX_ATTEMPTS = 5     // matches server cap
-const GAME_COST    = 100
+const GAME_COST    = 50
 
 const ARC_PRESETS = [
   { label: 'Opening Arc',   from: 1,   to: 50  },

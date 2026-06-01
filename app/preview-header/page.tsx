@@ -21,12 +21,12 @@ const MOCK_NOVELS = [
   { title: 'Omniscient Reader', author: 'Sing-Shong', genres: ['Regression', 'Fantasy'] },
 ]
 
-const NAV = ['Library', '✦ Chat', '🎭 Characters', '🎮 Games', 'Discover', 'Bookmarks']
+const NAV = ['Library', 'Chat', 'Characters', 'Games', 'Discover', 'Bookmarks']
 
 // Mock of the library's existing Filters panel (genre / status / sort)
 const FILTER_GENRES = ['Xianxia', 'Wuxia', 'Cultivation', 'System', 'Regression', 'Murim', 'Fantasy', 'Romance', 'Horror', 'Sci-Fi', 'Isekai', 'Game']
 
-function RefinedHeader() {
+function RefinedHeader({ signedIn = false }: { signedIn?: boolean }) {
   const [query, setQuery]           = useState('')
   const [filterOpen, setFilterOpen] = useState(false)
   const [activeGenres, setActive]   = useState<string[]>(['Xianxia'])
@@ -110,16 +110,36 @@ function RefinedHeader() {
           </div>
         </div>
 
-        {/* Sign-in box — sized to match the Filters button, pushed to the far right.
-            (In production this is the live TokenWidget: token balance when signed
-            in, this Login / Register box when signed out.) */}
-        <button className="shrink-0 flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-medium text-zinc-300 hover:border-amber-500/50 hover:text-amber-400 transition">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-            <circle cx="12" cy="8" r="4" />
-            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" strokeLinecap="round" />
-          </svg>
-          Login / Register
-        </button>
+        {/* Sign-in / token box — sized to match the Filters button, pushed far right.
+            In production this is the live TokenWidget: token balance + buy button
+            when signed in, Login / Register when signed out. */}
+        {signedIn ? (
+          <div className="shrink-0 flex items-center gap-2">
+            {/* Token balance pill */}
+            <div className="flex items-center gap-1.5 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3.5 py-2 text-sm font-bold text-amber-400">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
+              1,240
+            </div>
+            {/* Buy / account */}
+            <button className="flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-medium text-zinc-300 hover:border-amber-500/50 hover:text-amber-400 transition">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" strokeLinecap="round" />
+              </svg>
+              <span className="hidden sm:inline">Account</span>
+            </button>
+          </div>
+        ) : (
+          <button className="shrink-0 flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-medium text-zinc-300 hover:border-amber-500/50 hover:text-amber-400 transition">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" strokeLinecap="round" />
+            </svg>
+            Login / Register
+          </button>
+        )}
       </div>
 
       {/* Row 2 — page navigation (centered, no genre dropdown) */}
@@ -148,7 +168,13 @@ export default function HeaderPreviewPage() {
         🎨 <strong>Header Design Preview (Option B, refined)</strong> — Evaluation only. Not live. Desktop/tablet layout — phones keep the bottom tab bar.
       </div>
 
+      {/* Signed-OUT state */}
+      <p className="mx-auto max-w-7xl w-full px-4 pt-4 pb-2 text-[10px] font-bold uppercase tracking-widest text-zinc-600">Signed out</p>
       <RefinedHeader />
+
+      {/* Signed-IN state */}
+      <p className="mx-auto max-w-7xl w-full px-4 pt-6 pb-2 text-[10px] font-bold uppercase tracking-widest text-zinc-600">Signed in (token balance + account)</p>
+      <RefinedHeader signedIn />
 
       {/* Notes */}
       <div className="mx-auto max-w-4xl px-4 py-6 w-full">

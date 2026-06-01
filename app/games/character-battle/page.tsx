@@ -277,7 +277,7 @@ export default function CharacterBattlePage() {
         return
       }
 
-      updateTokens(user.tokens - 25)
+      updateTokens(user.tokens - 20)
       setResult(d)
       setPhase('result')
     } catch {
@@ -377,11 +377,11 @@ export default function CharacterBattlePage() {
                   className="inline-flex items-center gap-2 rounded-xl px-8 py-3 text-sm font-bold text-black transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0"
                   style={{ background: 'linear-gradient(135deg, #f97316 0%, #c2410c 100%)', boxShadow: bothReady ? '0 6px 20px rgba(249,115,22,0.25)' : 'none' }}
                 >
-                  ⚡ Begin Battle — 25 tokens
+                  ⚡ Begin Battle — 20 tokens
                 </button>
               )}
               <p className="mt-2 text-xs text-zinc-600">
-                {bothReady ? '25 tokens will be deducted' : 'Select both fighters to continue'}
+                {bothReady ? '20 tokens will be deducted' : 'Select both fighters to continue'}
               </p>
             </div>
           </div>
@@ -473,7 +473,7 @@ export default function CharacterBattlePage() {
                 className="rounded-xl px-8 py-3 text-sm font-bold text-black transition hover:-translate-y-0.5"
                 style={{ background: 'linear-gradient(135deg, #f97316 0%, #c2410c 100%)' }}
               >
-                New Battle — 25 tokens
+                New Battle — 20 tokens
               </button>
               <Link
                 href="/games"
