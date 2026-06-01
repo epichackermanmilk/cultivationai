@@ -11,11 +11,6 @@ const IcoUser = () => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
   </svg>
 )
-const IcoBookmark = () => (
-  <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
-  </svg>
-)
 const IcoWallet = () => (
   <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18-3a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
@@ -105,95 +100,36 @@ export default function TokenWidget() {
           </svg>
         </button>
 
-        {/* Dropdown */}
+        {/* Dropdown — compact, matches the Account box width */}
         {showDropdown && (
           <div
-            className="absolute right-0 top-full mt-2 w-64 rounded-2xl border shadow-2xl z-50 overflow-hidden"
+            className="absolute right-0 top-full mt-2 w-44 rounded-xl border shadow-2xl z-50 overflow-hidden"
             style={{ background: 'var(--nc-bg2)', borderColor: 'var(--nc-border)' }}
           >
-            {/* ── Account header ── */}
-            <div className="px-4 py-3" style={ROW_BORDER}>
-              <p className="text-sm font-semibold truncate" style={{ color: 'var(--nc-text)' }}>
-                {user.username ?? 'Set a username →'}
-              </p>
-              {user.username && (
-                <p className="text-xs truncate mt-0.5" style={{ color: 'var(--nc-text2)' }}>{user.email}</p>
-              )}
-              {!user.username && (
-                <p className="text-xs mt-0.5" style={{ color: 'var(--nc-text2)' }}>{user.email}</p>
-              )}
-              <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1">
-                <span className="text-amber-400 text-sm leading-none">⚡</span>
-                <span className="text-xs font-bold text-amber-400">{user.tokens.toLocaleString()}</span>
-                <span className="text-xs" style={{ color: 'var(--nc-text2)' }}>tokens</span>
-              </div>
-            </div>
-
-            {/* Onboarding nudge */}
-            {!user.onboarding_bonus_claimed && (
-              <Link
-                href="/profile"
-                onClick={() => setShowDropdown(false)}
-                className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-amber-400 transition hover:bg-amber-500/5"
-                style={ROW_BORDER}
-              >
-                <span>⚡</span>
-                <span>Complete profile → earn 10 tokens</span>
-              </Link>
-            )}
-
-            {/* ── Menu rows ── */}
-
             {/* Profile */}
-            <Link
-              href="/profile"
-              onClick={() => setShowDropdown(false)}
-              className={ROW}
-              style={{ ...ROW_BORDER, color: 'var(--nc-text)' }}
-            >
+            <Link href="/profile" onClick={() => setShowDropdown(false)} className={ROW}
+              style={{ ...ROW_BORDER, color: 'var(--nc-text)' }}>
               <IcoUser />
               <span className="text-sm font-medium">Profile</span>
             </Link>
 
-            {/* Bookmarks */}
-            <Link
-              href="/bookmarks"
-              onClick={() => setShowDropdown(false)}
-              className={ROW}
-              style={{ ...ROW_BORDER, color: 'var(--nc-text)' }}
-            >
-              <IcoBookmark />
-              <span className="text-sm font-medium">Bookmarks</span>
-            </Link>
-
-            {/* Purchase Tokens */}
-            <Link
-              href="/shop"
-              onClick={() => setShowDropdown(false)}
-              className={ROW}
-              style={{ ...ROW_BORDER, color: 'var(--nc-text)' }}
-            >
+            {/* Tokens */}
+            <Link href="/shop" onClick={() => setShowDropdown(false)} className={ROW}
+              style={{ ...ROW_BORDER, color: 'var(--nc-text)' }}>
               <IcoWallet />
-              <span className="text-sm font-medium">Purchase Tokens</span>
+              <span className="text-sm font-medium">Tokens</span>
             </Link>
 
             {/* Support */}
-            <Link
-              href="/support"
-              onClick={() => setShowDropdown(false)}
-              className={ROW}
-              style={{ ...ROW_BORDER, color: 'var(--nc-text)' }}
-            >
+            <Link href="/support" onClick={() => setShowDropdown(false)} className={ROW}
+              style={{ ...ROW_BORDER, color: 'var(--nc-text)' }}>
               <IcoSupport />
               <span className="text-sm font-medium">Support</span>
             </Link>
 
             {/* Sign Out */}
-            <button
-              onClick={() => { setShowDropdown(false); logout() }}
-              className={ROW}
-              style={{ color: 'var(--nc-text2)' }}
-            >
+            <button onClick={() => { setShowDropdown(false); logout() }} className={ROW}
+              style={{ color: 'var(--nc-text2)' }}>
               <IcoSignOut />
               <span className="text-sm font-medium">Sign out</span>
             </button>

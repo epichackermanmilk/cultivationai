@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient }       from '@supabase/supabase-js'
-import { listNovels }         from '@/lib/vps'
+import { listNovels, getNovelMeta } from '@/lib/vps'
 import Chat          from './Chat'
 import CoverImage    from './CoverImage'
 import VisitTracker  from './VisitTracker'
@@ -67,6 +67,12 @@ export default async function NovelPage({ params }: Props) {
     novel = novels.find(n => n.slug === slug) ?? null
   } catch {
     // VPS unreachable — fall through
+  }
+
+  // Fallback: if the cached index missed this novel (freshly scraped / cache lag),
+  // read its metadata directly so the page never wrongly shows "being indexed".
+  if (!novel) {
+    novel = await getNovelMeta(slug)
   }
 
   const title  = novel?.title  ?? slug.replace(/-/g, ' ')

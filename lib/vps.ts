@@ -35,3 +35,15 @@ export async function getNovelFacts(slug: string) {
   if (!res.ok) return null
   return res.json()
 }
+
+// Direct per-novel metadata read — used as a fallback when a freshly-scraped
+// novel hasn't propagated into the cached /novels index yet.
+export async function getNovelMeta(slug: string): Promise<NovelMeta | null> {
+  try {
+    const res = await fetch(`${BASE}/novels/${slug}/meta`, { headers, next: { revalidate: 60 } })
+    if (!res.ok) return null
+    return await res.json() as NovelMeta
+  } catch {
+    return null
+  }
+}
