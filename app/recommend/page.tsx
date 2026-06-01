@@ -32,13 +32,14 @@ function NovelPicker({
   const wrapRef               = useRef<HTMLDivElement>(null)
 
   const selectedSlugs = new Set(selected.map(n => n.slug))
-  const filtered = query.length > 1
+  const q = query.trim().toLowerCase()
+  const filtered = q.length >= 1
     ? library.filter(n =>
         !selectedSlugs.has(n.slug) &&
-        (n.title.toLowerCase().includes(query.toLowerCase()) ||
-         n.author.toLowerCase().includes(query.toLowerCase()))
+        (n.title.toLowerCase().includes(q) || n.author.toLowerCase().includes(q))
       ).slice(0, 8)
-    : []
+    // Empty query but focused → show a few suggestions so the picker is discoverable
+    : library.filter(n => !selectedSlugs.has(n.slug)).slice(0, 8)
 
   useEffect(() => {
     const h = (e: MouseEvent) => {

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import TokenWidget from '@/components/TokenWidget'
+import LoadingFacts from '@/components/LoadingFacts'
 import { useAuth } from '@/lib/auth-context'
 import { SECT_PRESETS } from '@/lib/games/archetypes'
 import type { Treatment } from '@/lib/games/archetypes'
@@ -66,7 +67,7 @@ export default function SectRecruitmentPage() {
   const [totalApplicants,setTotal]          = useState(8)
   const [applicant,      setApplicant]      = useState<Applicant | null>(null)
   const [messages,       setMessages]       = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
-  const [questionsLeft,  setQuestionsLeft]  = useState(2)
+  const [questionsLeft,  setQuestionsLeft]  = useState(3)
   const [input,          setInput]          = useState('')
   const [streaming,      setStreaming]      = useState(false)
   const [loading,        setLoading]        = useState(false)
@@ -87,7 +88,7 @@ export default function SectRecruitmentPage() {
   useEffect(() => {
     if (applicant) {
       setMessages([{ role: 'assistant', content: applicant.openingStatement }])
-      setQuestionsLeft(2)
+      setQuestionsLeft(3)
       setInput('')
       setTimeout(() => inputRef.current?.focus(), 100)
     }
@@ -210,20 +211,20 @@ export default function SectRecruitmentPage() {
       if (!res.ok) { setErrorMsg(data.error ?? 'Reveal failed'); return }
       setReveals(data.reveals)
       setSectOutcome(data.sectOutcome)
-      setRevealIndex(-1)
+      setRevealIndex(0)   // show the first applicant; the player advances one by one
       setLoading(false)
-      // Start reveal sequence
-      revealNext(data.reveals.length, 0)
     } catch {
       setErrorMsg('Connection error during reveal')
       setLoading(false)
     }
   }
 
-  function revealNext(total: number, idx: number) {
-    if (idx >= total) { setPhase('complete'); return }
-    setRevealIndex(idx)
-    setTimeout(() => revealNext(total, idx + 1), 2200)
+  // Player-driven reveal — show the next applicant, or move to results after the last.
+  function advanceReveal() {
+    setRevealIndex(idx => {
+      if (idx + 1 >= reveals.length) { setPhase('complete'); return idx }
+      return idx + 1
+    })
   }
 
   // ── Keyboard ──────────────────────────────────────────────────────────────────
@@ -252,8 +253,15 @@ export default function SectRecruitmentPage() {
         </div>
       </header>
 
+      {/* ── PREPARING (generating applicants) ────────────────────────────────── */}
+      {phase === 'lobby' && loading && (
+        <main className="flex-1 flex flex-col">
+          <LoadingFacts icon="📜" title="The applicants are gathering at the gate…" />
+        </main>
+      )}
+
       {/* ── LOBBY ────────────────────────────────────────────────────────────── */}
-      {phase === 'lobby' && (
+      {phase === 'lobby' && !loading && (
         <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
           <div className="w-full max-w-xl">
             <div className="text-center mb-8">
@@ -298,7 +306,7 @@ export default function SectRecruitmentPage() {
                 <div>
                   <p className="text-sm font-semibold" style={{ color: 'var(--nc-text)' }}>One session — 25 tokens</p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--nc-text2)' }}>
-                    8 applicants · 2 questions each · ~15 minutes · No per-turn charges
+                    8 applicants · 3 questions each · ~15 minutes · No per-turn charges
                   </p>
                 </div>
                 <span className="text-2xl">⚔️</span>
@@ -374,13 +382,11 @@ export default function SectRecruitmentPage() {
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">Appearance</p>
                   <p className="text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>{applicant.appearance}</p>
                 </div>
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">Background</p>
-                  <p className="text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>{applicant.background}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">Cultivation</p>
-                  <p className="text-xs font-medium text-amber-400/80">{applicant.cultivation}</p>
+                {/* Background is hidden on purpose — interview them to uncover who they really are */}
+                <div className="rounded-lg border border-dashed border-zinc-700/70 px-3 py-2">
+                  <p className="text-[11px] leading-relaxed text-zinc-500 italic">
+                    Their background is unknown. Ask them questions to uncover who they truly are before you decide.
+                  </p>
                 </div>
               </div>
             </div>
@@ -493,94 +499,84 @@ export default function SectRecruitmentPage() {
 
       {/* ── REVEAL LOADING ────────────────────────────────────────────────────── */}
       {phase === 'reveal' && loading && (
-        <main className="flex-1 flex flex-col items-center justify-center gap-6 px-4">
-          <div className="text-4xl animate-pulse">⚖️</div>
-          <p className="text-lg font-semibold text-amber-400">The records are being consulted…</p>
-          <p className="text-sm" style={{ color: 'var(--nc-text2)' }}>
-            Every decision is being weighed across ten thousand years of history.
-          </p>
+        <main className="flex-1 flex flex-col">
+          <LoadingFacts icon="⚖️" title="The records are being consulted…" />
         </main>
       )}
 
-      {/* ── REVEAL SEQUENCE ───────────────────────────────────────────────────── */}
-      {phase === 'reveal' && !loading && reveals.length > 0 && (
-        <main className="flex-1 overflow-y-auto px-4 py-8 max-w-2xl mx-auto w-full">
-          <div className="text-center mb-8">
-            <p className="text-xs font-bold uppercase tracking-widest text-amber-500/70 mb-2">✦ The Truth Revealed</p>
-            <h2 className="text-2xl font-bold" style={{ color: 'var(--nc-text)' }}>Who Were They, Really?</h2>
-          </div>
+      {/* ── REVEAL SEQUENCE (one applicant at a time) ─────────────────────────── */}
+      {phase === 'reveal' && !loading && reveals.length > 0 && (() => {
+        const r = reveals[Math.min(revealIndex, reveals.length - 1)]
+        const t = TREATMENT_LABELS[r.treatment]
+        const isLast = revealIndex >= reveals.length - 1
+        return (
+          <main className="flex-1 overflow-y-auto px-4 py-8 max-w-2xl mx-auto w-full">
+            <div className="text-center mb-6">
+              <p className="text-xs font-bold uppercase tracking-widest text-amber-500/70 mb-2">✦ The Truth Revealed</p>
+              <h2 className="text-2xl font-bold" style={{ color: 'var(--nc-text)' }}>Who Were They, Really?</h2>
+              <p className="mt-2 text-xs text-zinc-500">Applicant {revealIndex + 1} of {reveals.length}</p>
+            </div>
 
-          <div className="space-y-4">
-            {reveals.map((r, i) => {
-              const isRevealed = i <= revealIndex
-              const t = TREATMENT_LABELS[r.treatment]
-              return (
-                <div key={i}
-                  className={`rounded-2xl border transition-all duration-700 overflow-hidden ${
-                    isRevealed
-                      ? 'border-amber-500/30 opacity-100 translate-y-0'
-                      : 'border-[var(--nc-border)] opacity-20 translate-y-2'
-                  }`}
-                  style={{ background: 'var(--nc-bg2)' }}
-                >
-                  {/* Header */}
-                  <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--nc-border)]"
-                    style={{ background: isRevealed ? 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, transparent 100%)' : undefined }}>
-                    <div>
-                      <p className="font-bold text-amber-400">{r.displayName}</p>
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--nc-text2)' }}>
-                        was the <span className="font-semibold" style={{ color: 'var(--nc-text)' }}>{r.archetypeName}</span>
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`rounded px-2 py-0.5 text-xs font-semibold border ${t.color}`}>{t.label}</span>
-                      <span className="text-xs text-zinc-500">Potential {r.potential}/100</span>
-                    </div>
-                  </div>
+            {/* progress dots */}
+            <div className="flex justify-center gap-1.5 mb-6">
+              {reveals.map((_, i) => (
+                <span key={i} className={`h-1.5 rounded-full transition-all ${i <= revealIndex ? 'w-6 bg-amber-500' : 'w-1.5 bg-zinc-700'}`} />
+              ))}
+            </div>
 
-                  {isRevealed && (
-                    <div className="px-5 py-4 space-y-3">
-                      <p className="text-sm leading-relaxed" style={{ color: 'var(--nc-text)' }}>{r.narrative}</p>
-
-                      {/* Tells */}
-                      {r.tells.length > 0 && (
-                        <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">The tells you may have missed</p>
-                          <ul className="space-y-1">
-                            {r.tells.map((tell, ti) => (
-                              <li key={ti} className="text-xs flex items-start gap-2" style={{ color: 'var(--nc-text2)' }}>
-                                <span className="text-amber-500/60 mt-0.5 shrink-0">›</span>
-                                {tell}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {/* Effects */}
-                      {r.sectEffects.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {r.sectEffects.map((e, ei) => (
-                            <span key={ei} className={`text-[10px] rounded-full border px-2 py-0.5 font-medium ${
-                              e.delta > 0
-                                ? 'border-emerald-500/30 text-emerald-400'
-                                : e.delta < 0
-                                  ? 'border-rose-500/30 text-rose-400'
-                                  : 'border-zinc-600 text-zinc-400'
-                            }`}>
-                              {METRIC_LABELS[e.metric]} {e.delta > 0 ? '+' : ''}{e.delta} · {e.description}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
+            <div key={revealIndex} className="rounded-2xl border border-amber-500/30 overflow-hidden animate-[fadeIn_0.4s_ease]"
+              style={{ background: 'var(--nc-bg2)' }}>
+              <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--nc-border)]"
+                style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, transparent 100%)' }}>
+                <div>
+                  <p className="font-bold text-amber-400">{r.displayName}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--nc-text2)' }}>
+                    was the <span className="font-semibold" style={{ color: 'var(--nc-text)' }}>{r.archetypeName}</span>
+                  </p>
                 </div>
-              )
-            })}
-          </div>
-        </main>
-      )}
+                <div className="flex items-center gap-2">
+                  <span className={`rounded px-2 py-0.5 text-xs font-semibold border ${t.color}`}>{t.label}</span>
+                  <span className="text-xs text-zinc-500">Potential {r.potential}/100</span>
+                </div>
+              </div>
+
+              <div className="px-5 py-4 space-y-3">
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--nc-text)' }}>{r.narrative}</p>
+                {r.tells.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">The tells you may have missed</p>
+                    <ul className="space-y-1">
+                      {r.tells.map((tell, ti) => (
+                        <li key={ti} className="text-xs flex items-start gap-2" style={{ color: 'var(--nc-text2)' }}>
+                          <span className="text-amber-500/60 mt-0.5 shrink-0">›</span>{tell}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {r.sectEffects.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {r.sectEffects.map((e, ei) => (
+                      <span key={ei} className={`text-[10px] rounded-full border px-2 py-0.5 font-medium ${
+                        e.delta > 0 ? 'border-emerald-500/30 text-emerald-400'
+                          : e.delta < 0 ? 'border-rose-500/30 text-rose-400' : 'border-zinc-600 text-zinc-400'
+                      }`}>
+                        {METRIC_LABELS[e.metric]} {e.delta > 0 ? '+' : ''}{e.delta} · {e.description}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <button onClick={advanceReveal}
+              className="mt-6 w-full rounded-xl px-8 py-3 text-sm font-bold text-black transition hover:-translate-y-0.5"
+              style={{ background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)' }}>
+              {isLast ? 'See Your Sect’s Fate →' : 'Next Applicant →'}
+            </button>
+          </main>
+        )
+      })()}
 
       {/* ── COMPLETE ──────────────────────────────────────────────────────────── */}
       {phase === 'complete' && sectOutcome && (

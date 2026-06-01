@@ -9,7 +9,7 @@ import OpenAI             from 'openai'
 import { parseJsonBody, sanitizeText } from '@/lib/sanitize'
 import { ARCHETYPES, SECT_PRESETS }    from '@/lib/games/archetypes'
 
-const MAX_QUESTIONS = 2
+const MAX_QUESTIONS = 3
 
 function admin() {
   return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!, {
