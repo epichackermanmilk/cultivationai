@@ -19,7 +19,7 @@ function admin() {
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 const MULTI_CHAT_COST = 15
 const MAX_NOVELS = 10
-const CHUNKS_PER_NOVEL = 4
+const CHUNKS_PER_NOVEL = 6
 
 export async function POST(req: Request) {
   // ── Auth ──────────────────────────────────────────────────────────────────────
@@ -70,42 +70,62 @@ export async function POST(req: Request) {
   const embRes = await openai.embeddings.create({ model: 'text-embedding-3-small', input: message })
   const queryEmbedding = embRes.data[0].embedding
 
+  // Pull each novel's synopsis up front. The synopsis names the protagonist and
+  // grounds the model on WHO each novel's main character is — without it, broad
+  // questions like "which MC is stronger" retrieve generic combat passages and
+  // the model can't tell who the lead even is (and may grab the wrong character).
+  const slugs = novels.map(n => n.slug)
+  const { data: metaRows } = await sb
+    .from('novels')
+    .select('slug, title, author, description')
+    .in('slug', slugs)
+  const metaBySlug = new Map((metaRows ?? []).map(r => [r.slug as string, r]))
+
   // For each novel: if it's indexed, retrieve passages; if not, silently start
   // indexing it (kick off the embed in the background) so it's ready next time.
   const stillIndexing: string[] = []
   const perNovel = await Promise.all(novels.map(async n => {
-    const title = n.title || n.slug
+    const meta = metaBySlug.get(n.slug)
+    const title = (meta?.title as string) || n.title || n.slug
+    const description = (meta?.description as string) || ''
     try {
       const embedded = await isNovelEmbedded(n.slug)
       if (!embedded) {
-        triggerEmbed(n.slug).catch(() => {})   // fire-and-forget auto-unlock
+        triggerEmbed(n.slug).catch(() => {})   // fire-and-forget auto-index
         stillIndexing.push(title)
-        return { title, chunks: [] }
+        return { title, description, chunks: [], embedded: false }
       }
       const chunks = await matchChunks(queryEmbedding, n.slug, CHUNKS_PER_NOVEL)
-      return { title, chunks }
+      return { title, description, chunks, embedded: true }
     } catch {
-      return { title, chunks: [] }
+      return { title, description, chunks: [], embedded: false }
     }
   }))
 
-  const withContent = perNovel.filter(p => p.chunks.length > 0)
+  // Every embedded novel is included — even if chunk retrieval was thin — so a
+  // selected novel is NEVER silently dropped from the comparison. Its synopsis
+  // still anchors the model on that novel's protagonist.
+  const ready = perNovel.filter(p => p.embedded)
 
   // Nothing ready yet — we just kicked off indexing. Don't charge; tell them to retry.
-  if (withContent.length === 0) {
+  if (ready.length === 0) {
     const names = stillIndexing.length ? stillIndexing.join(', ') : 'the selected novels'
     const msg = `I'm now reading ${names} for you — this takes a few minutes the first time. ` +
                 `Ask your question again shortly and I'll have them indexed. (You weren't charged for this.)`
     return new Response(msg, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } })
   }
 
-  // Build a clearly-labelled, per-novel context block
-  const context = withContent.map(p =>
-    `## ${p.title}\n` +
-    p.chunks.map(c => `[Ch.${c.chapter_number}${c.chapter_title ? ` — ${c.chapter_title}` : ''}] ${c.text}`).join('\n\n')
-  ).join('\n\n———\n\n')
+  // Build a clearly-labelled, per-novel context block: synopsis first (names the
+  // protagonist), then the retrieved passages.
+  const context = ready.map(p => {
+    const syn = p.description ? `Synopsis: ${p.description}\n\n` : ''
+    const passages = p.chunks.length
+      ? p.chunks.map(c => `[Ch.${c.chapter_number}${c.chapter_title ? ` — ${c.chapter_title}` : ''}] ${c.text}`).join('\n\n')
+      : '(No specific passages matched this question — rely on the synopsis above and say if detail is limited.)'
+    return `## ${p.title}\n${syn}${passages}`
+  }).join('\n\n———\n\n')
 
-  const novelList = withContent.map(p => `"${p.title}"`).join(', ')
+  const novelList = ready.map(p => `"${p.title}"`).join(', ')
   const indexingNote = stillIndexing.length
     ? `\nNote: ${stillIndexing.join(', ')} ${stillIndexing.length === 1 ? 'is' : 'are'} still being indexed and not yet available — if the question needs ${stillIndexing.length === 1 ? 'it' : 'them'}, briefly mention they'll be ready in a few minutes.\n`
     : ''
@@ -113,9 +133,14 @@ export async function POST(req: Request) {
   const systemPrompt = `You are NovelCodex, an AI assistant that answers questions spanning MULTIPLE web novels at once.
 The reader has selected these novels: ${novelList}.
 ${indexingNote}
-Answer using ONLY the passages provided below, which are grouped by novel. When a question compares novels (power scaling, characters, cultivation systems, themes), draw on the relevant novels and make the comparison explicit. Always attribute facts to the specific novel they come from.
+CRITICAL rules:
+- You MUST address EVERY novel the reader selected. If the question compares the novels (e.g. "which main character is stronger"), you must discuss the protagonist/relevant characters from EACH novel — never answer about only one, and never substitute a character from a different novel.
+- Each novel's "Synopsis" names and frames that novel's protagonist — use it to correctly identify who the main character is. Do NOT confuse characters across novels.
+- Draw facts from the passages provided. The synopsis is reliable for who-is-who and the premise; the passages are reliable for specific events and details.
+- If a novel's passages are thin for this question, work from its synopsis and say plainly what's uncertain — do NOT invent, and do NOT pad the answer with another novel's characters.
+- Make comparisons explicit and always attribute each fact to the specific novel it comes from.
 
-If the passages don't cover something, say so honestly rather than guessing. Be specific and cite chapter details when useful.
+Be specific and cite chapter details when useful.
 
 Passages (grouped by novel):
 ${context}`

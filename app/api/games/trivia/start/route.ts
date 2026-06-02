@@ -24,6 +24,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 export interface TriviaQuestion {
   q:          string
   answer:     string
+  context:    string   // 1-sentence "aha" explanation shown on reveal
   novelTitle: string
   userAnswer: string | null
   correct:    boolean | null
@@ -141,11 +142,12 @@ Rules:
 - Vary difficulty and topic (characters, powers, places, events, relationships).
 - Spread questions across the different novels provided.
 - Keep questions concise (one sentence).
+- For EACH question also write a "context": one short sentence (max ~20 words) giving the satisfying "aha" detail behind the answer, drawn from the excerpt — so a player who got it wrong goes "ohhh, right." Do not restate the question; add the colour/reason.
 
 Return ONLY valid JSON:
 {
   "questions": [
-    { "q": "question text", "answer": "the correct short answer", "novelTitle": "which novel it came from" }
+    { "q": "question text", "answer": "the correct short answer", "context": "one-sentence aha explanation", "novelTitle": "which novel it came from" }
   ]
 }`
 
@@ -163,9 +165,10 @@ Return ONLY valid JSON:
     })
     const d = JSON.parse(completion.choices[0].message.content ?? '{}')
     if (Array.isArray(d.questions)) {
-      questions = d.questions.slice(0, questionCount).map((x: { q: string; answer: string; novelTitle: string }) => ({
+      questions = d.questions.slice(0, questionCount).map((x: { q: string; answer: string; context?: string; novelTitle: string }) => ({
         q:          x.q ?? '',
         answer:     x.answer ?? '',
+        context:    x.context ?? '',
         novelTitle: x.novelTitle ?? '',
         userAnswer: null,
         correct:    null,

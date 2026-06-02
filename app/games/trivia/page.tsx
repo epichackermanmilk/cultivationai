@@ -43,7 +43,7 @@ export default function TriviaPage() {
   const [total,      setTotal]      = useState(0)
   const [answer,     setAnswer]     = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [lastResult, setLastResult] = useState<{ correct: boolean; feedback: string; correctAnswer: string } | null>(null)
+  const [lastResult, setLastResult] = useState<{ correct: boolean; feedback: string; correctAnswer: string; answerContext?: string } | null>(null)
   const [correctSoFar, setCorrectSoFar] = useState(0)
   const [starting,   setStarting]   = useState(false)
   const [error,      setError]      = useState('')
@@ -121,7 +121,7 @@ export default function TriviaPage() {
       })
       const d = await r.json()
       if (!r.ok) { setError(d.error ?? 'Failed.'); return }
-      setLastResult({ correct: d.correct, feedback: d.feedback, correctAnswer: d.correctAnswer })
+      setLastResult({ correct: d.correct, feedback: d.feedback, correctAnswer: d.correctAnswer, answerContext: d.answerContext })
       setCorrectSoFar(d.done ? d.score : d.correctSoFar)
       if (d.done) {
         setFinalScore(d.score); setFinalGrade(d.grade); setReview(d.review)
@@ -308,6 +308,11 @@ export default function TriviaPage() {
                   {lastResult.feedback && <p className="text-sm" style={{ color: 'var(--nc-text2)' }}>{lastResult.feedback}</p>}
                   {!lastResult.correct && (
                     <p className="text-xs mt-1 text-zinc-500">Answer: <span className="text-zinc-300">{lastResult.correctAnswer}</span></p>
+                  )}
+                  {lastResult.answerContext && (
+                    <p className="mt-2.5 border-t border-white/10 pt-2.5 text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
+                      <span className="text-amber-400/80">💡 </span>{lastResult.answerContext}
+                    </p>
                   )}
                 </div>
                 <button onClick={isLastQuestion ? finishToComplete : next}

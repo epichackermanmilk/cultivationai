@@ -535,12 +535,12 @@ export default function Chat({ slug, title, author }: Props) {
       )}
 
       {/* ── Mode toggle ──────────────────────────────────────────────────────── */}
-      <div className="shrink-0 border-b border-[var(--nc-border)] px-3 py-2">
-        <div className="flex rounded-lg border border-[var(--nc-border)] p-0.5 gap-0.5"
+      <div className="shrink-0 border-b border-[var(--nc-border)] px-3 py-2.5">
+        <div className="mx-auto flex w-full max-w-2xl rounded-xl border border-[var(--nc-border)] p-1 gap-1"
           style={{ background: 'var(--nc-bg)' }}>
           <button
             onClick={() => switchMode('book')}
-            className={`flex-1 rounded-md py-1.5 text-xs font-medium transition ${
+            className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition ${
               chatMode === 'book' ? 'bg-amber-500 text-black' : 'hover:bg-zinc-800/50'
             }`}
             style={chatMode !== 'book' ? { color: 'var(--nc-text2)' } : {}}>
@@ -548,7 +548,7 @@ export default function Chat({ slug, title, author }: Props) {
           </button>
           <button
             onClick={() => switchMode('character')}
-            className={`flex-1 rounded-md py-1.5 text-xs font-medium transition ${
+            className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition ${
               chatMode === 'character' ? 'bg-amber-500 text-black' : 'hover:bg-zinc-800/50'
             }`}
             style={chatMode !== 'character' ? { color: 'var(--nc-text2)' } : {}}>
