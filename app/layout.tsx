@@ -17,9 +17,30 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://novelcodex.org";
+const SITE_DESC = "Your AI reading companion for xianxia, cultivation, and wuxia web novels. Ask anything about any story — characters, plot, lore, cultivation systems — and get instant, accurate answers.";
+
 export const metadata: Metadata = {
-  title: "NovelCodex",
-  description: "Every secret, every character, every world — ask anything.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "NovelCodex — AI companion for web novels",
+    template: "%s — NovelCodex",
+  },
+  description: SITE_DESC,
+  applicationName: "NovelCodex",
+  openGraph: {
+    type: "website",
+    siteName: "NovelCodex",
+    title: "NovelCodex — AI companion for web novels",
+    description: SITE_DESC,
+    url: SITE_URL,
+    // og image is supplied automatically by app/opengraph-image.tsx
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "NovelCodex — AI companion for web novels",
+    description: SITE_DESC,
+  },
   other: {
     "google-adsense-account": "ca-pub-1350938260860067",
   },

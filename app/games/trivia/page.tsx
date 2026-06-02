@@ -5,6 +5,7 @@ import Link        from 'next/link'
 import TokenWidget from '@/components/TokenWidget'
 import Footer      from '@/components/Footer'
 import { useAuth } from '@/lib/auth-context'
+import { matchesSearch } from '@/lib/search'
 
 // ─────────────────────────────────────────────────────────────────────────────
 interface Novel { slug: string; title: string; author?: string }
@@ -62,10 +63,9 @@ export default function TriviaPage() {
 
   useEffect(() => {
     if (!novelQuery.trim()) { setResults([]); return }
-    const q = novelQuery.toLowerCase()
     const pickedSlugs = new Set(picked.map(p => p.slug))
     setResults(allNovels.filter(n => !pickedSlugs.has(n.slug) &&
-      (n.title.toLowerCase().includes(q) || (n.author ?? '').toLowerCase().includes(q))).slice(0, 8))
+      (matchesSearch(n.title, novelQuery) || matchesSearch(n.author ?? '', novelQuery))).slice(0, 8))
   }, [novelQuery, allNovels, picked])
 
   useEffect(() => {

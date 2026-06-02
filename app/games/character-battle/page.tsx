@@ -5,6 +5,7 @@ import Link   from 'next/link'
 import TokenWidget from '@/components/TokenWidget'
 import Footer      from '@/components/Footer'
 import { useAuth } from '@/lib/auth-context'
+import { matchesSearch } from '@/lib/search'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -74,8 +75,7 @@ function FighterPanel({
   // Filter novels by query
   useEffect(() => {
     if (!novelQuery.trim()) { setNovelResults([]); return }
-    const q = novelQuery.toLowerCase()
-    setNovelResults(novels.filter(n => n.title.toLowerCase().includes(q) || (n.author ?? '').toLowerCase().includes(q)).slice(0, 8))
+    setNovelResults(novels.filter(n => matchesSearch(n.title, novelQuery) || matchesSearch(n.author ?? '', novelQuery)).slice(0, 8))
   }, [novelQuery, novels])
 
   // Load characters when novel selected
@@ -100,8 +100,7 @@ function FighterPanel({
   // Filter characters
   useEffect(() => {
     if (!charQuery.trim()) { setCharResults(characters.slice(0, 8)); return }
-    const q = charQuery.toLowerCase()
-    setCharResults(characters.filter(c => c.name.toLowerCase().includes(q)).slice(0, 8))
+    setCharResults(characters.filter(c => matchesSearch(c.name, charQuery)).slice(0, 8))
   }, [charQuery, characters])
 
   // Close dropdowns on outside click

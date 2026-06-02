@@ -470,6 +470,11 @@ export default function Chat({ slug, title, author }: Props) {
         <p className="max-w-xs text-xs text-zinc-600">
           Hang tight — we&apos;re reading every chapter so you can ask anything about this novel.
         </p>
+        <div className="max-w-xs rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+          <p className="text-xs leading-relaxed text-amber-300/80">
+            ✦ This one-time setup only happens the first time <em>anyone</em> opens this novel. After this, it loads instantly — for you and everyone else.
+          </p>
+        </div>
       </div>
     )
   }
@@ -665,18 +670,18 @@ export default function Chat({ slug, title, author }: Props) {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
-          <div className="flex h-full flex-col items-center justify-center gap-3 text-center opacity-60">
-            <div className="text-3xl">{chatMode === 'character' ? '🎭' : '✨'}</div>
-            <p className="text-sm text-zinc-400">
+          <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
+            <div className="text-5xl opacity-70">{chatMode === 'character' ? '🎭' : '✨'}</div>
+            <p className="text-base text-zinc-300">
               {chatMode === 'character' && characterName
-                ? <>You&apos;re now talking to <span className="text-amber-400">{characterName}</span></>
+                ? <>You&apos;re now talking to <span className="text-amber-400 font-semibold">{characterName}</span></>
                 : chatMode === 'character'
                 ? 'Pick a character above to start roleplaying'
-                : <>Ask anything about <span className="text-amber-400">{title}</span></>
+                : <>Ask anything about <span className="text-amber-400 font-semibold">{title}</span></>
               }
             </p>
             {chatMode === 'book' && (
-            <div className="mt-2 flex flex-col gap-2">
+            <div className="mt-1 flex w-full max-w-lg flex-col gap-3">
               {[
                 'Who are the main characters?',
                 'What is the cultivation system?',
@@ -685,7 +690,7 @@ export default function Chat({ slug, title, author }: Props) {
                 <button
                   key={q}
                   onClick={() => { setInput(q); inputRef.current?.focus() }}
-                  className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs font-medium text-amber-400/80 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400 transition text-left"
+                  className="rounded-xl border border-amber-500/30 bg-amber-500/5 px-5 py-3.5 text-sm font-medium text-amber-400/90 hover:border-amber-500/60 hover:bg-amber-500/10 hover:text-amber-400 transition text-left"
                 >
                   ✦ {q}
                 </button>
@@ -698,7 +703,7 @@ export default function Chat({ slug, title, author }: Props) {
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
-              className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap border ${
+              className={`max-w-[88%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed whitespace-pre-wrap border ${
                 msg.role === 'user'
                   ? 'rounded-br-sm border-violet-500/30'
                   : msg.isError
@@ -768,7 +773,7 @@ export default function Chat({ slug, title, author }: Props) {
             onKeyDown={onKeyDown}
             placeholder="Ask about the story, characters, cultivation system…"
             rows={1}
-            className="flex-1 resize-none rounded-xl border border-[var(--nc-border)] px-3 py-2.5 text-sm placeholder-zinc-500 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition max-h-32 overflow-y-auto"
+            className="flex-1 resize-none rounded-2xl border border-[var(--nc-border)] px-4 py-3.5 text-base placeholder-zinc-500 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition max-h-40 overflow-y-auto"
             style={{ background: 'var(--nc-bg2)', color: 'var(--nc-text)', fieldSizing: 'content' } as React.CSSProperties}
             disabled={streaming}
           />
@@ -780,12 +785,12 @@ export default function Chat({ slug, title, author }: Props) {
               (chatMode === 'book' && input.trim().length < 10) ||
               (chatMode === 'character' && !characterName.trim())
             }
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-black transition hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-black transition hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {streaming ? (
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent" />
+              <span className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent" />
             ) : (
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
               </svg>
             )}

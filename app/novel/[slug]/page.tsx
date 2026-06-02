@@ -173,7 +173,7 @@ export default async function NovelPage({ params, searchParams }: Props) {
       <div className="flex flex-1 overflow-hidden">
 
         {/* Sidebar */}
-        <aside className="hidden w-64 shrink-0 overflow-y-auto border-r border-[var(--nc-border)] lg:block" style={{ background: 'var(--nc-bg2)' }}>
+        <aside className="hidden w-80 shrink-0 overflow-y-auto border-r border-[var(--nc-border)] lg:block" style={{ background: 'var(--nc-bg2)' }}>
           {novel ? (
             <div className="p-4 space-y-4">
               <CoverImage src={novel.cover_url} alt={novel.title} />

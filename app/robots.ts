@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/api/', '/api/auth/', '/api/embed/', '/api/setup/'],
       },
     ],
-    sitemap: 'https://novelcodex.com/sitemap.xml',
+    sitemap: 'https://novelcodex.org/sitemap.xml',
   }
 }

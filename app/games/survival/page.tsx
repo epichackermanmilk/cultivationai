@@ -5,6 +5,7 @@ import Link        from 'next/link'
 import TokenWidget from '@/components/TokenWidget'
 import Footer      from '@/components/Footer'
 import { useAuth } from '@/lib/auth-context'
+import { matchesSearch } from '@/lib/search'
 
 // ─────────────────────────────────────────────────────────────────────────────
 type Phase = 'select' | 'active' | 'dead' | 'survived' | 'error'
@@ -74,8 +75,7 @@ export default function SurvivalPage() {
   // Filter novels
   useEffect(() => {
     if (!novelQuery.trim()) { setNovelResults([]); return }
-    const q = novelQuery.toLowerCase()
-    setNovelResults(novels.filter(n => n.title.toLowerCase().includes(q) || (n.author ?? '').toLowerCase().includes(q)).slice(0, 8))
+    setNovelResults(novels.filter(n => matchesSearch(n.title, novelQuery) || matchesSearch(n.author ?? '', novelQuery)).slice(0, 8))
   }, [novelQuery, novels])
 
   // Close dropdown on outside click

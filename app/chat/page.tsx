@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useRef, useCallback } from 'react'
 import SiteHeader     from '@/components/SiteHeader'
 import FeedbackWidget from '@/components/FeedbackWidget'
 import { useAuth }    from '@/lib/auth-context'
+import { matchesSearch } from '@/lib/search'
 
 interface Novel {
   slug: string
@@ -147,8 +148,7 @@ function NovelSelector({
 
   const visible = useMemo(() => {
     return novels.filter(n => {
-      if (search && !n.title.toLowerCase().includes(search.toLowerCase()) &&
-          !n.author.toLowerCase().includes(search.toLowerCase())) return false
+      if (search && !matchesSearch(n.title, search) && !matchesSearch(n.author, search)) return false
       if (selectedGenres.length > 0 && !n.genres.some(g => selectedGenres.includes(g))) return false
       if (minCh && n.total_chapters < Number(minCh)) return false
       if (maxCh && n.total_chapters > Number(maxCh)) return false

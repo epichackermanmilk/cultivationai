@@ -6,6 +6,7 @@ import SiteHeader from '@/components/SiteHeader'
 import Footer      from '@/components/Footer'
 import AdSlot      from '@/components/AdSlot'
 import { useAuth } from '@/lib/auth-context'
+import { matchesSearch } from '@/lib/search'
 
 const G: React.CSSProperties = {
   background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)',
@@ -32,11 +33,11 @@ function NovelPicker({
   const wrapRef               = useRef<HTMLDivElement>(null)
 
   const selectedSlugs = new Set(selected.map(n => n.slug))
-  const q = query.trim().toLowerCase()
+  const q = query.trim()
   const filtered = q.length >= 1
     ? library.filter(n =>
         !selectedSlugs.has(n.slug) &&
-        (n.title.toLowerCase().includes(q) || n.author.toLowerCase().includes(q))
+        (matchesSearch(n.title, q) || matchesSearch(n.author, q))
       ).slice(0, 8)
     // Empty query but focused → show a few suggestions so the picker is discoverable
     : library.filter(n => !selectedSlugs.has(n.slug)).slice(0, 8)

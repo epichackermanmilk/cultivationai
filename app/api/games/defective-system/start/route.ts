@@ -1,5 +1,5 @@
 // POST /api/games/defective-system/start
-// Charges 30 tokens, generates 5 quests from The System, returns session + first quest.
+// Charges 25 tokens, generates 5 quests from The System, returns session + first quest.
 
 import { NextResponse } from 'next/server'
 import { cookies }      from 'next/headers'

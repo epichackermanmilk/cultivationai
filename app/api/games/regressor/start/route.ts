@@ -1,5 +1,5 @@
 // POST /api/games/regressor/start
-// Charges 75 tokens (covers all runs). Generates the disaster scenario.
+// Charges 50 tokens (covers all runs). Generates the disaster scenario.
 // Also handles starting a new run within an existing session (no extra charge).
 
 import { NextResponse } from 'next/server'

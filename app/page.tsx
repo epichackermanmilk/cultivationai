@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import SiteHeader  from '@/components/SiteHeader'
 import AuthModal   from '@/components/AuthModal'
 import Footer      from '@/components/Footer'
 import { useAuth } from '@/lib/auth-context'
@@ -403,8 +402,8 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* ── Header (unified site header) ─────────────────────────────────────── */}
-      <SiteHeader />
+      {/* No header on the landing page — keeps focus on the hero CTA and
+          encourages scrolling through the full marketing page. */}
 
       {/* ── HERO ───────────────────────────────────────────────────────────── */}
       <section className="relative flex overflow-hidden" style={{ minHeight: '100vh' }}>

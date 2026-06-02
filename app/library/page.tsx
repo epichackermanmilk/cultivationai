@@ -10,6 +10,7 @@ import FeedbackWidget from '@/components/FeedbackWidget'
 import Footer         from '@/components/Footer'
 import AdSlot         from '@/components/AdSlot'
 import { FilterPanel, type Filters, DEFAULT_FILTERS, CHAPTER_MAX, paramsToFilters, hasActiveFilters } from '@/components/LibraryFilters'
+import { matchesSearch } from '@/lib/search'
 
 interface Novel {
   slug: string
@@ -130,12 +131,10 @@ export default function LibraryPage() {
   const filtered = useMemo(() => {
     let list = novels
     if (query.trim()) {
-      const q = query.toLowerCase()
-      list = list.filter(n =>
-        n.title.toLowerCase().includes(q) ||
-        n.author.toLowerCase().includes(q) ||
-        n.genres.some(g => g.toLowerCase().includes(q))
-      )
+      // Title-only, punctuation-insensitive match. Searching "heaven" should
+      // only surface novels with "heaven" in the TITLE — not ones that merely
+      // share an author or genre — and "heaven's" / "heavens" must both work.
+      list = list.filter(n => matchesSearch(n.title, query))
     }
     if (filters.genres.length > 0) {
       list = list.filter(n =>
