@@ -95,7 +95,7 @@ export async function POST(req: Request) {
         stillIndexing.push(title)
         return { title, description, chunks: [], embedded: false }
       }
-      const chunks = await matchChunks(queryEmbedding, n.slug, CHUNKS_PER_NOVEL)
+      const chunks = await matchChunks(queryEmbedding, n.slug, CHUNKS_PER_NOVEL, 0.1)
       return { title, description, chunks, embedded: true }
     } catch {
       return { title, description, chunks: [], embedded: false }
