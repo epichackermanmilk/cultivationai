@@ -56,23 +56,34 @@ export const dynamic = 'force-dynamic'
 export async function POST(req: Request) {
   const payload = Buffer.from(await req.arrayBuffer())
   const sig     = req.headers.get('stripe-signature')
-  const secret  = process.env.STRIPE_WEBHOOK_SECRET
+  // Accept the live secret AND (optionally) a test-mode secret, so we can run an
+  // end-to-end test purchase without swapping production into test mode.
+  const secrets = [process.env.STRIPE_WEBHOOK_SECRET, process.env.STRIPE_WEBHOOK_SECRET_TEST]
+    .filter((s): s is string => !!s)
 
   let event: Stripe.Event
 
-  if (!secret) {
+  if (secrets.length === 0) {
     return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 })
   }
   if (!sig) {
     return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 })
   }
 
-  try {
-    event = getStripe().webhooks.constructEvent(payload, sig, secret)
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Webhook signature verification failed'
-    return NextResponse.json({ error: msg }, { status: 400 })
+  let verified: Stripe.Event | null = null
+  let lastErr = 'Webhook signature verification failed'
+  for (const secret of secrets) {
+    try {
+      verified = getStripe().webhooks.constructEvent(payload, sig, secret)
+      break
+    } catch (err: unknown) {
+      lastErr = err instanceof Error ? err.message : lastErr
+    }
   }
+  if (!verified) {
+    return NextResponse.json({ error: lastErr }, { status: 400 })
+  }
+  event = verified
 
   try {
     // ── One-time purchase + add-on completed ─────────────────────────────────

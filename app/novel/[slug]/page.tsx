@@ -28,7 +28,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       : `Read and chat about ${novel.title} on NovelCodex. ${novel.total_chapters.toLocaleString()} chapters indexed.`
 
     return {
-      title:       `${novel.title} — NovelCodex`,
+      // The root layout template appends " — NovelCodex", so use the bare title
+      // here to avoid a doubled suffix.
+      title:       novel.title,
       description: desc,
       openGraph: {
         title:       novel.title,

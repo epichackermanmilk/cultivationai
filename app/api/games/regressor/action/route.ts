@@ -60,7 +60,11 @@ export async function POST(req: Request) {
     `Day ${t.turn}: [Action: ${t.action}]\n${t.narration}`
   ).join('\n\n')
 
-  const systemPrompt = `You are narrating a xianxia regression story. This is Life ${state.currentRun} of the player's regression.
+  const powerSection = state.regressorPower
+    ? `\n## Your Regressor's Power (carried from a past life)\n${state.regressorPower.name}: ${state.regressorPower.description}\nDrawback: ${state.regressorPower.drawback}\nThe player may invoke this power, but it is NOT a free win — enforce the drawback every time, and it cannot trivially solve a lethal trap.\n`
+    : ''
+
+  const systemPrompt = `You are narrating a HARD xianxia regression story. This is Life ${state.currentRun} of the player's regression. The fun comes from a real power fantasy gated behind genuine danger: dying, learning the hidden rules, and coming back sharper.
 
 ## World
 ${state.worldContext}
@@ -69,19 +73,20 @@ ${state.worldContext}
 ${state.disaster.name}: ${state.disaster.description}
 Days until disaster: ${MAX_TURNS - turn + 1} (currently Day ${turn} of ${MAX_TURNS})
 Hint the player knows: "${state.disaster.hint}"
-${pastRunSection}
+${powerSection}${pastRunSection}
 ## Recent Events
 ${recentTurns || 'This is the start of this life.'}
 
 ## Rules
-1. Narrate the RESULT of the player's action in 3-5 sentences. Be specific and vivid.
-2. Xianxia style: cultivation terms, political intrigue, spiritual sense, qi fluctuations.
-3. Each turn should advance the story and give the player meaningful information.
-4. If the action leads to the player's death: end with exactly [DEATH: brief reason].
-5. If the player prevents the disaster: end with exactly [VICTORY: how they stopped it].
-6. If disaster day arrives (Day ${MAX_TURNS}) without prevention: end with exactly [DISASTER].
-7. Otherwise: end with a choice or cliffhanger that invites the next action.
-8. DO NOT resolve the disaster unless the player takes a specific, logically correct action.`
+1. Narrate the RESULT of the player's action vividly (one tight paragraph). Xianxia style: cultivation realms, factions, spiritual sense, qi, intrigue.
+2. THIS WORLD IS LETHAL AND DOES NOT HOLD HANDS. Reckless, arrogant, uninformed, or careless actions can get the player killed SUDDENLY — including hidden traps, ambushes, poison, betrayal, or forbidden ground they had no way to know was deadly the first time. Do NOT telegraph every danger. Some doors kill.
+3. BUT always be FAIR, never random: every death must, in hindsight, have a cause the player can now learn from and avoid next life. The death reason should reveal a concrete piece of hidden information ("the third elder was the traitor", "the eastern path is warded with a soul-trap"). This is the core loop — death → knowledge → progress.
+4. Reward decisive, observant, information-driven play with real, satisfying progress and power — let the player FEEL clever and strong when they earn it.
+5. Use the player's past-life memories and Regressor's Power where relevant, honoring its drawback.
+6. If the action leads to death: end with exactly [DEATH: specific reason that teaches a lesson].
+7. If the player prevents the disaster through a specific, logically correct action: end with exactly [VICTORY: how].
+8. If Day ${MAX_TURNS} arrives without prevention: end with exactly [DISASTER].
+9. Otherwise end with a sharp choice or cliffhanger. Do NOT resolve the disaster unless the action genuinely earns it.`
 
   // ── Stream response ────────────────────────────────────────────────────────
   const stream = await openai.chat.completions.create({
@@ -91,8 +96,8 @@ ${recentTurns || 'This is the start of this life.'}
       { role: 'user',   content: `Day ${turn}. My action: ${action}` },
     ],
     stream:      true,
-    temperature: 0.85,
-    max_tokens:  350,
+    temperature: 0.9,
+    max_tokens:  700,
   })
 
   let fullText = ''

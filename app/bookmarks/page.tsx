@@ -60,12 +60,9 @@ export default function BookmarksPage() {
         <main className="min-w-0 flex-1">
         <h1 className="mb-6 text-3xl sm:text-4xl font-extrabold tracking-tight" style={{ color: 'var(--nc-text)' }}>Your Bookmarks</h1>
         {!mounted ? (
-          /* Skeleton */
-          <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="rounded-xl bg-zinc-800 animate-pulse aspect-[3/4]" />
-            ))}
-          </div>
+          /* Nothing until mounted — bookmarks read from localStorage synchronously
+             on mount, so a skeleton just flashes empty boxes for a frame. */
+          <div className="min-h-[40vh]" />
         ) : books.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
             <span className="text-5xl">🔖</span>

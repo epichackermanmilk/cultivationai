@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react'
 import Link        from 'next/link'
 import TokenWidget from '@/components/TokenWidget'
 import Footer      from '@/components/Footer'
+import AdSlot      from '@/components/AdSlot'
+import { track }   from '@/lib/analytics'
 import { useAuth } from '@/lib/auth-context'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -32,6 +34,8 @@ export default function RegressorPage() {
   const [disaster,       setDisaster]       = useState<Disaster | null>(null)
   const [worldContext,   setWorldContext]   = useState('')
   const [openingText,    setOpeningText]    = useState('')
+  const [regressorPower, setRegressorPower] = useState<{ name: string; description: string; drawback: string } | null>(null)
+  const [archetype,      setArchetype]      = useState('')
   const [currentTurn,    setCurrentTurn]    = useState(1)
   const [currentRun,     setCurrentRun]     = useState(1)
   const [turns,          setTurns]          = useState<Turn[]>([])
@@ -71,11 +75,14 @@ export default function RegressorPage() {
       })
       const d = await r.json()
       if (!r.ok) { setError(d.error ?? 'Failed to start.'); return }
+      track('game_start', { game: 'regressor' })
       updateTokens(user.tokens - 50)
       setSessionId(d.sessionId)
       setDisaster(d.disaster)
       setWorldContext(d.worldContext)
       setOpeningText(d.openingNarration)
+      setRegressorPower(d.regressorPower ?? null)
+      setArchetype(d.archetype ?? '')
       setCurrentTurn(1)
       setCurrentRun(1)
       setTurns([])
@@ -187,7 +194,9 @@ export default function RegressorPage() {
         </div>
       </header>
 
-      <main className="flex-1 mx-auto w-full max-w-3xl px-4 py-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 gap-6 px-4 py-8">
+        <aside className="hidden xl:block w-40 shrink-0"><AdSlot variant="side" /></aside>
+        <main className="min-w-0 flex-1 max-w-3xl mx-auto">
 
         {/* ── LOBBY ─────────────────────────────────────────────────────────── */}
         {phase === 'lobby' && (
@@ -244,13 +253,23 @@ export default function RegressorPage() {
         {(phase === 'active' || phase === 'run_end') && disaster && (
           <div className="space-y-5">
 
+            {/* Your Regressor's Power */}
+            {regressorPower && (
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5">
+                {archetype && <p className="text-[11px] font-bold uppercase tracking-widest text-amber-500/70 mb-1.5">{archetype}</p>}
+                <p className="text-lg font-bold text-amber-300">✦ {regressorPower.name}</p>
+                <p className="text-sm mt-1.5 leading-relaxed" style={{ color: 'var(--nc-text2)' }}>{regressorPower.description}</p>
+                <p className="text-xs mt-2 text-amber-500/70"><span className="font-semibold">Drawback:</span> {regressorPower.drawback}</p>
+              </div>
+            )}
+
             {/* Disaster banner */}
-            <div className="rounded-2xl border border-violet-500/30 bg-violet-500/5 p-4">
+            <div className="rounded-2xl border border-violet-500/30 bg-violet-500/5 p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-violet-500/70 mb-1">The Great Disaster</p>
-                  <p className="text-base font-bold text-violet-300">{disaster.name}</p>
-                  <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--nc-text2)' }}>{disaster.description}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-violet-500/70 mb-1">The Great Disaster</p>
+                  <p className="text-lg font-bold text-violet-300">{disaster.name}</p>
+                  <p className="text-sm mt-1.5 leading-relaxed" style={{ color: 'var(--nc-text2)' }}>{disaster.description}</p>
                 </div>
                 {/* Countdown */}
                 <div className="text-right shrink-0">
@@ -457,7 +476,9 @@ export default function RegressorPage() {
           </div>
         )}
 
-      </main>
+        </main>
+        <aside className="hidden xl:block w-40 shrink-0"><AdSlot variant="side" /></aside>
+      </div>
       <Footer />
     </div>
   )

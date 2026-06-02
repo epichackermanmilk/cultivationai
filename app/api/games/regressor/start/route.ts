@@ -22,6 +22,10 @@ export interface RegressorState {
   phase:        'active' | 'run_end' | 'victory'
   disaster:     { name: string; description: string; hint: string }
   worldContext: string
+  // A power carried back from the past life — the regression "cheat" that fuels
+  // the power fantasy, balanced by a real drawback.
+  regressorPower?: { name: string; description: string; drawback: string }
+  archetype?:    string
   currentTurn:  number
   currentRun:   number
   turns: Array<{ turn: number; action: string; narration: string }>
@@ -73,29 +77,40 @@ export async function POST(req: Request) {
   await sb.from('profiles').update({ tokens: profile.tokens - GAME_COST }).eq('id', user.id)
 
   // ── Generate disaster scenario ────────────────────────────────────────────
-  const systemPrompt = `You are a xianxia cultivation story generator.
-Create a Great Disaster scenario for a regression game. The player is a cultivator who died in the disaster and has regressed back in time with 30 days to prevent it.
+  const systemPrompt = `You are a xianxia cultivation story generator for a HARD regression roguelike. The player died in a great disaster and regressed 30 days into the past to prevent it. The loop is the fun: die, learn the hidden rules, return stronger.
 
-The disaster should be:
-- Dramatic and specific (not vague)
-- Stoppable if the player figures out the root cause
-- Rooted in xianxia lore (sect politics, demonic cultivation, ancient sealed evils, heavenly tribulations, betrayals, etc.)
-- Different every time — vary the type, scale, and players involved
+Generate a scenario that is GENUINELY DIFFICULT and high-stakes — a world that punishes carelessness with sudden death but rewards clever, observant, information-driven play. There should be hidden lethal dangers (traps, traitors, forbidden ground, poison, ambushes) that a first-life player cannot know about — only by dying and regressing do they learn.
+
+ALSO give the player a power-fantasy edge: a "Regressor's Power" carried back from their past life — a cultivation technique, a System, a bloodline, or forbidden knowledge — that makes them feel strong, BUT with a real drawback that stops it from trivially winning. And assign a fun cultivation-novel ARCHETYPE for the player's role.
+
+The disaster must be:
+- Dramatic, specific, and HARD to stop (a wrong move is fatal; the correct path is non-obvious)
+- Solvable only by piecing together hidden information across lives
+- Rooted in xianxia lore (sect politics, demonic cultivation, sealed evils, heavenly tribulation, betrayal)
+- Different every time
 
 Return ONLY valid JSON:
 {
-  "disaster": {
-    "name": "Short dramatic name (e.g. 'The Crimson Moon Massacre')",
-    "description": "2-3 sentences. What happens, who dies, the scale of destruction.",
-    "hint": "One vague clue about the root cause — something the player died knowing but not understanding."
+  "archetype": "A cultivation-novel role for the player (e.g. 'Disgraced Outer Disciple with a Hidden Heritage', 'The Sect's Overlooked Alchemist', 'Sword Prodigy Crippled by a Rival').",
+  "regressorPower": {
+    "name": "Evocative name (e.g. 'Eye of the Returned', 'Heaven-Defying Reincarnation Art').",
+    "description": "1-2 sentences. A power that makes the player feel strong — e.g. read a person's killing intent, rewind a few seconds of combat, sense lies, a devastating technique. Make it cool.",
+    "drawback": "1 sentence. A real cost/limit — backlash, cooldown, qi drain, it reveals the player as a regressor if overused, etc."
   },
-  "worldContext": "2-3 sentences setting the scene: where we are, what sect, what era, the political landscape.",
-  "openingNarration": "3-4 sentences. The player wakes up in their past body. Vivid sensory detail. The dread of knowing what's coming."
+  "disaster": {
+    "name": "Short dramatic name (e.g. 'The Crimson Moon Massacre').",
+    "description": "2-3 sentences. What happens, who dies, the scale of destruction. Make the stakes feel lethal.",
+    "hint": "One cryptic clue the player died knowing but not understanding."
+  },
+  "worldContext": "2-3 sentences: where we are, what sect, what era, the political landscape, who holds power.",
+  "openingNarration": "3-4 sentences. The player wakes in their past body, the Regressor's Power stirring within them, dread of what's coming. Vivid sensory detail."
 }`
 
   let disaster: RegressorState['disaster'] | null = null
   let worldContext = ''
   let openingNarration = ''
+  let regressorPower: RegressorState['regressorPower'] = undefined
+  let archetype = ''
 
   try {
     const completion = await openai.chat.completions.create({
@@ -103,13 +118,15 @@ Return ONLY valid JSON:
       messages:        [{ role: 'system', content: systemPrompt }],
       response_format: { type: 'json_object' },
       temperature:     0.95,
-      max_tokens:      600,
+      max_tokens:      900,
     })
     const d = JSON.parse(completion.choices[0].message.content ?? '{}')
     if (d.disaster?.name && d.worldContext) {
       disaster        = d.disaster
       worldContext    = d.worldContext
       openingNarration = d.openingNarration ?? ''
+      if (d.regressorPower?.name) regressorPower = d.regressorPower
+      if (typeof d.archetype === 'string') archetype = d.archetype
     }
   } catch (e) {
     console.error('[regressor/start] AI error:', e)
@@ -127,6 +144,8 @@ Return ONLY valid JSON:
     phase:        'active',
     disaster,
     worldContext,
+    regressorPower,
+    archetype,
     currentTurn:  1,
     currentRun:   1,
     turns:        [],
@@ -154,6 +173,8 @@ Return ONLY valid JSON:
     sessionId:       session.id,
     disaster,
     worldContext,
+    regressorPower,
+    archetype,
     openingNarration,
     currentTurn:     1,
     maxTurns:        MAX_TURNS,

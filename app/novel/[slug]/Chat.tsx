@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
+import { track } from '@/lib/analytics'
 
 interface Message {
   role:    'user' | 'assistant'
@@ -265,6 +266,7 @@ export default function Chat({ slug, title, author }: Props) {
     setMessages(prev => [...prev, userMsg, assistantMsg])
     setInput('')
     setStreaming(true)
+    track('chat_message', { mode: chatMode, slug })
 
     let fullResponse = ''
     let exchangeOk   = false

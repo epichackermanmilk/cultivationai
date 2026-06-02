@@ -114,11 +114,11 @@ export default function FeedbackWidget() {
           onClick={e => { if (e.target === e.currentTarget) { setOpen(false); reset() } }}
         >
           <div
-            className="w-full max-w-sm rounded-2xl border border-[var(--nc-border)] p-5 shadow-2xl"
+            className="w-full max-w-lg rounded-2xl border border-[var(--nc-border)] p-7 shadow-2xl"
             style={{ background: 'var(--nc-bg2)' }}
           >
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-bold" style={{ color: 'var(--nc-text)' }}>Send Feedback</h2>
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="text-lg font-bold" style={{ color: 'var(--nc-text)' }}>Send Feedback</h2>
               <button
                 onClick={() => { setOpen(false); reset() }}
                 className="text-zinc-500 hover:text-zinc-300 transition text-xl leading-none"
@@ -154,8 +154,8 @@ export default function FeedbackWidget() {
                   value={text}
                   onChange={e => setText(e.target.value)}
                   placeholder={PLACEHOLDERS[type]}
-                  rows={4}
-                  className="mb-3 w-full resize-none rounded-xl border border-[var(--nc-border)] p-3 text-sm placeholder-zinc-500 outline-none focus:border-amber-500 transition"
+                  rows={6}
+                  className="mb-3 w-full resize-none rounded-xl border border-[var(--nc-border)] p-3.5 text-base placeholder-zinc-500 outline-none focus:border-amber-500 transition"
                   style={{ background: 'var(--nc-bg3)', color: 'var(--nc-text)' }}
                 />
 
