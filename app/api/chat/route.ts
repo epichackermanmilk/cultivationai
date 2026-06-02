@@ -111,12 +111,54 @@ export async function POST(req: Request) {
   const isBroad = !characterName && BROAD_RE.test(message)
   const wantsEarly = /\b(first arc|early|beginning|start|opening|so far|initial)\b/i.test(message)
 
+  // ── HyDE (Hypothetical Document Embeddings) ────────────────────────────────
+  // A question like "what happened in the second death game" embeds far away from
+  // the actual chapter prose (which narrates the events without labelling them
+  // "second"), so naive top-k recall misses them. We first generate a short
+  // hypothetical answer in the novel's style — narrative prose that embeds MUCH
+  // closer to the real chunks — and search with BOTH the question and that
+  // passage. This is the single biggest recall win for specific event questions.
+  let hydeText = ''
+  if (!characterName) {
+    try {
+      const hyde = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        max_tokens: 180,
+        temperature: 0.7,
+        messages: [{
+          role: 'system',
+          content: `You help search a web-novel database. Write a SHORT hypothetical excerpt (2-3 sentences) that could plausibly appear in the novel "${title}" and would answer the reader's question. Write it as narrative prose in the novel's style, inventing concrete-sounding names/places/events. Accuracy does NOT matter — it is used only as a semantic search query, never shown to anyone. Reader's question: "${message}"`,
+        }],
+      })
+      hydeText = hyde.choices[0]?.message?.content?.trim() ?? ''
+    } catch { /* HyDE is best-effort */ }
+  }
+
+  const toEmbed = hydeText ? [embeddingQuery, hydeText] : [embeddingQuery]
   const embRes = await openai.embeddings.create({
     model: 'text-embedding-3-small',
-    input: embeddingQuery,
+    input: toEmbed,
   })
   const queryEmbedding = embRes.data[0].embedding
-  let chunks = await matchChunks(queryEmbedding, slug, isBroad ? 10 : 6)
+  const hydeEmbedding  = hydeText ? embRes.data[1].embedding : null
+
+  // Higher recall: more candidates + a lower threshold, across both vectors.
+  const PER = characterName ? 8 : 12
+  const TH  = 0.1
+  const retrievals = await Promise.all([
+    matchChunks(queryEmbedding, slug, PER, TH),
+    ...(hydeEmbedding ? [matchChunks(hydeEmbedding, slug, PER, TH)] : []),
+  ])
+  // Merge + dedupe (keep the highest similarity per chunk), then take the top ~16.
+  const byKey = new Map<string, { text: string; chapter_number: number; chapter_title: string; similarity: number }>()
+  for (const list of retrievals) {
+    for (const c of list) {
+      const k = `${c.chapter_number}:${c.text.slice(0, 48)}`
+      const prev = byKey.get(k)
+      if (!prev || c.similarity > prev.similarity) byKey.set(k, c)
+    }
+  }
+  let chunks = [...byKey.values()].sort((a, b) => b.similarity - a.similarity).slice(0, isBroad ? 12 : 16)
 
   if (isBroad) {
     // Pull chapters in reading order and merge them with the semantic matches.
@@ -154,7 +196,7 @@ export async function POST(req: Request) {
   }
 
   const context = chunks
-    .map(c => `[Ch.${c.chapter_number} — ${c.chapter_title}]\n${isBroad ? c.text.slice(0, 700) : c.text}`)
+    .map(c => `[Ch.${c.chapter_number} — ${c.chapter_title}]\n${c.text.slice(0, isBroad ? 700 : 900)}`)
     .join('\n\n---\n\n')
 
   // ── Build system prompt (book assistant OR character roleplay) ─────────────
@@ -239,8 +281,8 @@ ${context}`
       ? `\nThe reader is asking for a summary/overview. The passages below are drawn in READING ORDER from the relevant part of the story. Synthesize across them into a flowing, coherent summary — connect events chronologically rather than answering with isolated facts. It's fine to generalize the throughline of the arc; you do not need a passage for every sentence. Aim for a few tight paragraphs.\n`
       : ''
     systemPrompt = `You are an AI assistant for readers of the novel "${title}" by ${author}.
-Answer questions using ONLY the passages provided below. Be specific and reference chapter details when relevant.
-If something genuinely isn't covered in the passages, say so honestly rather than inventing — but do your best to synthesize what the passages do show before giving up.
+Answer using the passages provided below. They were retrieved by semantic relevance and may be out of order or partial — piece the answer together from whatever relevant details appear across them, even if scattered, and reference chapter numbers when useful.
+Only say you can't answer if NONE of the passages relate to the question at all. Do not refuse just because the passages don't use the exact wording of the question — infer and connect. Never invent facts that contradict the passages.
 ${broadNote}
 Relevant passages:
 ${context}`

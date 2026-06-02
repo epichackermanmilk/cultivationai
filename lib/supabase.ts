@@ -32,13 +32,14 @@ export async function matchChunks(
   embedding: number[],
   slug: string,
   count = 6,
+  threshold = 0.2,
 ): Promise<{ text: string; chapter_number: number; chapter_title: string; similarity: number }[]> {
   const sb = getSupabase()
   const { data, error } = await sb.rpc('match_chunks', {
     query_embedding:  embedding,
     novel_slug:       slug,
     match_count:      count,
-    match_threshold:  0.2,
+    match_threshold:  threshold,
   })
   if (error) throw new Error(error.message)
   return data ?? []
