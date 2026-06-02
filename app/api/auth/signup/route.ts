@@ -25,7 +25,10 @@ export async function POST(req: Request) {
   const { email: emailRaw, password: passwordRaw, username: usernameRaw, email_marketing_consent: consentRaw } = parsed.data as {
     email?: unknown; password?: unknown; username?: unknown; email_marketing_consent?: unknown
   }
-  const emailConsent = consentRaw === true
+  // Auto-subscribe new accounts to the newsletter by default — they can
+  // unsubscribe anytime (every email has an unsubscribe link). Only an explicit
+  // `false` opts out at signup.
+  const emailConsent = consentRaw !== false
   if (!isValidEmail(emailRaw))
     return NextResponse.json({ error: 'Invalid email address' }, { status: 400 })
   if (!isValidPassword(passwordRaw))
@@ -116,7 +119,7 @@ export async function POST(req: Request) {
         <!-- Hero -->
         <tr><td style="background:#18181b;border:1px solid #27272a;border-radius:16px;padding:40px 36px;">
           <h1 style="margin:0 0 12px;font-size:28px;font-weight:800;color:#fafafa;line-height:1.2;">
-            Your free tokens<br/>are waiting.
+            Your ${WELCOME_TOKENS} free tokens<br/>are waiting.
           </h1>
           <p style="margin:0 0 28px;font-size:15px;line-height:1.6;color:#a1a1aa;">
             Welcome to NovelCodex — the AI reading companion for web novel fans.
@@ -157,6 +160,19 @@ export async function POST(req: Request) {
 </body>
 </html>`,
       })
+
+      // Add to the marketing audience (newsletter list) so account-holders
+      // receive updates. Auto-subscribed; they can unsubscribe anytime.
+      if (emailConsent && process.env.RESEND_AUDIENCE_ID) {
+        try {
+          await resend.contacts.create({
+            email,
+            firstName:    username ?? undefined,
+            unsubscribed: false,
+            audienceId:   process.env.RESEND_AUDIENCE_ID,
+          })
+        } catch { /* non-fatal — contact may already exist */ }
+      }
     } catch {
       // Email failure is non-fatal — user is already signed up successfully
     }

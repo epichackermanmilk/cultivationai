@@ -5,7 +5,7 @@
 import { createClient } from '@supabase/supabase-js'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-export const DISCORD_GUILD_ID = '1508204543429709895'
+export const DISCORD_GUILD_ID = '1511269693586018324'
 
 export const DISCORD_ROLES = {
   NovelCodex:  '1510606615290843136',  // base — any linked account

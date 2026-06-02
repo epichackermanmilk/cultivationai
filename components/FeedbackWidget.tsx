@@ -68,8 +68,10 @@ export default function FeedbackWidget() {
 
   const reset = () => { setText(''); setEmail(''); setSent(false) }
 
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+
   const submit = async () => {
-    if (!text.trim()) return
+    if (!text.trim() || !emailValid) return
     setLoading(true)
     // Store submission locally and show success
     try {
@@ -161,14 +163,16 @@ export default function FeedbackWidget() {
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  placeholder="Your email (optional — for follow-up)"
-                  className="mb-3 w-full rounded-xl border border-[var(--nc-border)] px-3 py-2 text-sm placeholder-zinc-500 outline-none focus:border-amber-500 transition"
+                  placeholder="Your email (required — so we can follow up)"
+                  required
+                  className="mb-1 w-full rounded-xl border border-[var(--nc-border)] px-3 py-2 text-sm placeholder-zinc-500 outline-none focus:border-amber-500 transition"
                   style={{ background: 'var(--nc-bg3)', color: 'var(--nc-text)' }}
                 />
+                <p className="mb-3 px-1 text-[11px] text-zinc-500">We&apos;ll only use this to follow up on your message.</p>
 
                 <button
                   onClick={submit}
-                  disabled={loading || !text.trim()}
+                  disabled={loading || !text.trim() || !emailValid}
                   className="w-full rounded-xl bg-amber-500 py-2.5 text-sm font-semibold text-black hover:bg-amber-400 transition disabled:opacity-50"
                 >
                   {loading ? 'Sending…' : 'Send'}

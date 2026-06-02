@@ -122,7 +122,8 @@ export default function GamesPage() {
 
       <SiteHeader />
 
-      <main className="flex-1 mx-auto w-full max-w-6xl px-4 py-10">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-4 py-10">
+        <main className="min-w-0 flex-1">
 
         {/* Hero */}
         <div className="mb-12 text-center">
@@ -163,17 +164,18 @@ export default function GamesPage() {
           </div>
         </section>
 
-        {/* Bottom note */}
+        {/* Bottom note — community scenarios teaser */}
         <div className="mt-14 rounded-2xl border border-[var(--nc-border)] p-6 text-center"
           style={{ background: 'var(--nc-bg2)' }}>
-          <p className="text-sm font-semibold" style={{ color: 'var(--nc-text)' }}>More games in development</p>
+          <p className="text-sm font-semibold" style={{ color: 'var(--nc-text)' }}>✦ Community scenarios coming soon</p>
           <p className="mt-1.5 max-w-sm mx-auto text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
-            Each game is built around cultivation novel lore. Upcoming: Regressor Challenge, Murim Investigation,
-            Hidden Traitor, Heavenly Auction, and more. Community scenarios coming soon.
+            Soon you&apos;ll be able to create, share, and play scenarios built by the community — set in your favorite novels.
           </p>
         </div>
 
-      </main>
+        </main>
+        <aside className="hidden xl:block w-40 shrink-0"><AdSlot variant="side" /></aside>
+      </div>
 
       <Footer />
       <FeedbackWidget />

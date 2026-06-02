@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth-context'
 import SiteHeader  from '@/components/SiteHeader'
 import FeedbackWidget from '@/components/FeedbackWidget'
 import Footer         from '@/components/Footer'
+import AdSlot         from '@/components/AdSlot'
 
 export default function BookmarksPage() {
   const { user, loading: authLoading } = useAuth()
@@ -54,10 +55,13 @@ export default function BookmarksPage() {
       {/* Header */}
       <SiteHeader />
 
-      <main className="flex-1 px-4 py-6 mx-auto w-full max-w-4xl">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-4 py-8">
+        <aside className="hidden xl:block w-40 shrink-0"><AdSlot variant="side" /></aside>
+        <main className="min-w-0 flex-1">
+        <h1 className="mb-6 text-3xl sm:text-4xl font-extrabold tracking-tight" style={{ color: 'var(--nc-text)' }}>Your Bookmarks</h1>
         {!mounted ? (
           /* Skeleton */
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="rounded-xl bg-zinc-800 animate-pulse aspect-[3/4]" />
             ))}
@@ -78,10 +82,10 @@ export default function BookmarksPage() {
           </div>
         ) : (
           <>
-            <p className="mb-4 text-xs text-zinc-500">
+            <p className="mb-5 text-sm text-zinc-500">
               {books.length} saved novel{books.length !== 1 ? 's' : ''} · {storageLabel}
             </p>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
               {books.map(novel => (
                 <div key={novel.slug} className="group relative flex flex-col gap-2">
                   {/* Cover */}
@@ -118,12 +122,12 @@ export default function BookmarksPage() {
                   {/* Title + author */}
                   <div className="flex-1 min-w-0">
                     <Link href={`/novel/${novel.slug}`}>
-                      <p className="text-xs font-semibold leading-tight line-clamp-2 group-hover:text-amber-400 transition-colors" style={{ color: 'var(--nc-text)' }}>
+                      <p className="text-sm font-semibold leading-tight line-clamp-2 group-hover:text-amber-400 transition-colors" style={{ color: 'var(--nc-text)' }}>
                         {novel.title}
                       </p>
                     </Link>
                     {novel.author && (
-                      <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--nc-text2)' }}>
+                      <p className="text-xs mt-1 truncate" style={{ color: 'var(--nc-text2)' }}>
                         {novel.author}
                       </p>
                     )}
@@ -144,7 +148,9 @@ export default function BookmarksPage() {
             </div>
           </>
         )}
-      </main>
+        </main>
+        <aside className="hidden xl:block w-40 shrink-0"><AdSlot variant="side" /></aside>
+      </div>
 
       <Footer />
       <FeedbackWidget />

@@ -5,6 +5,7 @@ import Link        from 'next/link'
 import SiteHeader from '@/components/SiteHeader'
 import Footer      from '@/components/Footer'
 import AdSlot      from '@/components/AdSlot'
+import FeedbackWidget from '@/components/FeedbackWidget'
 import { useAuth } from '@/lib/auth-context'
 import { matchesSearch } from '@/lib/search'
 
@@ -235,11 +236,13 @@ export default function RecommendPage() {
       {/* Header */}
       <SiteHeader />
 
-      <main className="flex-1 mx-auto w-full max-w-3xl px-4 py-10">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-4 py-12">
+        <aside className="hidden xl:block w-40 shrink-0"><AdSlot variant="side" /></aside>
+        <main className="mx-auto min-w-0 flex-1 max-w-3xl">
         {/* Title */}
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold mb-2" style={G}>Discover Your Next Novel</h1>
-          <p className="text-sm" style={{ color: 'var(--nc-text2)' }}>
+        <div className="mb-10 text-center">
+          <h1 className="mb-3 text-4xl sm:text-5xl font-extrabold tracking-tight" style={G}>Discover Your Next Novel</h1>
+          <p className="text-base" style={{ color: 'var(--nc-text2)' }}>
             AI-powered recommendations · <span className="text-amber-400 font-medium">10 tokens</span> per search
           </p>
         </div>
@@ -397,9 +400,12 @@ export default function RecommendPage() {
             {results.length > 0 && <AdSlot variant="banner" className="mt-6 rounded-xl" />}
           </div>
         )}
-      </main>
+        </main>
+        <aside className="hidden xl:block w-40 shrink-0"><AdSlot variant="side" /></aside>
+      </div>
 
       <Footer />
+      <FeedbackWidget />
     </div>
   )
 }

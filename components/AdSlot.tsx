@@ -13,8 +13,8 @@
 import { useAuth } from '@/lib/auth-context'
 
 interface AdSlotProps {
-  /** 'banner' = full-width slim strip | 'feed' = card-sized break in a grid/list */
-  variant?:  'banner' | 'feed'
+  /** 'banner' = full-width slim strip | 'feed' = card-sized break | 'side' = tall vertical rail */
+  variant?:  'banner' | 'feed' | 'side'
   className?: string
 }
 
@@ -26,6 +26,17 @@ export default function AdSlot({ variant = 'banner', className = '' }: AdSlotPro
 
   // Hide for subscribers or users who purchased ad-free
   if (user?.ads_disabled || user?.subscription_active) return null
+
+  if (variant === 'side') {
+    // Tall vertical skyscraper for side rails (≈160×600). Sticky so it follows.
+    return (
+      <div className={`sticky top-28 flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-zinc-700/60 bg-zinc-900/40 ${className}`}
+        style={{ minHeight: 600 }}>
+        <p className="text-[10px] uppercase tracking-widest text-zinc-600 mb-1 [writing-mode:vertical-rl] sm:[writing-mode:horizontal-tb]">Advertisement</p>
+        <p className="text-xs text-zinc-700">Ad space</p>
+      </div>
+    )
+  }
 
   if (variant === 'feed') {
     return (
