@@ -53,10 +53,21 @@ export async function GET() {
     if (!res.ok) throw new Error(`VPS ${res.status}`)
     const data = await res.json()
     const raw: unknown[] = Array.isArray(data) ? data : (data.novels ?? [])
-    // Normalize genres (merge casing/typo variants, drop junk) for all consumers
+    // Slim the payload to ONLY the fields the library grid / header / pickers use.
+    // Dropping `description` (≈2,200 synopses) keeps this under Next's 2 MB fetch-
+    // cache ceiling so it can actually be cached — much faster library loads.
+    // The novel page (/meta) and the recommender (VPS /novels direct) still fetch
+    // the full record with the description, so nothing user-facing is lost.
     const novels = raw.map(n => {
-      const nn = n as { genres?: string[] }
-      return { ...nn, genres: cleanGenres(nn.genres) }
+      const nn = n as { slug?: string; title?: string; author?: string; total_chapters?: number; genres?: string[]; cover_url?: string }
+      return {
+        slug:           nn.slug,
+        title:          nn.title,
+        author:         nn.author,
+        total_chapters: nn.total_chapters,
+        genres:         cleanGenres(nn.genres),
+        cover_url:      nn.cover_url,
+      }
     })
     cache = { data: novels, ts: Date.now() }
     return novels
