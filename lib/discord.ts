@@ -5,7 +5,12 @@
 import { createClient } from '@supabase/supabase-js'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-export const DISCORD_GUILD_ID = '1511269693586018324'
+export const DISCORD_GUILD_ID = '1508204543429709895'  // server (unchanged)
+
+// Channel-category that the purchase roles unlock. Access is granted by Discord's
+// own role→category permission settings (configured in the server, not here) —
+// the bot only assigns the roles below. Kept for reference/future use.
+export const DISCORD_PURCHASE_CATEGORY_ID = '1511269693586018324'
 
 export const DISCORD_ROLES = {
   NovelCodex:  '1510606615290843136',  // base — any linked account
