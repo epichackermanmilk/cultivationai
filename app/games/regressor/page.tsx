@@ -34,8 +34,7 @@ export default function RegressorPage() {
   const [disaster,       setDisaster]       = useState<Disaster | null>(null)
   const [worldContext,   setWorldContext]   = useState('')
   const [openingText,    setOpeningText]    = useState('')
-  const [regressorPower, setRegressorPower] = useState<{ name: string; description: string; drawback: string } | null>(null)
-  const [archetype,      setArchetype]      = useState('')
+  const [abilityHint,    setAbilityHint]    = useState('')
   const [currentTurn,    setCurrentTurn]    = useState(1)
   const [currentRun,     setCurrentRun]     = useState(1)
   const [turns,          setTurns]          = useState<Turn[]>([])
@@ -81,8 +80,7 @@ export default function RegressorPage() {
       setDisaster(d.disaster)
       setWorldContext(d.worldContext)
       setOpeningText(d.openingNarration)
-      setRegressorPower(d.regressorPower ?? null)
-      setArchetype(d.archetype ?? '')
+      setAbilityHint(d.abilityHint ?? '')
       setCurrentTurn(1)
       setCurrentRun(1)
       setTurns([])
@@ -253,16 +251,6 @@ export default function RegressorPage() {
         {(phase === 'active' || phase === 'run_end') && disaster && (
           <div className="space-y-5">
 
-            {/* Your Regressor's Power */}
-            {regressorPower && (
-              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5">
-                {archetype && <p className="text-[11px] font-bold uppercase tracking-widest text-amber-500/70 mb-1.5">{archetype}</p>}
-                <p className="text-lg font-bold text-amber-300">✦ {regressorPower.name}</p>
-                <p className="text-sm mt-1.5 leading-relaxed" style={{ color: 'var(--nc-text2)' }}>{regressorPower.description}</p>
-                <p className="text-xs mt-2 text-amber-500/70"><span className="font-semibold">Drawback:</span> {regressorPower.drawback}</p>
-              </div>
-            )}
-
             {/* Disaster banner */}
             <div className="rounded-2xl border border-violet-500/30 bg-violet-500/5 p-5">
               <div className="flex items-start justify-between gap-3">
@@ -328,6 +316,11 @@ export default function RegressorPage() {
                 <p className="mt-3 text-xs italic text-zinc-600">
                   Hint from your last memory: &ldquo;{disaster.hint}&rdquo;
                 </p>
+                {abilityHint && (
+                  <p className="mt-1.5 text-xs italic text-amber-400/45">
+                    A fragment of intuition: &ldquo;{abilityHint}&rdquo;
+                  </p>
+                )}
               </div>
             )}
 

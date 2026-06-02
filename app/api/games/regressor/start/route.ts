@@ -26,6 +26,7 @@ export interface RegressorState {
   // the power fantasy, balanced by a real drawback.
   regressorPower?: { name: string; description: string; drawback: string }
   archetype?:    string
+  abilityHint?:  string   // subtle, player-facing teaser (the power is never explained outright)
   currentTurn:  number
   currentRun:   number
   turns: Array<{ turn: number; action: string; narration: string }>
@@ -103,14 +104,18 @@ Return ONLY valid JSON:
     "hint": "One cryptic clue the player died knowing but not understanding."
   },
   "worldContext": "2-3 sentences: where we are, what sect, what era, the political landscape, who holds power.",
-  "openingNarration": "3-4 sentences. The player wakes in their past body, the Regressor's Power stirring within them, dread of what's coming. Vivid sensory detail."
-}`
+  "openingNarration": "4-5 sentences. The player wakes in their past body. SUBTLY weave in ONE unexplained flicker of the Regressor's Power — an instinct, a sensation, a strange certainty — barely perceptible and NEVER named or explained; the player must uncover what it is over many lives. Vivid sensory detail and the dread of what is coming.",
+  "abilityHint": "ONE cryptic sentence (max 14 words) that passively hints at the power or an affinity WITHOUT naming it — a fragment of intuition for the player to puzzle over (e.g. 'Cold dread crawls up your spine an instant before someone means you harm.')."
+}
+
+IMPORTANT: The Regressor's Power is a MYSTERY the player discovers through play. NEVER state it plainly — only hint it subtly in openingNarration and abilityHint.`
 
   let disaster: RegressorState['disaster'] | null = null
   let worldContext = ''
   let openingNarration = ''
   let regressorPower: RegressorState['regressorPower'] = undefined
   let archetype = ''
+  let abilityHint = ''
 
   try {
     const completion = await openai.chat.completions.create({
@@ -127,6 +132,7 @@ Return ONLY valid JSON:
       openingNarration = d.openingNarration ?? ''
       if (d.regressorPower?.name) regressorPower = d.regressorPower
       if (typeof d.archetype === 'string') archetype = d.archetype
+      if (typeof d.abilityHint === 'string') abilityHint = d.abilityHint
     }
   } catch (e) {
     console.error('[regressor/start] AI error:', e)
@@ -146,6 +152,7 @@ Return ONLY valid JSON:
     worldContext,
     regressorPower,
     archetype,
+    abilityHint,
     currentTurn:  1,
     currentRun:   1,
     turns:        [],
@@ -173,8 +180,9 @@ Return ONLY valid JSON:
     sessionId:       session.id,
     disaster,
     worldContext,
-    regressorPower,
-    archetype,
+    // The power itself is intentionally NOT sent to the client — only a subtle
+    // hint. The player discovers what it actually does over multiple lives.
+    abilityHint,
     openingNarration,
     currentTurn:     1,
     maxTurns:        MAX_TURNS,
