@@ -24,6 +24,17 @@ const nextConfig: NextConfig = {
   },
   experimental: {},
 
+  // Permanent redirects for renamed novel slugs (old truncated → full-title slug)
+  async redirects() {
+    return [
+      {
+        source: '/novel/heavens-proud-daughters-please-return-my',
+        destination: '/novel/heavens-proud-daughters-please-return-my-happy-ending-to-me',
+        permanent: true,
+      },
+    ]
+  },
+
   // Security headers applied to all routes
   async headers() {
     return [

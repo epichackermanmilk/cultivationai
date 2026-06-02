@@ -8,7 +8,7 @@ import SiteHeader from '@/components/SiteHeader'
 import Footer from '@/components/Footer'
 import { track } from '@/lib/analytics'
 
-const DISCORD_INVITE = 'https://discord.gg/P6UQfCPbnh'
+const DISCORD_INVITE = 'https://discord.gg/xjQvnrvW3M'
 
 interface ProfileData {
   username:                 string | null

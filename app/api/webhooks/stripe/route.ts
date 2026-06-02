@@ -56,10 +56,13 @@ export const dynamic = 'force-dynamic'
 export async function POST(req: Request) {
   const payload = Buffer.from(await req.arrayBuffer())
   const sig     = req.headers.get('stripe-signature')
-  // Accept the live secret AND (optionally) a test-mode secret, so we can run an
-  // end-to-end test purchase without swapping production into test mode.
-  const secrets = [process.env.STRIPE_WEBHOOK_SECRET, process.env.STRIPE_WEBHOOK_SECRET_TEST]
-    .filter((s): s is string => !!s)
+  // Accept the live secret AND (optionally) one or more comma-separated test-mode
+  // secrets, so we can run an end-to-end test purchase without swapping production
+  // into test mode. We try each until the signature verifies.
+  const secrets = [
+    process.env.STRIPE_WEBHOOK_SECRET,
+    ...(process.env.STRIPE_WEBHOOK_SECRET_TEST ?? '').split(',').map(s => s.trim()),
+  ].filter((s): s is string => !!s)
 
   let event: Stripe.Event
 
