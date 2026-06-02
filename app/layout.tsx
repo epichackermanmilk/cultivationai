@@ -56,6 +56,23 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      {/* Domain lock — if this page is being served from a scraper/reverse-proxy
+          clone on a foreign domain, bounce the visitor to the real site. Protects
+          users from credential/payment theft on a mirror and starves the clone of
+          traffic. Allows our canonical domains + local dev only. */}
+      <Script id="domain-lock" strategy="beforeInteractive">
+        {`
+          (function(){
+            try {
+              var h = location.hostname;
+              var ok = h === 'novelcodex.org' || h === 'novelcodex.com'
+                || h.indexOf('.novelcodex.org') !== -1 || h.indexOf('.novelcodex.com') !== -1
+                || h === 'localhost' || h === '127.0.0.1';
+              if (!ok) { location.replace('https://novelcodex.org' + location.pathname + location.search); }
+            } catch (e) {}
+          })();
+        `}
+      </Script>
       {/* Consent Mode v2 — default everything DENIED until the user accepts the
           cookie banner. Must run before GA / AdSense so they respect the choice. */}
       <Script id="consent-default" strategy="beforeInteractive">
@@ -90,6 +107,37 @@ export default function RootLayout({
         `}
       </Script>
       <body className="min-h-full">
+        {/* Brand + sitelinks-search-box structured data (helps Google show a
+            search box + sitelinks under the NovelCodex result). */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "Organization",
+                  name: "NovelCodex",
+                  url: SITE_URL,
+                  logo: `${SITE_URL}/logo.png`,
+                },
+                {
+                  "@type": "WebSite",
+                  name: "NovelCodex",
+                  url: SITE_URL,
+                  potentialAction: {
+                    "@type": "SearchAction",
+                    target: {
+                      "@type": "EntryPoint",
+                      urlTemplate: `${SITE_URL}/library?q={search_term_string}`,
+                    },
+                    "query-input": "required name=search_term_string",
+                  },
+                },
+              ],
+            }),
+          }}
+        />
         <ThemeProvider>
           <AuthProvider>
             {children}
