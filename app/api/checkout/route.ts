@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
+import { isNativeAppUA } from '@/lib/native'
 
 // Lazily initialised so the build doesn't fail when STRIPE_SECRET_KEY is absent
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -39,6 +40,19 @@ function admin() {
 }
 
 export async function POST(req: Request) {
+  // In-app purchases are blocked (Google Play policy): tokens are digital goods,
+  // so buying them must happen on the website, not inside the Android app. The
+  // app's WebView UA carries the "NovelCodexApp" marker — refuse checkout for it.
+  if (isNativeAppUA(req.headers.get('user-agent'))) {
+    return NextResponse.json(
+      {
+        error: 'Token purchases are managed on the NovelCodex website. Open novelcodex.org in your browser to add tokens.',
+        code: 'NATIVE_APP',
+      },
+      { status: 403 },
+    )
+  }
+
   // Verify session
   const cookieStore = await cookies()
   const token = cookieStore.get('nc_session')?.value

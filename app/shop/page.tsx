@@ -5,6 +5,7 @@ import Link        from 'next/link'
 import SiteHeader  from '@/components/SiteHeader'
 import Footer      from '@/components/Footer'
 import { useAuth } from '@/lib/auth-context'
+import { isNativeAppClient } from '@/lib/native'
 
 // ── Pricing data ──────────────────────────────────────────────────────────────
 const ONE_TIME = [
@@ -204,6 +205,15 @@ export default function ShopPage() {
   const [error,   setError]   = useState<string | null>(null)
   const [faqOpen, setFaqOpen] = useState<string | null>(null)
 
+  // Native-app detection. Inside the Android app, token purchases are not offered
+  // (Google Play requires Play Billing for in-app digital goods) — we hide the
+  // purchase UI and show a "manage on the web" notice instead. Gated on `mounted`
+  // so the buy buttons are never rendered inside the app, even for one frame.
+  const [mounted,  setMounted]  = useState(false)
+  const [isNative, setIsNative] = useState(false)
+  useEffect(() => { setMounted(true); setIsNative(isNativeAppClient()) }, [])
+  const showPurchase = mounted && !isNative
+
   const handleBuy = (tier: string, mode: string) => {
     if (!user) {
       setError('Please sign in to purchase tokens.')
@@ -243,6 +253,27 @@ export default function ShopPage() {
             )}
           </div>
         )}
+
+        {/* ── In-app notice: token purchases are web-only (Google Play policy) ── */}
+        {mounted && isNative && (
+          <div className="mb-10 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-8 text-center">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5">
+              <BoltIcon className="h-3.5 w-3.5 text-amber-400" />
+              <span className="text-xs font-semibold text-amber-400">Manage tokens on the web</span>
+            </div>
+            <h2 className="mb-2 text-lg font-bold" style={{ color: 'var(--nc-text)' }}>
+              Top-ups happen on novelcodex.org
+            </h2>
+            <p className="mx-auto max-w-md text-sm" style={{ color: 'var(--nc-text2)' }}>
+              Token purchases and subscriptions are handled on the NovelCodex website. Open{' '}
+              <span className="font-semibold text-amber-400">novelcodex.org</span> in your browser to add tokens or
+              manage your plan — your balance and everything you own stay in sync automatically.
+            </p>
+          </div>
+        )}
+
+        {/* ── Web purchase region (hidden inside the native app) ──────────── */}
+        {showPurchase && (<>
 
         {/* ── Welcome Deal (new members only, 7-day window) ─────────────── */}
         {user && (() => {
@@ -461,6 +492,9 @@ export default function ShopPage() {
             </div>
           </div>
         )}
+
+        </>)}
+        {/* ── end web purchase region ──────────────────────────────────────── */}
 
         {/* ── FAQ ──────────────────────────────────────────────────────────── */}
         <div className="mb-12">
