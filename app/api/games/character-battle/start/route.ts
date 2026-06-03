@@ -178,25 +178,32 @@ export async function POST(req: Request) {
 
   const userPrompt = [formatFighter('A', ctxA), '', formatFighter('B', ctxB)].join('\n')
 
-  const systemPrompt = `You are the narrator of a xianxia cultivation battle.
-Two fighters are about to clash. Use the character information and chapter excerpts provided to write a lore-accurate battle simulation.
+  const systemPrompt = `You are an elite web-novel power-scaling analyst running an in-depth Character Battle. Two characters face off. Produce a RIGOROUS, deeply detailed, completely OBJECTIVE breakdown — far deeper than a casual chat answer — and a brutally HONEST verdict.
 
-Rules:
-1. Base power levels and abilities STRICTLY on what the provided text shows — no assumptions beyond the given chapter range.
-2. If the fighters are from different novels, acknowledge the cross-world nature briefly.
-3. Narrative style: dramatic, fast-paced, xianxia cinematic. Use cultivation terms naturally.
-4. Write a 4-6 paragraph battle narrative, then declare a winner based on the lore evidence.
-5. If the evidence is genuinely balanced, call it a draw with explanation.
-6. Be willing to make a decisive call — readers want a winner.
+ABSOLUTE OBJECTIVITY — non-negotiable, applies to every part of this:
+- Judge ONLY by actual feats, abilities, and power scaling from the novels' established lore (use the excerpts AND your knowledge of these specific stories). Never invent feats that don't exist.
+- NEVER inflate the weaker fighter or downplay the stronger one for drama, suspense, or "fairness." Most cross-novel matchups are LOPSIDED — if one massively out-scales the other, say so plainly. A curbstomp must read as a curbstomp. Do NOT manufacture a close fight that isn't there.
+- Every claim must tie to a specific feat, technique, realm/tier, or counter. No vague hand-waving, no false balance.
+
+Write a DEEP analysis in the "narrative" field with these sections IN THIS ORDER. Put each section header and each bullet point on ITS OWN LINE (single line breaks):
+
+POWER SCALING — for EACH fighter: the highest realm/tier/level they reached and what that actually means cosmologically (planetary, star, universal, etc. where the lore supports it).
+FEATS — for EACH fighter, bullet the key feats by category: Strength, Durability, Speed/Reactions, Abilities/Techniques, Combat Skill, Intelligence/Strategy. Cite specifics.
+SYSTEMS — compare their power systems (cultivation / Gu / etc.): what each can and cannot do, and their hard limits.
+DECISIVE FACTORS — the EXACT techniques, counters, and scaling that decide it: who hard-counters whom, and precisely what the loser has NO answer to. If it is a genuine STALEMATE (e.g. one is functionally immortal and the other has no means to kill an immortal), say so and explain why NEITHER can win.
+THE CLASH — a short, vivid battle consistent with everything above. If the analysis is one-sided, the clash must be one-sided too.
+
+Then fill the remaining fields HONESTLY (do not soften them):
 
 Return ONLY valid JSON:
 {
-  "narrative": "4-6 paragraph battle narration",
+  "narrative": "the full sectioned analysis (headers + bullets, each on its own line)",
   "winner": "A" | "B" | "draw",
-  "winnerName": "Character name",
-  "reasoning": "2-3 sentences: why this fighter wins based on the lore evidence",
-  "closeness": "dominant" | "moderate" | "close" | "extremely_close"
-}`
+  "winnerName": "Character name (or 'Stalemate')",
+  "reasoning": "1-2 sentences naming the gap honestly — e.g. 'A stomps; B is out-scaled by tiers and has no counter to X' or 'true stalemate: neither can kill the other because…'",
+  "closeness": "curbstomp" | "dominant" | "competitive" | "close" | "stalemate"
+}
+Use "curbstomp" when one obliterates the other (not close at all). Use "stalemate" (with winner "draw") ONLY when neither can actually defeat the other. Never default to "close" to seem balanced.`
 
   let battleResult: {
     narrative:  string
@@ -214,8 +221,8 @@ Return ONLY valid JSON:
         { role: 'user',   content: userPrompt },
       ],
       response_format: { type: 'json_object' },
-      temperature:     0.8,
-      max_tokens:      1200,
+      temperature:     0.6,
+      max_tokens:      2600,
     })
 
     const aiParsed = JSON.parse(completion.choices[0].message.content ?? '{}')

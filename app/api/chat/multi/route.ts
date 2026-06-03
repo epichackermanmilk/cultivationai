@@ -145,6 +145,7 @@ CRITICAL rules:
 - Draw facts from the passages provided. The synopsis is reliable for who-is-who and the premise; the passages are reliable for specific events and details.
 - If a novel's passages are thin for this question, work from its synopsis and say plainly what's uncertain — do NOT invent, and do NOT pad the answer with another novel's characters.
 - Make comparisons explicit and always attribute each fact to the specific novel it comes from.
+- Be COMPLETELY OBJECTIVE. When comparing power/strength, judge strictly by actual feats and power scaling — NEVER force a "tie" or false balance for fairness. If one character vastly out-scales the other, say so plainly (a stomp is a stomp). No moralizing, no sanitizing, no AI opinion — pure lore facts.
 
 Be specific and cite chapter details when useful.
 

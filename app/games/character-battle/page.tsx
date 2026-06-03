@@ -31,10 +31,13 @@ interface BattleResult {
 type Phase = 'select' | 'fighting' | 'result' | 'error'
 
 const CLOSENESS_LABEL: Record<string, string> = {
+  curbstomp:      'Curbstomp — not close',
   dominant:       'Dominant victory',
   moderate:       'Clear advantage',
+  competitive:    'Competitive fight',
   close:          'Close fight',
   extremely_close:'Razor\'s edge',
+  stalemate:      'Stalemate — neither can win',
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
