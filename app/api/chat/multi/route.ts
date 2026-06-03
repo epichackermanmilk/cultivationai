@@ -95,9 +95,15 @@ export async function POST(req: Request) {
         stillIndexing.push(title)
         return { title, description, chunks: [], embedded: false }
       }
-      const chunks = await matchChunks(queryEmbedding, n.slug, CHUNKS_PER_NOVEL, 0.1)
+      // An embedded novel is ALWAYS kept (so it's never silently dropped from the
+      // comparison). If the vector search itself errors/times out, we still
+      // include it with its synopsis. Retry once with cheaper params on failure.
+      let chunks: Awaited<ReturnType<typeof matchChunks>> = []
+      try { chunks = await matchChunks(queryEmbedding, n.slug, CHUNKS_PER_NOVEL, 0.1) }
+      catch { try { chunks = await matchChunks(queryEmbedding, n.slug, 4, 0.25) } catch { /* synopsis-only */ } }
       return { title, description, chunks, embedded: true }
     } catch {
+      // Only an isNovelEmbedded failure lands here — treat as not-ready.
       return { title, description, chunks: [], embedded: false }
     }
   }))

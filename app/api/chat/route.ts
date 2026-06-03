@@ -143,11 +143,17 @@ export async function POST(req: Request) {
   const hydeEmbedding  = hydeText ? embRes.data[1].embedding : null
 
   // Higher recall: more candidates + a lower threshold, across both vectors.
+  // Each retrieval is wrapped so a vector-search timeout (large novels without a
+  // tuned index) degrades gracefully instead of crashing the whole request.
   const PER = characterName ? 8 : 12
   const TH  = 0.1
+  const safeMatch = async (emb: number[], th: number) => {
+    try { return await matchChunks(emb, slug, PER, th) }
+    catch { try { return await matchChunks(emb, slug, 6, 0.25) } catch { return [] } }
+  }
   const retrievals = await Promise.all([
-    matchChunks(queryEmbedding, slug, PER, TH),
-    ...(hydeEmbedding ? [matchChunks(hydeEmbedding, slug, PER, TH)] : []),
+    safeMatch(queryEmbedding, TH),
+    ...(hydeEmbedding ? [safeMatch(hydeEmbedding, TH)] : []),
   ])
   // Merge + dedupe (keep the highest similarity per chunk), then take the top ~16.
   const byKey = new Map<string, { text: string; chapter_number: number; chapter_title: string; similarity: number }>()
@@ -281,8 +287,13 @@ ${context}`
       ? `\nThe reader is asking for a summary/overview. The passages below are drawn in READING ORDER from the relevant part of the story. Synthesize across them into a flowing, coherent summary — connect events chronologically rather than answering with isolated facts. It's fine to generalize the throughline of the arc; you do not need a passage for every sentence. Aim for a few tight paragraphs.\n`
       : ''
     systemPrompt = `You are an AI assistant for readers of the novel "${title}" by ${author}.
-Answer using the passages provided below. They were retrieved by semantic relevance and may be out of order or partial — piece the answer together from whatever relevant details appear across them, even if scattered, and reference chapter numbers when useful.
-Only say you can't answer if NONE of the passages relate to the question at all. Do not refuse just because the passages don't use the exact wording of the question — infer and connect. Never invent facts that contradict the passages.
+Answer using the passages provided below. They were retrieved by relevance and may be out of order or partial — piece the answer together from whatever relevant details genuinely appear across them, and cite chapter numbers when useful.
+
+GROUNDING RULES — do not break these:
+- Every name, technique, event, place, or fact in your answer MUST appear in the passages below. NEVER invent or guess names/techniques/events, and never fill gaps with plausible-sounding inventions.
+- If the question assumes something that the passages do NOT support (a false premise — e.g. a technique or event that isn't there), do not play along. Say you don't find evidence of that specific thing in what you have, and share the closest thing the passages DO show, if any.
+- It's better to say "the passages don't cover that" than to fabricate. Only answer confidently for things actually present in the passages.
+- You may connect and infer across passages, but inferences must be clearly grounded in what's written — not invented.
 ${broadNote}
 Relevant passages:
 ${context}`
