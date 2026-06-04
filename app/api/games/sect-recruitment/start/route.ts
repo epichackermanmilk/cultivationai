@@ -1,5 +1,5 @@
 // POST /api/games/sect-recruitment/start
-// Charges 50 tokens, picks archetypes, generates all 8 applicant presentations via AI,
+// Charges 25 tokens, picks archetypes, generates all 8 applicant presentations via AI,
 // stores session in Supabase, returns session + first applicant.
 //
 // Required Supabase table (run once):
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
 
   if (!profile || profile.tokens < GAME_COST) {
     return NextResponse.json(
-      { error: 'Not enough tokens — you need 50 tokens to begin recruitment.', code: 'INSUFFICIENT_TOKENS' },
+      { error: `Not enough tokens — you need ${GAME_COST} tokens to begin recruitment.`, code: 'INSUFFICIENT_TOKENS' },
       { status: 402 },
     )
   }
