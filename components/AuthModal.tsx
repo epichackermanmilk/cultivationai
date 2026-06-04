@@ -13,6 +13,8 @@ interface Props {
   rightOffset?: number
   /** Pixel offset from the top of the viewport (default 64 — just below a typical header) */
   topOffset?: number
+  /** Forced login wall (mobile app): centered, non-dismissible, no close button. */
+  forced?: boolean
 }
 
 /** Password rules: 7+ chars, at least one digit, at least one special char */
@@ -23,7 +25,7 @@ function validatePassword(pw: string): string | null {
   return null
 }
 
-export default function AuthPanel({ onClose, rightOffset = 16, topOffset = 64 }: Props) {
+export default function AuthPanel({ onClose, rightOffset = 16, topOffset = 64, forced = false }: Props) {
   const { refresh } = useAuth()
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -38,20 +40,21 @@ export default function AuthPanel({ onClose, rightOffset = 16, topOffset = 64 }:
 
   // ── Close on Escape ───────────────────────────────────────────────────────
   useEffect(() => {
-    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const h = (e: KeyboardEvent) => { if (!forced && e.key === 'Escape') onClose() }
     window.addEventListener('keydown', h)
     return () => window.removeEventListener('keydown', h)
-  }, [onClose])
+  }, [onClose, forced])
 
   // ── Close on outside click ────────────────────────────────────────────────
   useEffect(() => {
+    if (forced) return
     const h = (e: MouseEvent) => {
       if (panelRef.current && !panelRef.current.contains(e.target as Node))
         onClose()
     }
     document.addEventListener('mousedown', h)
     return () => document.removeEventListener('mousedown', h)
-  }, [onClose])
+  }, [onClose, forced])
 
   // ── Step 1: check if email has an account ─────────────────────────────────
   const checkEmail = async () => {
@@ -142,33 +145,44 @@ export default function AuthPanel({ onClose, rightOffset = 16, topOffset = 64 }:
     'w-full rounded-lg bg-amber-500 py-2.5 text-sm font-semibold text-black ' +
     'hover:bg-amber-400 transition disabled:opacity-40 disabled:cursor-not-allowed'
 
+  const panelStyle: React.CSSProperties = {
+    background:           'rgba(10,10,14,0.96)',
+    backdropFilter:       'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
+    border:               '1px solid transparent',
+    backgroundClip:       'padding-box',
+    boxShadow: '0 0 0 1px rgba(251,191,36,0.35), 0 0 18px rgba(251,191,36,0.08), 0 25px 50px rgba(0,0,0,0.7)',
+  }
+  if (!forced) { panelStyle.right = rightOffset; panelStyle.top = topOffset }
+
   return createPortal(
-    /* Full-viewport overlay — click outside the card to close */
-    <div className="fixed inset-0 z-[9999]">
+    /* Full-viewport overlay. Forced = centered, opaque, non-dismissible (app login wall). */
+    <div
+      className={forced ? 'fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto p-4 pt-14' : 'fixed inset-0 z-[9999]'}
+      style={forced ? { background: 'rgba(0,0,0,0.94)' } : undefined}
+    >
       <div
         ref={panelRef}
-        className="absolute w-80 rounded-2xl p-5 shadow-2xl shadow-black/70"
-        style={{
-          right:             rightOffset,
-          top:               topOffset,
-          background:        'rgba(10,10,14,0.96)',
-          backdropFilter:    'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          /* Thin amber gradient rim */
-          border: '1px solid transparent',
-          backgroundClip:   'padding-box',
-          boxShadow: '0 0 0 1px rgba(251,191,36,0.35), 0 0 18px rgba(251,191,36,0.08), 0 25px 50px rgba(0,0,0,0.7)',
-        }}
+        className={(forced ? '' : 'absolute ') + 'w-80 rounded-2xl p-5 shadow-2xl shadow-black/70'}
+        style={panelStyle}
       >
-        {/* Semi-transparent close × */}
-        <button
-          onClick={onClose}
-          aria-label="Close"
-          className="absolute right-3 top-3 text-lg leading-none transition hover:text-zinc-300"
-          style={{ color: 'rgba(161,161,170,0.5)' }}   /* zinc-400 @ 50% */
-        >
-          ×
-        </button>
+        {/* Semi-transparent close × (hidden in forced login-wall mode) */}
+        {!forced && (
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="absolute right-3 top-3 text-lg leading-none transition hover:text-zinc-300"
+            style={{ color: 'rgba(161,161,170,0.5)' }}   /* zinc-400 @ 50% */
+          >
+            ×
+          </button>
+        )}
+        {forced && (
+          <div className="mb-4 text-center">
+            <p className="text-lg font-extrabold" style={{ color: '#f59e0b' }}>NovelCodex</p>
+            <p className="mt-1 text-xs text-zinc-400">Sign in or create a free account to continue</p>
+          </div>
+        )}
 
         {/* ── Email step ────────────────────────────────────────────────── */}
         {step === 'email' && (

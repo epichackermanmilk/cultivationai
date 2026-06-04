@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { isNativeAppClient } from '@/lib/native'
 
 declare global {
   interface Window {
@@ -15,6 +16,9 @@ export default function CookieConsent() {
   const [show, setShow] = useState(false)
 
   useEffect(() => {
+    // Native app: don't show the web cookie banner. Consent Mode stays at its
+    // privacy-safe default (denied), and there's no AdSense/GA in the app shell.
+    if (isNativeAppClient()) return
     try {
       if (!localStorage.getItem('nc_cookie_consent')) setShow(true)
     } catch { /* localStorage blocked — don't show */ }

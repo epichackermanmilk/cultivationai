@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/lib/theme-context";
 import { AuthProvider }  from "@/lib/auth-context";
 import MobileNav        from "@/components/MobileNav";
 import CookieConsent    from "@/components/CookieConsent";
+import MobileAuthGate   from "@/components/MobileAuthGate";
 import Script           from "next/script";
 
 const geistSans = Geist({
@@ -143,6 +144,7 @@ export default function RootLayout({
             {children}
             <MobileNav />
             <CookieConsent />
+            <MobileAuthGate />
           </AuthProvider>
         </ThemeProvider>
       </body>
