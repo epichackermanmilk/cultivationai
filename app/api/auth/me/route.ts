@@ -46,6 +46,10 @@ export async function GET() {
     tokens_ever_purchased = (profile?.tokens_ever_purchased as number) ?? 0
   } catch { /* profiles table optional */ }
 
+  // Whether the account has an email/password identity (vs. Google-only). Lets
+  // the UI show password/email management only where it applies.
+  const has_password = (user.identities ?? []).some(i => i.provider === 'email')
+
   return NextResponse.json({
     user: {
       id:                      user.id,
@@ -59,6 +63,7 @@ export async function GET() {
       discord_user_id,
       discord_verified,
       tokens_ever_purchased,
+      has_password,
     },
   })
 }

@@ -14,6 +14,7 @@ export interface AuthUser {
   discord_user_id:         string | null
   discord_verified:        boolean
   tokens_ever_purchased:   number
+  has_password:            boolean  // false = Google-only account (no password to change)
 }
 
 interface AuthCtx {

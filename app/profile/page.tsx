@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth-context'
 import SiteHeader from '@/components/SiteHeader'
 import Footer from '@/components/Footer'
 import { track } from '@/lib/analytics'
+import AccountSecurity from '@/components/AccountSecurity'
 
 const DISCORD_INVITE = 'https://discord.gg/xjQvnrvW3M'
 
@@ -524,6 +525,9 @@ export default function ProfilePage() {
           )}
         </div>
       </div>
+
+      {/* Account & security */}
+      <AccountSecurity />
 
       {/* Quick links */}
       <div className="mt-6 grid grid-cols-2 gap-3">

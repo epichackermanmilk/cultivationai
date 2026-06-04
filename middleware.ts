@@ -19,8 +19,15 @@ function check(key: string, limit: number, windowMs: number): { ok: boolean; res
 
 // ── Route config ──────────────────────────────────────────────────────────────
 const ROUTES: Array<{ test: (p: string) => boolean; limit: number; windowMs: number }> = [
-  // Auth — tightest: 5 attempts per 15 min (brute-force protection)
-  { test: p => /^\/api\/auth\/(login|signup)/.test(p), limit: 5,   windowMs: 15 * 60_000 },
+  // Auth — login is per-account-locked inside the route (5 fails → 15-min lock),
+  // so this IP cap is a looser backstop that lets the friendly per-account
+  // countdown be what a fumbling user sees first.
+  { test: p => p.startsWith('/api/auth/login'),           limit: 12, windowMs: 15 * 60_000 },
+  { test: p => p.startsWith('/api/auth/signup'),          limit: 5,  windowMs: 15 * 60_000 },
+  { test: p => p.startsWith('/api/auth/reset'),           limit: 5,  windowMs: 15 * 60_000 },
+  { test: p => p.startsWith('/api/auth/change-password'), limit: 8,  windowMs: 15 * 60_000 },
+  { test: p => p.startsWith('/api/auth/change-email'),    limit: 8,  windowMs: 15 * 60_000 },
+  { test: p => p.startsWith('/api/auth/delete-account'),  limit: 5,  windowMs: 15 * 60_000 },
   // Checkout — 6 per hour (prevents card-testing / abuse)
   { test: p => p.startsWith('/api/checkout'),           limit: 6,   windowMs: 60 * 60_000 },
   // Chat — 20 per minute (each call costs OpenAI money)
@@ -45,6 +52,10 @@ const ROUTES: Array<{ test: (p: string) => boolean; limit: number; windowMs: num
 const MAX_BODY: Record<string, number> = {
   '/api/auth/signup': 1_024,
   '/api/auth/login':  1_024,
+  '/api/auth/reset':           2_048,
+  '/api/auth/change-password': 2_048,
+  '/api/auth/change-email':    2_048,
+  '/api/auth/delete-account':  1_024,
   '/api/chat':       10_240,   // extra headroom for characterProfile payload
   '/api/embed':       512,
   '/api/checkout':    256,

@@ -257,6 +257,13 @@ export default function AuthPanel({ onClose, rightOffset = 16, topOffset = 64 }:
                   </span>
                 : 'Sign In'}
             </button>
+
+            <a
+              href="/forgot-password"
+              className="block text-center text-xs text-zinc-500 hover:text-amber-400 transition"
+            >
+              Forgot password?
+            </a>
           </div>
         )}
 
