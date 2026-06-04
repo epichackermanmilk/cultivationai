@@ -23,6 +23,16 @@ export default function AuthCallbackPage() {
   const [message, setMessage] = useState('Signing you in…')
 
   useEffect(() => {
+    // ── Native app flow ──────────────────────────────────────────────────────
+    // When OAuth ran in the system browser (redirect_to had ?app=1), we can't set
+    // the app's cookie from here (wrong browser). Instead hand the token to the app
+    // via a custom-scheme deep link; the app re-opens THIS page (without app=1)
+    // inside its own webview, where the cookie can actually be set.
+    if (new URLSearchParams(window.location.search).get('app') === '1') {
+      window.location.href = 'org.novelcodex.app://auth-callback' + window.location.hash
+      return
+    }
+
     const hash = window.location.hash.slice(1)   // strip leading #
     const params = new URLSearchParams(hash)
     const accessToken = params.get('access_token')

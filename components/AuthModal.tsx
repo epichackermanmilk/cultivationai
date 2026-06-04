@@ -124,15 +124,27 @@ export default function AuthPanel({ onClose, rightOffset = 16, topOffset = 64, f
   }
 
   // ── Google OAuth ──────────────────────────────────────────────────────────
-  const googleSignIn = () => {
+  const googleSignIn = async () => {
     // Save the current page so we can return to it after OAuth completes
     try { sessionStorage.setItem('nc_return_to', window.location.pathname + window.location.search) } catch { /* ignore */ }
-    const base     = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const redirect = `${window.location.origin}/auth/callback`
-    if (base) {
-      window.location.href =
-        `${base}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirect)}`
+    const base = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (!base) return
+
+    // Inside the app: Google blocks OAuth in a webview, so open it in the system
+    // browser. /auth/callback?app=1 then deep-links the token back into the app
+    // (NativeAuthBridge), which finishes sign-in inside the webview.
+    const Browser = (window as unknown as {
+      Capacitor?: { Plugins?: { Browser?: { open: (o: { url: string }) => Promise<void> } } }
+    }).Capacitor?.Plugins?.Browser
+    if (/NovelCodexApp/.test(navigator.userAgent) && Browser) {
+      const redirect = encodeURIComponent('https://novelcodex.org/auth/callback?app=1')
+      try { await Browser.open({ url: `${base}/auth/v1/authorize?provider=google&redirect_to=${redirect}` }) } catch { /* ignore */ }
+      return
     }
+
+    // Web: redirect the page straight to the OAuth flow.
+    const redirect = `${window.location.origin}/auth/callback`
+    window.location.href = `${base}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirect)}`
   }
 
   // ── Shared input class ────────────────────────────────────────────────────
