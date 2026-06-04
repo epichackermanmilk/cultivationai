@@ -225,25 +225,28 @@ export default function RegressorPage() {
               ))}
             </div>
 
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-1.5">
-              <span className="text-xs font-bold text-violet-400">50 tokens · 6 lives included</span>
+            <div className="mx-auto max-w-xs space-y-3">
+              {/* Cost box — same width as the Begin button, stacked above it */}
+              <div className="flex items-center justify-center gap-2 rounded-xl border border-violet-500/30 bg-violet-500/10 px-4 py-3">
+                <span className="text-xs font-bold text-violet-400">50 tokens · 6 lives included</span>
+              </div>
+
+              {error && <p className="text-sm text-rose-400">{error}</p>}
+
+              {!user ? (
+                <Link href="/library" className="flex w-full items-center justify-center gap-2 rounded-xl border border-violet-500/40 bg-violet-500/10 px-8 py-3 text-sm font-bold text-violet-300 hover:bg-violet-500/20 transition">
+                  Sign in to play
+                </Link>
+              ) : (
+                <button onClick={startGame} disabled={starting}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl px-8 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)', boxShadow: '0 6px 20px rgba(124,58,237,0.3)' }}>
+                  {starting ? (
+                    <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Generating Disaster…</>
+                  ) : '⚔️ Begin — 50 tokens'}
+                </button>
+              )}
             </div>
-
-            {error && <p className="mb-4 text-sm text-rose-400">{error}</p>}
-
-            {!user ? (
-              <Link href="/library" className="inline-flex items-center gap-2 rounded-xl border border-violet-500/40 bg-violet-500/10 px-8 py-3 text-sm font-bold text-violet-300 hover:bg-violet-500/20 transition">
-                Sign in to play
-              </Link>
-            ) : (
-              <button onClick={startGame} disabled={starting}
-                className="inline-flex items-center gap-2 rounded-xl px-8 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)', boxShadow: '0 6px 20px rgba(124,58,237,0.3)' }}>
-                {starting ? (
-                  <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Generating Disaster…</>
-                ) : '⚔️ Begin — 50 tokens'}
-              </button>
-            )}
           </div>
         )}
 
