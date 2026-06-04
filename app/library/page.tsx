@@ -144,8 +144,13 @@ export default function LibraryPage() {
       )
     }
     list = list.filter(n => n.total_chapters >= filters.minChapters && (filters.maxChapters >= CHAPTER_MAX || n.total_chapters <= filters.maxChapters))
-    if (filters.sort === 'asc')  list = [...list].sort((a,b) => a.total_chapters - b.total_chapters)
-    if (filters.sort === 'desc') list = [...list].sort((a,b) => b.total_chapters - a.total_chapters)
+    // Default ordering: most chapters first. The longest, most-established novels
+    // lead (which reads as "most popular") so the library looks strong on landing
+    // instead of opening on obscure 30-chapter titles that happen to start with "A".
+    // 'asc' flips to fewest-first; 'desc' is the same as default.
+    list = filters.sort === 'asc'
+      ? [...list].sort((a, b) => a.total_chapters - b.total_chapters)
+      : [...list].sort((a, b) => b.total_chapters - a.total_chapters)
     return list
   }, [novels, query, filters])
 

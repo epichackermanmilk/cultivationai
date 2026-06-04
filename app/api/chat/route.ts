@@ -31,6 +31,82 @@ function logUsage(slug: string, inputTokens: number, outputTokens: number) {
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
+// "second death game", "the final trial", "the 3rd tournament", "next arc"…
+const EPISODIC_RE = /\b(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|final|last|next|latest|previous|\d{1,3}(?:st|nd|rd|th))\s+(death\s+game|game|arc|trial|round|tournament|war|battle|raid|dungeon|mission|quest|volume|part|saga|tribulation|test|exam|phase|stage|world|floor|layer|realm|match|invasion|expedition|event|instance|scenario)\b/i
+
+type ArcRow = { text: string; chapter_number: number; chapter_title: string; similarity: number }
+
+// Episodic "arc locator": the reader asks about a specific arc/episode the novel
+// never explicitly numbers. The chapter TITLES reveal the structure, so we let a
+// cheap model read the title spine, identify the chapter range, and pull it.
+async function locateArcRange(
+  sb: ReturnType<typeof admin>,
+  slug: string,
+  title: string,
+  message: string,
+): Promise<ArcRow[] | null> {
+  try {
+    const { data: titles } = await sb
+      .from('chunks')
+      .select('chapter_number, chapter_title')
+      .eq('slug', slug)
+      .eq('chunk_index', 0)            // one row per chapter
+      .order('chapter_number', { ascending: true })
+      .limit(1200)
+    if (!titles || titles.length < 4) return null
+    const titleList = titles.map(t => `${t.chapter_number}. ${t.chapter_title}`).join('\n')
+
+    const r = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      max_tokens: 60,
+      temperature: 0,
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: `You are given the complete, ordered chapter list of the novel "${title}". The reader is asking about a specific episode/arc/section of the story (e.g. "the second death game", "the tournament arc", "the final trial").
+
+Work out which contiguous block of chapters that section covers, using the chapter titles as your guide. A section usually STARTS when a new event/game/arc/place/opponent is introduced and ENDS when it concludes (a victory, a reward, a return to normal life, or the start of the next section). To find "the Nth <thing>", count occurrences of that kind of event from chapter 1 onward, in order, and return the Nth one's range.
+
+Arcs, games, and trials usually span many chapters (often 10-40), so the END chapter should be well beyond the START — never equal to it. Make your best, most reasonable estimate of the start and end even if the titles aren't perfectly explicit. Only return found=false if the question genuinely does not refer to any locatable section of this story.
+
+Respond as JSON: {"found": boolean, "start": number, "end": number}.
+
+Chapters:
+${titleList}` },
+        { role: 'user', content: message },
+      ],
+    })
+    const j = JSON.parse(r.choices[0]?.message?.content ?? '{}')
+    console.error('[arc]', JSON.stringify({ q: message, titles: titles.length, j }))
+    if (!j.found || typeof j.start !== 'number') return null
+    const start = Math.max(1, Math.floor(j.start))
+    let end = Math.min(typeof j.end === 'number' ? Math.floor(j.end) : start, start + 60)
+    // Safety net: the model sometimes collapses end→start. Arcs span many
+    // chapters, so widen a too-narrow range to a sensible minimum.
+    if (end < start + 16) end = start + 16
+
+    const { data: rows } = await sb
+      .from('chunks')
+      .select('text, chapter_number, chapter_title')
+      .eq('slug', slug)
+      .gte('chapter_number', start)
+      .lte('chapter_number', Math.max(start, end))
+      .order('chapter_number', { ascending: true })
+      .order('chunk_index',    { ascending: true })
+      .limit(140)
+    if (!rows || !rows.length) return null
+    // Sample evenly across the arc so a long arc's ending isn't dropped.
+    let picked = rows
+    if (rows.length > 40) {
+      const step = rows.length / 40
+      picked = Array.from({ length: 40 }, (_, i) => rows[Math.floor(i * step)])
+    }
+    return picked.map(r => ({ text: r.text, chapter_number: r.chapter_number, chapter_title: r.chapter_title, similarity: 1 }))
+  } catch (e) {
+    console.error('[arc] error:', String(e))
+    return null
+  }
+}
+
 export async function POST(req: Request) {
   // ── Auth check ─────────────────────────────────────────────────────────────
   const cookieStore = await cookies()
@@ -142,33 +218,57 @@ export async function POST(req: Request) {
   const queryEmbedding = embRes.data[0].embedding
   const hydeEmbedding  = hydeText ? embRes.data[1].embedding : null
 
-  // Higher recall: more candidates + a lower threshold, across both vectors.
-  // Each retrieval is wrapped so a vector-search timeout (large novels without a
-  // tuned index) degrades gracefully instead of crashing the whole request.
-  const PER = characterName ? 8 : 12
+  // ── Retrieval: vector (HyDE) + keyword, fused by reciprocal-rank fusion ──────
+  // Each retrieval is wrapped so a vector-search timeout (large novels) degrades
+  // gracefully instead of crashing the request.
+  const PER = characterName ? 8 : 14
   const TH  = 0.1
+  type Row = { text: string; chapter_number: number; chapter_title: string; similarity: number }
   const safeMatch = async (emb: number[], th: number) => {
     try { return await matchChunks(emb, slug, PER, th) }
     catch { try { return await matchChunks(emb, slug, 6, 0.25) } catch { return [] } }
   }
-  const retrievals = await Promise.all([
+  // Keyword/full-text retrieval complements vectors for exact terms, names, and
+  // specific events that semantic search ranks poorly. Book mode only.
+  const keywordSearch = async (): Promise<Row[]> => {
+    if (characterName) return []
+    try {
+      const { data } = await sb.rpc('match_chunks_fts', { novel_slug: slug, query_text: message, match_count: 12 })
+      return ((data ?? []) as { text: string; chapter_number: number; chapter_title: string }[])
+        .map(r => ({ text: r.text, chapter_number: r.chapter_number, chapter_title: r.chapter_title, similarity: 0 }))
+    } catch { return [] }
+  }
+  const lists: Row[][] = await Promise.all([
     safeMatch(queryEmbedding, TH),
     ...(hydeEmbedding ? [safeMatch(hydeEmbedding, TH)] : []),
+    keywordSearch(),
   ])
-  // Merge + dedupe (keep the highest similarity per chunk), then take the top ~16.
-  const byKey = new Map<string, { text: string; chapter_number: number; chapter_title: string; similarity: number }>()
-  for (const list of retrievals) {
-    for (const c of list) {
-      const k = `${c.chapter_number}:${c.text.slice(0, 48)}`
-      const prev = byKey.get(k)
-      if (!prev || c.similarity > prev.similarity) byKey.set(k, c)
-    }
-  }
-  let chunks = [...byKey.values()].sort((a, b) => b.similarity - a.similarity).slice(0, isBroad ? 12 : 16)
 
-  if (isBroad) {
-    // Pull chapters in reading order and merge them with the semantic matches.
-    // "First arc / beginning" → earliest chapters; otherwise sample across the book.
+  // Reciprocal-rank fusion: a chunk ranked highly by more than one retriever wins.
+  const RRF_K = 60
+  const fused = new Map<string, { row: Row; score: number }>()
+  for (const list of lists) {
+    list.forEach((c, i) => {
+      const k = `${c.chapter_number}:${c.text.slice(0, 48)}`
+      const add = 1 / (RRF_K + i)
+      const cur = fused.get(k)
+      if (cur) cur.score += add
+      else fused.set(k, { row: c, score: add })
+    })
+  }
+  let chunks: Row[] = [...fused.values()].sort((a, b) => b.score - a.score).map(s => s.row).slice(0, isBroad ? 14 : 22)
+
+  // ── Episodic "arc locator" ──────────────────────────────────────────────────
+  // "The second death game / the X arc / the final trial" — pinpoint the chapter
+  // range from the title spine and pull those chapters in order.
+  let isArc = false
+  if (!characterName && EPISODIC_RE.test(message)) {
+    const arc = await locateArcRange(sb, slug, title, message)
+    if (arc && arc.length) { chunks = arc; isArc = true }
+  }
+
+  if (isBroad && !isArc) {
+    // Broad summary/overview: weave in a chronological spine of the story.
     try {
       const { data: chrono } = await sb
         .from('chunks')
@@ -190,9 +290,10 @@ export async function POST(req: Request) {
         }
       }
     } catch { /* fall back to semantic-only */ }
-    // Present in reading order so the summary flows chronologically.
-    chunks.sort((a, b) => a.chapter_number - b.chapter_number)
   }
+
+  // Present ordered material (summaries / arcs) in reading order so it flows.
+  if (isBroad || isArc) chunks.sort((a, b) => a.chapter_number - b.chapter_number)
 
   if (chunks.length === 0) {
     const notFoundMsg = characterName
@@ -202,7 +303,7 @@ export async function POST(req: Request) {
   }
 
   const context = chunks
-    .map(c => `[Ch.${c.chapter_number} — ${c.chapter_title}]\n${c.text.slice(0, isBroad ? 700 : 900)}`)
+    .map(c => `[Ch.${c.chapter_number} — ${c.chapter_title}]\n${c.text.slice(0, (isBroad || isArc) ? 680 : 900)}`)
     .join('\n\n---\n\n')
 
   // ── Build system prompt (book assistant OR character roleplay) ─────────────
@@ -283,7 +384,9 @@ ${context}`
 
   } else {
     // ── Book assistant mode — pure Q&A ──────────────────────────────────────
-    const broadNote = isBroad
+    const broadNote = isArc
+      ? `\nThe passages below are the chapters that make up the specific section/arc the reader asked about, in reading order. Walk through what happens across them and synthesize a clear, coherent answer that follows the events in sequence. You don't need a passage for every sentence — convey the throughline of this section. If a detail genuinely isn't in these chapters, say so briefly rather than inventing.\n`
+      : isBroad
       ? `\nThe reader is asking for a summary/overview. The passages below are drawn in READING ORDER from the relevant part of the story. Synthesize across them into a flowing, coherent summary — connect events chronologically rather than answering with isolated facts. It's fine to generalize the throughline of the arc; you do not need a passage for every sentence. Aim for a few tight paragraphs.\n`
       : ''
     systemPrompt = `You are an AI assistant for readers of the novel "${title}" by ${author}.
@@ -304,7 +407,7 @@ ${context}`
     model:          'gpt-4o-mini',
     stream:         true,
     stream_options: { include_usage: true },
-    max_tokens:     isBroad ? 1100 : 800,
+    max_tokens:     (isBroad || isArc) ? 1100 : 800,
     temperature:    characterName ? 0.7 : 0.3,  // more expressive in roleplay mode
     messages:    [
       { role: 'system', content: systemPrompt },
@@ -347,10 +450,13 @@ ${context}`
     },
   })
 
+  const dbgNums = chunks.map(c => c.chapter_number)
   return new Response(readable, {
     headers: {
       'Content-Type':       'text/plain; charset=utf-8',
       'X-Tokens-Remaining': String(profile.tokens - CHAT_COST),
+      'X-NC-Mode':          isArc ? 'arc' : isBroad ? 'broad' : 'fused',
+      'X-NC-Chapters':      dbgNums.length ? `${Math.min(...dbgNums)}-${Math.max(...dbgNums)} n=${chunks.length}` : 'none',
     },
   })
 }
