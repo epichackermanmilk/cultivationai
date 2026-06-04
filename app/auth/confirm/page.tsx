@@ -143,7 +143,7 @@ export default function AuthConfirmPage() {
             </Link>
             <p className="mt-3 text-xs" style={{ color: 'var(--nc-text2)' }}>
               Need help?{' '}
-              <a href="mailto:hello@novelcodex.com" className="text-amber-400 hover:underline">
+              <a href="mailto:hello@novelcodex.org" className="text-amber-400 hover:underline">
                 Contact support
               </a>
             </p>
