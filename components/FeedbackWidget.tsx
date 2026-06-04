@@ -30,35 +30,54 @@ export default function FeedbackWidget() {
   const dragStart = useRef({ mx: 0, my: 0, bx: 0, by: 0 })
   const btnRef    = useRef<HTMLButtonElement>(null)
 
-  const onMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button !== 0) return
-    e.preventDefault()
-    const btn = btnRef.current!
-    const rect = btn.getBoundingClientRect()
+  // Shared drag logic for both mouse and touch (touch = mobile, the case that
+  // was missing — so the bubble can be dragged off the multi-chat send button).
+  const beginDrag = useCallback((startX: number, startY: number, isTouch: boolean) => {
+    const rect = btnRef.current!.getBoundingClientRect()
     dragging.current  = true
-    dragStart.current = { mx: e.clientX, my: e.clientY, bx: rect.left, by: rect.top }
+    dragStart.current = { mx: startX, my: startY, bx: rect.left, by: rect.top }
 
-    const onMove = (ev: MouseEvent) => {
-      if (!dragging.current) return
-      const dx = ev.clientX - dragStart.current.mx
-      const dy = ev.clientY - dragStart.current.my
-      // Keep the bubble below the sticky header so it can't be dragged out of reach
-      const TOP_LIMIT = 100
+    const move = (cx: number, cy: number) => {
+      const dx = cx - dragStart.current.mx
+      const dy = cy - dragStart.current.my
+      const TOP_LIMIT = 100   // keep below the sticky header
       const nx = Math.max(0, Math.min(window.innerWidth  - 44, dragStart.current.bx + dx))
       const ny = Math.max(TOP_LIMIT, Math.min(window.innerHeight - 44, dragStart.current.by + dy))
       setPos({ x: nx, y: ny })
     }
-    const onUp = (ev: MouseEvent) => {
-      const totalMove = Math.abs(ev.clientX - dragStart.current.mx) + Math.abs(ev.clientY - dragStart.current.my)
+    const finish = (cx: number, cy: number) => {
+      const totalMove = Math.abs(cx - dragStart.current.mx) + Math.abs(cy - dragStart.current.my)
       dragging.current = false
-      document.removeEventListener('mousemove', onMove)
-      document.removeEventListener('mouseup',   onUp)
-      // Only open modal if it was a click (not a drag)
-      if (totalMove < 5) setOpen(true)
+      document.removeEventListener('mousemove', mMove)
+      document.removeEventListener('mouseup',   mUp)
+      document.removeEventListener('touchmove', tMove)
+      document.removeEventListener('touchend',  tEnd)
+      if (totalMove < 8) setOpen(true)   // treat as a tap, not a drag
     }
-    document.addEventListener('mousemove', onMove)
-    document.addEventListener('mouseup',   onUp)
+    const mMove = (ev: MouseEvent) => { if (dragging.current) move(ev.clientX, ev.clientY) }
+    const mUp   = (ev: MouseEvent) => finish(ev.clientX, ev.clientY)
+    const tMove = (ev: TouchEvent) => { const t = ev.touches[0]; if (dragging.current && t) { ev.preventDefault(); move(t.clientX, t.clientY) } }
+    const tEnd  = (ev: TouchEvent) => { const t = ev.changedTouches[0]; finish(t?.clientX ?? dragStart.current.mx, t?.clientY ?? dragStart.current.my) }
+
+    if (isTouch) {
+      document.addEventListener('touchmove', tMove, { passive: false })
+      document.addEventListener('touchend',  tEnd)
+    } else {
+      document.addEventListener('mousemove', mMove)
+      document.addEventListener('mouseup',   mUp)
+    }
   }, [])
+
+  const onMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0) return
+    e.preventDefault()
+    beginDrag(e.clientX, e.clientY, false)
+  }, [beginDrag])
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    const t = e.touches[0]
+    if (t) beginDrag(t.clientX, t.clientY, true)
+  }, [beginDrag])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
@@ -96,8 +115,9 @@ export default function FeedbackWidget() {
       <button
         ref={btnRef}
         onMouseDown={onMouseDown}
+        onTouchStart={onTouchStart}
         className={`z-40 flex h-11 w-11 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-110 active:scale-95 select-none ${pos ? '' : 'fixed right-4 sm:right-5 bottom-24 sm:bottom-5'}`}
-        style={bubbleStyle}
+        style={{ ...bubbleStyle, touchAction: 'none' }}
         title="Feedback / Report / Request (drag to move)"
         aria-label="Open feedback"
       >

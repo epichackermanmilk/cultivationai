@@ -11,6 +11,7 @@
 //   ALTER TABLE profiles ADD COLUMN IF NOT EXISTS subscription_active boolean DEFAULT false;
 
 import { useAuth } from '@/lib/auth-context'
+import { isNativeAppClient } from '@/lib/native'
 
 interface AdSlotProps {
   /** 'banner' = full-width slim strip | 'feed' = card-sized break | 'side' = tall vertical rail */
@@ -23,6 +24,10 @@ export default function AdSlot({ variant = 'banner', className = '' }: AdSlotPro
 
   // Don't flash during auth hydration
   if (loading) return null
+
+  // No ads inside the native app: AdSense is web-only (apps must use AdMob), and
+  // we don't want placeholder ad boxes cluttering the app shell.
+  if (isNativeAppClient()) return null
 
   // Hide for subscribers or users who purchased ad-free
   if (user?.ads_disabled || user?.subscription_active) return null

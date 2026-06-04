@@ -26,11 +26,22 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const sb = admin()
-  const { data: profile } = await sb
+  let { data: profile } = await sb
     .from('profiles')
     .select('tokens, username, age, onboarding_bonus_claimed, email_marketing_consent')
     .eq('id', user.id)
     .maybeSingle()
+
+  // Self-heal: legacy accounts created before the profiles table have no row, so
+  // their tokens (in user_metadata) show as 0 here and can't be spent. Seed a row.
+  if (!profile) {
+    const seedTokens = Number(user.user_metadata?.tokens) || 0
+    await sb.from('profiles').upsert(
+      { id: user.id, email: user.email, tokens: seedTokens },
+      { onConflict: 'id' },
+    )
+    profile = { tokens: seedTokens, username: null, age: null, onboarding_bonus_claimed: false, email_marketing_consent: false }
+  }
 
   return NextResponse.json({
     id: user.id,

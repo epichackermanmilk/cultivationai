@@ -74,7 +74,7 @@ export default function TokenWidget() {
         {/* Token balance pill — taps through to the shop */}
         <Link
           href="/shop"
-          className="flex items-center gap-1.5 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm font-bold text-amber-400 transition hover:bg-amber-500/20"
+          className="flex h-9 items-center gap-1.5 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 text-sm font-bold text-amber-400 transition hover:bg-amber-500/20"
           aria-label={`${user.tokens} tokens — buy more`}
         >
           <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -86,7 +86,7 @@ export default function TokenWidget() {
         {/* Account box — opens the dropdown menu */}
         <button
           onClick={() => setShowDropdown(v => !v)}
-          className="flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400"
+          className="flex h-9 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm font-medium text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-400"
         >
           <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
