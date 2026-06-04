@@ -6,6 +6,7 @@ import SiteHeader  from '@/components/SiteHeader'
 import Footer      from '@/components/Footer'
 import { useAuth } from '@/lib/auth-context'
 import { isNativeAppClient } from '@/lib/native'
+import WatchAdButton from '@/components/WatchAdButton'
 
 // ── Pricing data ──────────────────────────────────────────────────────────────
 const ONE_TIME = [
@@ -269,6 +270,8 @@ export default function ShopPage() {
               <span className="font-semibold text-amber-400">novelcodex.org</span> in your browser to add tokens or
               manage your plan — your balance and everything you own stay in sync automatically.
             </p>
+            {/* Free in-app way to earn tokens (only renders when AdMob is present) */}
+            <div className="mx-auto mt-5 max-w-xs"><WatchAdButton /></div>
           </div>
         )}
 
