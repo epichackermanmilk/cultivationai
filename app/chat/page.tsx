@@ -298,6 +298,68 @@ export default function ChatPage() {
 
   const selectedNovels = novels.filter(n => selected.has(n.slug))
 
+  // Streams a multi-chat answer into messages[asstIndex]. Returns the X-NC-Indexing
+  // header (comma-separated slugs) when the novels are still indexing, else null.
+  const streamMulti = async (
+    text: string,
+    history: { role: string; content: string }[],
+    asstIndex: number,
+    novelList: { slug: string; title: string }[],
+  ): Promise<string | null> => {
+    const r = await fetch('/api/chat/multi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, novels: novelList, history }),
+    })
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}))
+      const m = r.status === 402
+        ? '⚡ You\'re out of tokens. Visit the shop to get more and keep chatting.'
+        : (d.error ?? 'Something went wrong. Please try again.')
+      setMessages(prev => { const a = [...prev]; a[asstIndex] = { role: 'assistant', content: m }; return a })
+      return null
+    }
+    const remaining = r.headers.get('X-Tokens-Remaining')
+    if (remaining !== null) { const n = parseInt(remaining, 10); if (!isNaN(n)) updateTokens(n) }
+    const indexing = r.headers.get('X-NC-Indexing')
+
+    const reader  = r.body!.getReader()
+    const decoder = new TextDecoder()
+    let full = ''
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      full += decoder.decode(value, { stream: true })
+      setMessages(prev => { const a = [...prev]; a[asstIndex] = { role: 'assistant', content: full }; return a })
+    }
+    return indexing
+  }
+
+  // Polls embed readiness in the background, then re-runs the question into the same
+  // bubble. Safe to leave — indexing continues server-side regardless.
+  const pollAndAnswer = (
+    slugs: string[],
+    text: string,
+    history: { role: string; content: string }[],
+    asstIndex: number,
+    novelList: { slug: string; title: string }[],
+    attempt = 0,
+  ) => {
+    window.setTimeout(async () => {
+      try {
+        const r = await fetch('/api/embed/status?slugs=' + encodeURIComponent(slugs.join(',')))
+        const d = await r.json()
+        if (d.allReady) {
+          setMessages(prev => { const a = [...prev]; a[asstIndex] = { role: 'assistant', content: '✓ Indexing complete — answering now…' }; return a })
+          await streamMulti(text, history, asstIndex, novelList)
+          return
+        }
+      } catch { /* transient — keep polling */ }
+      if (attempt < 80) pollAndAnswer(slugs, text, history, asstIndex, novelList, attempt + 1)   // ~20 min @ 15s
+      else setMessages(prev => { const a = [...prev]; a[asstIndex] = { role: 'assistant', content: 'These novels are still indexing — they\'ll be ready soon. Ask your question again in a bit and I\'ll have them.' }; return a })
+    }, 15000)
+  }
+
   const sendDemo = async () => {
     const text = input.trim()
     if (!text || selected.size === 0 || sending) return
@@ -307,44 +369,17 @@ export default function ChatPage() {
     setSending(true)
     setInput('')
 
-    // history BEFORE we append the new turn
     const priorHistory = messages.map(m => ({ role: m.role, content: m.content }))
-    const asstIndex = messages.length + 1   // index of the assistant message we're about to add
+    const novelList    = selectedNovels.map(n => ({ slug: n.slug, title: n.title }))
+    const asstIndex    = messages.length + 1   // the assistant placeholder we add below
 
     setMessages(prev => [...prev, { role: 'user', content: text }, { role: 'assistant', content: '' }])
 
     try {
-      const r = await fetch('/api/chat/multi', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text,
-          novels:  selectedNovels.map(n => ({ slug: n.slug, title: n.title })),
-          history: priorHistory,
-        }),
-      })
-
-      if (!r.ok) {
-        const d = await r.json().catch(() => ({}))
-        const msg = r.status === 402
-          ? '⚡ You\'re out of tokens. Visit the shop to get more and keep chatting.'
-          : (d.error ?? 'Something went wrong. Please try again.')
-        setMessages(prev => { const a = [...prev]; a[asstIndex] = { role: 'assistant', content: msg }; return a })
-        setSending(false)
-        return
-      }
-
-      const remaining = r.headers.get('X-Tokens-Remaining')
-      if (remaining !== null) { const n = parseInt(remaining, 10); if (!isNaN(n)) updateTokens(n) }
-
-      const reader  = r.body!.getReader()
-      const decoder = new TextDecoder()
-      let full = ''
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        full += decoder.decode(value, { stream: true })
-        setMessages(prev => { const a = [...prev]; a[asstIndex] = { role: 'assistant', content: full }; return a })
+      const indexing = await streamMulti(text, priorHistory, asstIndex, novelList)
+      if (indexing) {
+        const pending = indexing.split(',').map(s => s.trim()).filter(Boolean)
+        pollAndAnswer(pending, text, priorHistory, asstIndex, novelList)
       }
     } catch {
       setMessages(prev => { const a = [...prev]; a[asstIndex] = { role: 'assistant', content: 'Network error — please try again.' }; return a })

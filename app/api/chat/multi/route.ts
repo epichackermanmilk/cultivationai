@@ -113,12 +113,18 @@ export async function POST(req: Request) {
   // still anchors the model on that novel's protagonist.
   const ready = perNovel.filter(p => p.embedded)
 
-  // Nothing ready yet — we just kicked off indexing. Don't charge; tell them to retry.
+  // Nothing ready yet — we just kicked off indexing. Don't charge; signal the
+  // client to poll status and answer automatically when indexing finishes.
   if (ready.length === 0) {
     const names = stillIndexing.length ? stillIndexing.join(', ') : 'the selected novels'
-    const msg = `I'm now reading ${names} for you — this takes a few minutes the first time. ` +
-                `Ask your question again shortly and I'll have them indexed. (You weren't charged for this.)`
-    return new Response(msg, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } })
+    const msg = `I'm reading ${names} for you now — large novels can take a few minutes the first time. ` +
+                `You can stay here and I'll answer automatically the moment they're ready, or leave and come back and ask again anytime — the indexing keeps going either way.`
+    return new Response(msg, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'X-NC-Indexing': slugs.join(','),
+      },
+    })
   }
 
   // Build a clearly-labelled, per-novel context block: synopsis first (names the

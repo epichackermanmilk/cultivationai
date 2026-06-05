@@ -7,7 +7,7 @@
 // Swap to the real unit (ca-app-pub-1350938260860067/7432259303) for production.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-const REWARDED_AD_ID = 'ca-app-pub-3940256099942544/5224354917' // TEST id
+const REWARDED_AD_ID = 'ca-app-pub-1350938260860067/7432259303' // production rewarded unit
 
 function plugin(): any | undefined {
   if (typeof window === 'undefined') return undefined
