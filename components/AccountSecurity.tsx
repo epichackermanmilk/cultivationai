@@ -130,7 +130,7 @@ export default function AccountSecurity() {
           <div className="px-5 pb-5">
             {isGoogle ? (
               <p className="text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
-                You sign in with Google, so there&apos;s no password to change here — your sign-in is managed by your Google account.
+                You signed in with Google, so there&apos;s no password to change here — your sign-in is managed by your Google account.
               </p>
             ) : (
               <form onSubmit={changePassword} className="space-y-3">

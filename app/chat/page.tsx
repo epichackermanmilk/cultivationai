@@ -5,6 +5,7 @@ import SiteHeader     from '@/components/SiteHeader'
 import FeedbackWidget from '@/components/FeedbackWidget'
 import { useAuth }    from '@/lib/auth-context'
 import { matchesSearch } from '@/lib/search'
+import { coverSrc } from '@/lib/cover'
 
 interface Novel {
   slug: string
@@ -156,6 +157,23 @@ function NovelSelector({
     })
   }, [novels, search, selectedGenres, minCh, maxCh])
 
+  // Render in pages — mapping all ~2,500 cards at once froze the app when the
+  // picker opened. Render a window and grow it as the user scrolls.
+  const PAGE = 60
+  const [shown, setShown] = useState(PAGE)
+  useEffect(() => { setShown(PAGE) }, [search, selectedGenres, minCh, maxCh])
+  const sentinelRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) setShown(s => Math.min(s + PAGE, visible.length)) },
+      { rootMargin: '300px' },
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [visible.length, shown])
+
   const addAllVisible    = () => visible.forEach(n => { if (!selected.has(n.slug)) onToggle(n.slug) })
   const removeAllVisible = () => visible.forEach(n => { if (selected.has(n.slug))  onToggle(n.slug) })
 
@@ -206,7 +224,7 @@ function NovelSelector({
 
       {/* Novel list */}
       <div className="flex-1 overflow-y-auto">
-        {visible.map(n => {
+        {visible.slice(0, shown).map(n => {
           const on = selected.has(n.slug)
           return (
             <button
@@ -217,7 +235,8 @@ function NovelSelector({
               {/* Cover thumb */}
               <div className="h-10 w-7 shrink-0 overflow-hidden rounded bg-zinc-800">
                 {n.cover_url
-                  ? <img src={n.cover_url} alt="" className="h-full w-full object-cover" />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={coverSrc(n.cover_url, 80)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                   : <div className="h-full w-full bg-zinc-700" />
                 }
               </div>
@@ -231,6 +250,7 @@ function NovelSelector({
             </button>
           )
         })}
+        {shown < visible.length && <div ref={sentinelRef} className="h-10" />}
       </div>
     </div>
   )
