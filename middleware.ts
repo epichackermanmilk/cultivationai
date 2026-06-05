@@ -75,6 +75,14 @@ export function middleware(req: NextRequest) {
     req.headers.get('x-real-ip') ??
     'anon'
 
+  // Cover image proxy — disk-cached, SSRF-guarded image serving. Not rate-limited:
+  // an image-heavy library page legitimately fires many cover requests in a burst.
+  if (path.startsWith('/api/cover')) {
+    const res = NextResponse.next()
+    res.headers.set('X-Content-Type-Options', 'nosniff')
+    return res
+  }
+
   // Rate limit
   for (const route of ROUTES) {
     if (route.test(path)) {
