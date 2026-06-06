@@ -14,6 +14,19 @@ export const COOKIE_OPTS = {
   secure:   process.env.NODE_ENV === 'production',
 }
 
+// The Supabase access_token in nc_session expires after ~1h. We also store the
+// refresh_token (nc_refresh) so the session can be silently renewed — otherwise
+// users get "session expired" after an hour. POST /api/auth/refresh uses it.
+export const REFRESH_COOKIE = 'nc_refresh'
+
+export const REFRESH_COOKIE_OPTS = {
+  httpOnly: true,
+  maxAge:   60 * 60 * 24 * 30,   // 30 days
+  path:     '/',
+  sameSite: 'lax' as const,
+  secure:   process.env.NODE_ENV === 'production',
+}
+
 /** Service-role client — server-only. Bypasses RLS; never expose to the browser. */
 export function admin() {
   return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!, {

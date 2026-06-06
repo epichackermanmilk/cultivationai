@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { parseJsonBody } from '@/lib/sanitize'
+import { REFRESH_COOKIE, REFRESH_COOKIE_OPTS } from '@/lib/auth-server'
 
 const COOKIE      = 'nc_session'
 const COOKIE_OPTS = {
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
   const parsed = await parseJsonBody(req, 2048)
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 })
 
-  const { access_token } = parsed.data as { access_token?: unknown }
+  const { access_token, refresh_token } = parsed.data as { access_token?: unknown; refresh_token?: unknown }
   if (!access_token || typeof access_token !== 'string' || access_token.length < 20) {
     return NextResponse.json({ error: 'Invalid token' }, { status: 400 })
   }
@@ -44,5 +45,8 @@ export async function POST(req: Request) {
 
   const res = NextResponse.json({ ok: true, email: user.email })
   res.cookies.set(COOKIE, access_token, COOKIE_OPTS)
+  if (typeof refresh_token === 'string' && refresh_token.length > 20) {
+    res.cookies.set(REFRESH_COOKIE, refresh_token, REFRESH_COOKIE_OPTS)
+  }
   return res
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { parseJsonBody, isValidEmail, isValidPassword } from '@/lib/sanitize'
+import { REFRESH_COOKIE, REFRESH_COOKIE_OPTS } from '@/lib/auth-server'
 
 const COOKIE      = 'nc_session'
 const COOKIE_OPTS = {
@@ -180,5 +181,6 @@ export async function POST(req: Request) {
 
   const res = NextResponse.json({ email, tokens: WELCOME_TOKENS })
   res.cookies.set(COOKIE, session.session.access_token, COOKIE_OPTS)
+  res.cookies.set(REFRESH_COOKIE, session.session.refresh_token, REFRESH_COOKIE_OPTS)
   return res
 }

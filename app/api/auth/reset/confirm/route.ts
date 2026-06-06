@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { admin, SESSION_COOKIE, COOKIE_OPTS } from '@/lib/auth-server'
+import { admin, SESSION_COOKIE, COOKIE_OPTS, REFRESH_COOKIE, REFRESH_COOKIE_OPTS } from '@/lib/auth-server'
 import { parseJsonBody, isValidPassword } from '@/lib/sanitize'
 
 // POST /api/auth/reset/confirm — complete a password reset.
@@ -36,8 +36,10 @@ export async function POST(req: Request) {
   const res = NextResponse.json({ ok: true, email: verified.user.email ?? null })
   try {
     const { data: signIn } = await sb.auth.signInWithPassword({ email: verified.user.email!, password })
-    if (signIn?.session?.access_token)
+    if (signIn?.session?.access_token) {
       res.cookies.set(SESSION_COOKIE, signIn.session.access_token, COOKIE_OPTS)
+      if (signIn.session.refresh_token) res.cookies.set(REFRESH_COOKIE, signIn.session.refresh_token, REFRESH_COOKIE_OPTS)
+    }
   } catch { /* password is set; they can sign in manually */ }
 
   return res

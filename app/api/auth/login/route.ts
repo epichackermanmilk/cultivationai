@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { admin, SESSION_COOKIE, COOKIE_OPTS } from '@/lib/auth-server'
+import { admin, SESSION_COOKIE, COOKIE_OPTS, REFRESH_COOKIE, REFRESH_COOKIE_OPTS } from '@/lib/auth-server'
 import { parseJsonBody, isValidEmail, isValidPassword } from '@/lib/sanitize'
 
 // ── Per-account lockout policy ────────────────────────────────────────────────
@@ -139,6 +139,7 @@ export async function POST(req: Request) {
     if (att) { try { await sb.from('login_attempts').delete().eq('email', email) } catch { /* non-fatal */ } }
     const res = NextResponse.json({ email: data.user?.email ?? email })
     res.cookies.set(SESSION_COOKIE, data.session.access_token, COOKIE_OPTS)
+    res.cookies.set(REFRESH_COOKIE, data.session.refresh_token, REFRESH_COOKIE_OPTS)
     return res
   }
 

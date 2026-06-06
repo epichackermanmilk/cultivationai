@@ -35,8 +35,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refresh = useCallback(async () => {
     try {
-      const r = await fetch('/api/auth/me')
-      const d = await r.json()
+      let r = await fetch('/api/auth/me')
+      let d = await r.json()
+      if (!d.user) {
+        // Access token may have expired — try to renew it from the refresh token.
+        const rr = await fetch('/api/auth/refresh', { method: 'POST' })
+        if (rr.ok) { r = await fetch('/api/auth/me'); d = await r.json() }
+      }
       setUser(d.user ?? null)
     } catch {
       setUser(null)
@@ -46,6 +51,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => { refresh() }, [refresh])
+
+  // Keep the session alive: the Supabase access token expires after ~1h, so renew
+  // it periodically while signed in. Without this, long sessions (e.g. waiting for
+  // multi-novel indexing) hit "session expired" and get signed out.
+  useEffect(() => {
+    if (!user?.id) return
+    const id = window.setInterval(() => {
+      fetch('/api/auth/refresh', { method: 'POST' }).catch(() => {})
+    }, 45 * 60 * 1000)   // every 45 min (token lives ~60)
+    return () => window.clearInterval(id)
+  }, [user?.id])
 
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })

@@ -35,7 +35,8 @@ export default function AuthCallbackPage() {
 
     const hash = window.location.hash.slice(1)   // strip leading #
     const params = new URLSearchParams(hash)
-    const accessToken = params.get('access_token')
+    const accessToken  = params.get('access_token')
+    const refreshToken = params.get('refresh_token')
 
     if (!accessToken) {
       // Could also be ?error=... from the query string
@@ -51,7 +52,7 @@ export default function AuthCallbackPage() {
         const res = await fetch('/api/auth/oauth-callback', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ access_token: accessToken }),
+          body:    JSON.stringify({ access_token: accessToken, refresh_token: refreshToken }),
         })
 
         if (!res.ok) {
