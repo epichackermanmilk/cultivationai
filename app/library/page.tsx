@@ -11,6 +11,7 @@ import Footer         from '@/components/Footer'
 import AdSlot         from '@/components/AdSlot'
 import { FilterPanel, type Filters, DEFAULT_FILTERS, CHAPTER_MAX, paramsToFilters, hasActiveFilters } from '@/components/LibraryFilters'
 import { matchesSearch } from '@/lib/search'
+import { coverSrc } from '@/lib/cover'
 
 interface Novel {
   slug: string
@@ -283,7 +284,7 @@ function NovelCard({ novel }: { novel: Novel }) {
           {novel.cover_url && !imgErr ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={novel.cover_url}
+              src={coverSrc(novel.cover_url)}
               alt={novel.title}
               loading="lazy"
               decoding="async"
