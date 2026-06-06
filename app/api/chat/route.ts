@@ -39,6 +39,29 @@ type ArcRow = { text: string; chapter_number: number; chapter_title: string; sim
 // Episodic "arc locator": the reader asks about a specific arc/episode the novel
 // never explicitly numbers. The chapter TITLES reveal the structure, so we let a
 // cheap model read the title spine, identify the chapter range, and pull it.
+// Pull the ordinal out of an episodic question: "the fifth arc" → 5,
+// "the 3rd tournament" → 3, "the final/last trial" → 'last'. Returns null for
+// non-positional phrasings ("next"/"previous") we can't resolve without context.
+function parseEpisodicOrdinal(message: string): number | 'last' | null {
+  const m = message.toLowerCase()
+  if (/\b(final|last|latest)\s+\w+/.test(m)) return 'last'
+  const WORDS: Record<string, number> = {
+    first: 1, second: 2, third: 3, fourth: 4, fifth: 5,
+    sixth: 6, seventh: 7, eighth: 8, ninth: 9, tenth: 10,
+  }
+  for (const [w, n] of Object.entries(WORDS)) {
+    if (new RegExp(`\\b${w}\\s+\\w+`).test(m)) return n
+  }
+  const d = m.match(/\b(\d{1,3})(?:st|nd|rd|th)\s+\w+/)
+  if (d) return parseInt(d[1], 10)
+  return null
+}
+
+// Episodic "arc locator": the reader asks about the Nth arc/event the novel never
+// explicitly numbers. The model ENUMERATES every occurrence of that section type
+// in reading order; the CODE then selects the Nth. This is the key correctness
+// property — the model can't shortcut an ordinal like "fifth" into "chapter 5"
+// (the previous bug), because it never picks the index, it only segments.
 async function locateArcRange(
   sb: ReturnType<typeof admin>,
   slug: string,
@@ -46,53 +69,101 @@ async function locateArcRange(
   message: string,
 ): Promise<ArcRow[] | null> {
   try {
-    const { data: titles } = await sb
-      .from('chunks')
-      .select('chapter_number, chapter_title')
-      .eq('slug', slug)
-      .eq('chunk_index', 0)            // one row per chapter
-      .order('chapter_number', { ascending: true })
-      .limit(1200)
-    if (!titles || titles.length < 4) return null
+    const ordinal = parseEpisodicOrdinal(message)
+    if (ordinal === null) return null
+
+    // Supabase caps each request at 1000 rows regardless of .limit(), which
+    // truncated long novels (e.g. Reverend Insanity ~2,334 ch) → paginate.
+    type T = { chapter_number: number; chapter_title: string }
+    const titles: T[] = []
+    for (let from = 0; from < 5000; from += 1000) {
+      const { data } = await sb
+        .from('chunks')
+        .select('chapter_number, chapter_title')
+        .eq('slug', slug)
+        .eq('chunk_index', 0)            // one row per chapter
+        .order('chapter_number', { ascending: true })
+        .range(from, from + 999)
+      if (!data || !data.length) break
+      titles.push(...(data as T[]))
+      if (data.length < 1000) break
+    }
+    if (titles.length < 4) return null
+    const lastCh = titles[titles.length - 1].chapter_number
     const titleList = titles.map(t => `${t.chapter_number}. ${t.chapter_title}`).join('\n')
 
     const r = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
-      max_tokens: 60,
+      max_tokens: 1200,
       temperature: 0,
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: `You are given the complete, ordered chapter list of the novel "${title}". The reader is asking about a specific episode/arc/section of the story (e.g. "the second death game", "the tournament arc", "the final trial").
+        { role: 'system', content: `You segment the web novel "${title}" into its major sections using its ordered chapter list, then list them so a caller can pick one.
 
-Work out which contiguous block of chapters that section covers, using the chapter titles as your guide. A section usually STARTS when a new event/game/arc/place/opponent is introduced and ENDS when it concludes (a victory, a reward, a return to normal life, or the start of the next section). To find "the Nth <thing>", count occurrences of that kind of event from chapter 1 onward, in order, and return the Nth one's range.
+The reader asked: "${message}"
 
-Arcs, games, and trials usually span many chapters (often 10-40), so the END chapter should be well beyond the START — never equal to it. Make your best, most reasonable estimate of the start and end even if the titles aren't perfectly explicit. Only return found=false if the question genuinely does not refer to any locatable section of this story.
+1. Decide what KIND of recurring section they mean — a story "arc"/"saga"/"volume"/"part", or a specific recurring event ("death game", "tournament", "trial", "war", etc.).
+2. Scan the chapter titles from chapter 1 onward and identify EVERY occurrence of that kind, in chronological order. A section STARTS when a new major goal / setting / opponent / event begins and ENDS at the chapter just before the next one begins.
 
-Respond as JSON: {"found": boolean, "start": number, "end": number}.
+Return JSON: {"found": boolean, "kind": string, "occurrences": [{"start": number, "end": number, "label": "short name"}, ...]}.
+
+Hard rules:
+- List ALL occurrences in order — do NOT try to pick the one the reader wants, the caller does that.
+- NEVER map the reader's ordinal (e.g. "fifth") to a chapter number. "The fifth arc" means the 5th item in your list, which in a long novel usually starts well past chapter 100 — not chapter 5.
+- The first arc/section usually starts at or near chapter 1. Most arcs span 15-60+ chapters.
+- Cover the ENTIRE novel: keep listing arcs all the way through chapter ${lastCh}. The last arc you list should end at or near chapter ${lastCh}.
+- Use only chapter numbers that exist (1..${lastCh}). starts must strictly increase.
+- found=false only if the story genuinely has no such sections.
 
 Chapters:
 ${titleList}` },
-        { role: 'user', content: message },
+        { role: 'user', content: 'List every occurrence in order as specified.' },
       ],
     })
     const j = JSON.parse(r.choices[0]?.message?.content ?? '{}')
-    console.error('[arc]', JSON.stringify({ q: message, titles: titles.length, j }))
-    if (!j.found || typeof j.start !== 'number') return null
-    const start = Math.max(1, Math.floor(j.start))
-    let end = Math.min(typeof j.end === 'number' ? Math.floor(j.end) : start, start + 60)
-    // Safety net: the model sometimes collapses end→start. Arcs span many
-    // chapters, so widen a too-narrow range to a sensible minimum.
-    if (end < start + 16) end = start + 16
+    const occ: { start: number; end: number; label?: string }[] =
+      Array.isArray(j.occurrences)
+        ? j.occurrences.filter((o: { start?: unknown }) => typeof o?.start === 'number')
+        : []
+    if (!j.found || !occ.length) {
+      console.error('[arc]', JSON.stringify({ q: message, ord: ordinal, titles: titles.length, kind: j.kind, n: occ.length, hit: false }))
+      return null
+    }
+
+    // Select the requested occurrence IN CODE.
+    const idx = ordinal === 'last' ? occ.length - 1 : ordinal - 1
+    if (idx < 0 || idx >= occ.length) {
+      console.error('[arc]', JSON.stringify({ q: message, ord: ordinal, n: occ.length, hit: false, reason: 'out-of-range' }))
+      return null   // they asked for the 8th of 5 — don't guess
+    }
+    const sel = occ[idx]
+    let start = Math.max(1, Math.floor(sel.start))
+    let end = Math.floor(
+      typeof sel.end === 'number' && sel.end >= start
+        ? sel.end
+        : (occ[idx + 1]?.start ? occ[idx + 1].start - 1 : start + 30),
+    )
+    if (end < start + 12) end = start + 12
+    end = Math.min(end, start + 80, lastCh)   // bound retrieval span
+
+    // The final arc concludes the story, so it must reach the end of the novel.
+    // On very long title lists the model often under-enumerates and stops well
+    // short — anchor "last/final" to the tail instead of trusting that endpoint.
+    if (ordinal === 'last' && end < lastCh - 30) {
+      start = Math.max(1, lastCh - 70)
+      end   = lastCh
+    }
+    console.error('[arc]', JSON.stringify({ q: message, ord: ordinal, n: occ.length, idx, start, end, label: sel.label, hit: true }))
 
     const { data: rows } = await sb
       .from('chunks')
       .select('text, chapter_number, chapter_title')
       .eq('slug', slug)
       .gte('chapter_number', start)
-      .lte('chapter_number', Math.max(start, end))
+      .lte('chapter_number', end)
       .order('chapter_number', { ascending: true })
       .order('chunk_index',    { ascending: true })
-      .limit(140)
+      .limit(200)
     if (!rows || !rows.length) return null
     // Sample evenly across the arc so a long arc's ending isn't dropped.
     let picked = rows
