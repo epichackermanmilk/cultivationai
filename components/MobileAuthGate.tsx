@@ -26,7 +26,7 @@ export default function MobileAuthGate() {
 
   // Let the account-recovery / OAuth pages through — the wall must NOT cover them,
   // or users can't reset their password or finish signing in.
-  const OPEN_PATHS = ['/forgot-password', '/reset-password', '/auth/callback', '/auth/confirm']
+  const OPEN_PATHS = ['/forgot-password', '/reset-password', '/auth/callback', '/auth/confirm', '/delete-account', '/privacy', '/terms']
   if (OPEN_PATHS.some(p => pathname.startsWith(p))) return null
 
   // Inside the app and not signed in → hard login wall over everything else.
