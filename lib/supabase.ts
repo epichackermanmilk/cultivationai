@@ -17,30 +17,8 @@ export function getSupabase(): SupabaseClient {
 }
 
 // ── Query helpers ─────────────────────────────────────────────────────────────
+// Chunk storage/retrieval now lives in Qdrant on the VPS (off Supabase, which
+// only handles auth/profiles). These re-export the Qdrant implementations so
+// every existing caller switches over without changes.
 
-export async function isNovelEmbedded(slug: string): Promise<boolean> {
-  const sb = getSupabase()
-  const { data } = await sb
-    .from('novels')
-    .select('is_embedded')
-    .eq('slug', slug)
-    .maybeSingle()
-  return data?.is_embedded === true
-}
-
-export async function matchChunks(
-  embedding: number[],
-  slug: string,
-  count = 6,
-  threshold = 0.2,
-): Promise<{ text: string; chapter_number: number; chapter_title: string; similarity: number }[]> {
-  const sb = getSupabase()
-  const { data, error } = await sb.rpc('match_chunks', {
-    query_embedding:  embedding,
-    novel_slug:       slug,
-    match_count:      count,
-    match_threshold:  threshold,
-  })
-  if (error) throw new Error(error.message)
-  return data ?? []
-}
+export { isNovelEmbedded, matchChunks } from './qdrant'

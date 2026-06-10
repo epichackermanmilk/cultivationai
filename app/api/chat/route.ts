@@ -1,5 +1,6 @@
 import OpenAI from 'openai'
 import { matchChunks } from '@/lib/supabase'
+import { scrollTitles, scrollRange, scrollChrono } from '@/lib/qdrant'
 import { parseJsonBody, sanitizeText } from '@/lib/sanitize'
 import { NextResponse } from 'next/server'
 import { appendFileSync } from 'fs'
@@ -63,7 +64,6 @@ function parseEpisodicOrdinal(message: string): number | 'last' | null {
 // property — the model can't shortcut an ordinal like "fifth" into "chapter 5"
 // (the previous bug), because it never picks the index, it only segments.
 async function locateArcRange(
-  sb: ReturnType<typeof admin>,
   slug: string,
   title: string,
   message: string,
@@ -72,22 +72,8 @@ async function locateArcRange(
     const ordinal = parseEpisodicOrdinal(message)
     if (ordinal === null) return null
 
-    // Supabase caps each request at 1000 rows regardless of .limit(), which
-    // truncated long novels (e.g. Reverend Insanity ~2,334 ch) → paginate.
-    type T = { chapter_number: number; chapter_title: string }
-    const titles: T[] = []
-    for (let from = 0; from < 5000; from += 1000) {
-      const { data } = await sb
-        .from('chunks')
-        .select('chapter_number, chapter_title')
-        .eq('slug', slug)
-        .eq('chunk_index', 0)            // one row per chapter
-        .order('chapter_number', { ascending: true })
-        .range(from, from + 999)
-      if (!data || !data.length) break
-      titles.push(...(data as T[]))
-      if (data.length < 1000) break
-    }
+    // One row per chapter (chunk_index=0) in reading order, from Qdrant.
+    const titles = await scrollTitles(slug)
     if (titles.length < 4) return null
     const lastCh = titles[titles.length - 1].chapter_number
     const titleList = titles.map(t => `${t.chapter_number}. ${t.chapter_title}`).join('\n')
@@ -155,16 +141,8 @@ ${titleList}` },
     }
     console.error('[arc]', JSON.stringify({ q: message, ord: ordinal, n: occ.length, idx, start, end, label: sel.label, hit: true }))
 
-    const { data: rows } = await sb
-      .from('chunks')
-      .select('text, chapter_number, chapter_title')
-      .eq('slug', slug)
-      .gte('chapter_number', start)
-      .lte('chapter_number', end)
-      .order('chapter_number', { ascending: true })
-      .order('chunk_index',    { ascending: true })
-      .limit(200)
-    if (!rows || !rows.length) return null
+    const rows = await scrollRange(slug, start, end, 200)
+    if (!rows.length) return null
     // Sample evenly across the arc so a long arc's ending isn't dropped.
     let picked = rows
     if (rows.length > 40) {
@@ -301,14 +279,9 @@ export async function POST(req: Request) {
   }
   // Keyword/full-text retrieval complements vectors for exact terms, names, and
   // specific events that semantic search ranks poorly. Book mode only.
-  const keywordSearch = async (): Promise<Row[]> => {
-    if (characterName) return []
-    try {
-      const { data } = await sb.rpc('match_chunks_fts', { novel_slug: slug, query_text: message, match_count: 12 })
-      return ((data ?? []) as { text: string; chapter_number: number; chapter_title: string }[])
-        .map(r => ({ text: r.text, chapter_number: r.chapter_number, chapter_title: r.chapter_title, similarity: 0 }))
-    } catch { return [] }
-  }
+  // Keyword/FTS retrieval moved off Supabase with the chunks table; vector +
+  // HyDE carry retrieval. (TODO: re-add via a Qdrant full-text payload index.)
+  const keywordSearch = async (): Promise<Row[]> => []
   const lists: Row[][] = await Promise.all([
     safeMatch(queryEmbedding, TH),
     ...(hydeEmbedding ? [safeMatch(hydeEmbedding, TH)] : []),
@@ -334,21 +307,15 @@ export async function POST(req: Request) {
   // range from the title spine and pull those chapters in order.
   let isArc = false
   if (!characterName && EPISODIC_RE.test(message)) {
-    const arc = await locateArcRange(sb, slug, title, message)
+    const arc = await locateArcRange(slug, title, message)
     if (arc && arc.length) { chunks = arc; isArc = true }
   }
 
   if (isBroad && !isArc) {
     // Broad summary/overview: weave in a chronological spine of the story.
     try {
-      const { data: chrono } = await sb
-        .from('chunks')
-        .select('text, chapter_number, chapter_title')
-        .eq('slug', slug)
-        .order('chapter_number', { ascending: true })
-        .order('chunk_index',    { ascending: true })
-        .limit(wantsEarly ? 18 : 60)
-      if (chrono && chrono.length) {
+      const chrono = await scrollChrono(slug, wantsEarly ? 18 : 60)
+      if (chrono.length) {
         let extra = chrono.slice(0, 18)
         if (!wantsEarly && chrono.length > 18) {
           const step = Math.max(1, Math.floor(chrono.length / 18))
@@ -373,8 +340,14 @@ export async function POST(req: Request) {
     return new Response(notFoundMsg, { headers: { 'Content-Type': 'text/plain' } })
   }
 
+  // W1: previously every retrieved chunk was truncated to 900 chars (~150 of its
+  // ~500 words), discarding most of what retrieval found. Show chunks fully; for
+  // precise questions keep fewer-but-complete chunks (focus > breadth).
+  const CTX_N   = (isBroad || isArc) ? chunks.length : Math.min(chunks.length, 12)
+  const CTX_CAP = (isBroad || isArc) ? 1400 : 2600
   const context = chunks
-    .map(c => `[Ch.${c.chapter_number} — ${c.chapter_title}]\n${c.text.slice(0, (isBroad || isArc) ? 680 : 900)}`)
+    .slice(0, CTX_N)
+    .map(c => `[Ch.${c.chapter_number} — ${c.chapter_title}]\n${c.text.slice(0, CTX_CAP)}`)
     .join('\n\n---\n\n')
 
   // ── Build system prompt (book assistant OR character roleplay) ─────────────
