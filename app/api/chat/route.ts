@@ -67,13 +67,14 @@ async function locateArcRange(
   slug: string,
   title: string,
   message: string,
+  maxChapter?: number,
 ): Promise<ArcRow[] | null> {
   try {
     const ordinal = parseEpisodicOrdinal(message)
     if (ordinal === null) return null
 
     // One row per chapter (chunk_index=0) in reading order, from Qdrant.
-    const titles = await scrollTitles(slug)
+    const titles = await scrollTitles(slug, maxChapter)
     if (titles.length < 4) return null
     const lastCh = titles[titles.length - 1].chapter_number
     const titleList = titles.map(t => `${t.chapter_number}. ${t.chapter_title}`).join('\n')
@@ -130,7 +131,7 @@ ${titleList}` },
         : (occ[idx + 1]?.start ? occ[idx + 1].start - 1 : start + 30),
     )
     if (end < start + 12) end = start + 12
-    end = Math.min(end, start + 80, lastCh)   // bound retrieval span
+    end = Math.min(end, start + 80, lastCh, ...(maxChapter ? [maxChapter] : []))
 
     // The final arc concludes the story, so it must reach the end of the novel.
     // On very long title lists the model often under-enumerates and stops well
@@ -202,6 +203,10 @@ export async function POST(req: Request) {
     typeof body.characterProfile === 'object' &&
     !Array.isArray(body.characterProfile)
   ) ? body.characterProfile as Record<string, unknown> : null
+
+  // W6: spoiler ceiling — only retrieve chapters the reader has actually read
+  const rawMax = typeof body.maxChapter === 'number' ? Math.floor(body.maxChapter) : 0
+  const maxChapter = rawMax > 0 ? rawMax : undefined
 
   if (!slug || !message) {
     return NextResponse.json({ error: 'slug and message are required' }, { status: 400 })
@@ -276,8 +281,8 @@ export async function POST(req: Request) {
   const TH  = 0.1
   type Row = { text: string; chapter_number: number; chapter_title: string; similarity: number }
   const safeMatch = async (emb: number[], th: number) => {
-    try { return await matchChunks(emb, slug, PER, th) }
-    catch { try { return await matchChunks(emb, slug, 6, 0.25) } catch { return [] } }
+    try { return await matchChunks(emb, slug, PER, th, maxChapter) }
+    catch { try { return await matchChunks(emb, slug, 6, 0.25, maxChapter) } catch { return [] } }
   }
   // Vector (+HyDE) first so we can gauge confidence before adding keyword.
   const vecLists: Row[][] = await Promise.all([
@@ -289,7 +294,7 @@ export async function POST(req: Request) {
   // Keyword/full-text leg ONLY when vector confidence is low — on confident
   // matches it just adds tangential name-matches that dilute the answer (the eval
   // measured this regressing well-covered questions). Book mode only.
-  const kwList: Row[] = (!characterName && topSim < 0.42) ? await qdrantKeyword(slug, message, 12) : []
+  const kwList: Row[] = (!characterName && topSim < 0.42) ? await qdrantKeyword(slug, message, 12, maxChapter) : []
   const lists: Row[][] = [...vecLists, kwList]
 
   // Reciprocal-rank fusion: a chunk ranked highly by more than one retriever wins.
@@ -306,12 +311,30 @@ export async function POST(req: Request) {
   }
   let chunks: Row[] = [...fused.values()].sort((a, b) => b.score - a.score).map(s => s.row).slice(0, isBroad ? 14 : 22)
 
+  // ── Cross-encoder reranker (W4) ──────────────────────────────────────────────
+  // Rerank the fused top-N with bge-reranker-base for precision. Only fires for
+  // standard retrieval (not broad/arc/summary modes which need reading order).
+  if (!isBroad && !characterName && chunks.length > 2) {
+    try {
+      const rerank = await fetch('http://127.0.0.1:8787/rerank', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: message, passages: chunks.map(c => c.text.slice(0, 512)) }),
+        signal: AbortSignal.timeout(3000),
+      })
+      if (rerank.ok) {
+        const rr = await rerank.json() as { ranked: number[] }
+        chunks = rr.ranked.map(i => chunks[i])
+      }
+    } catch { /* reranker down — fall through to RRF order */ }
+  }
+
   // ── Episodic "arc locator" ──────────────────────────────────────────────────
   // "The second death game / the X arc / the final trial" — pinpoint the chapter
   // range from the title spine and pull those chapters in order.
   let isArc = false
   if (!characterName && EPISODIC_RE.test(message)) {
-    const arc = await locateArcRange(slug, title, message)
+    const arc = await locateArcRange(slug, title, message, maxChapter)
     if (arc && arc.length) { chunks = arc; isArc = true }
   }
 
@@ -325,10 +348,10 @@ export async function POST(req: Request) {
   let isSummary = false
   const ORDERED_RE = /\b(trace|list|every|all (the|her|his|major|of)|in order|chronolog|timeline|sequence of|progression|step[- ]by[- ]step|history of|allies|enemies|adversaries|grow stronger|major events|over the (early|course)|between .+ and)\b/i
   if (!characterName && !isArc && ORDERED_RE.test(message)) {
-    let to = 120
+    let to = maxChapter ?? 120
     const mN = message.match(/first\s+(\d{1,4})/i)
-    if (mN) to = Math.min(parseInt(mN[1], 10) + 8, 200)
-    else if (/\bfirst\s+\w+\s+chapters?\b|\b(early|opening|beginning|initial|start)\b/i.test(message)) to = 80
+    if (mN) to = Math.min(parseInt(mN[1], 10) + 8, maxChapter ?? 200)
+    else if (/\bfirst\s+\w+\s+chapters?\b|\b(early|opening|beginning|initial|start)\b/i.test(message)) to = Math.min(80, maxChapter ?? 80)
     const sums = await getChapterSummaries(slug, 1, to, 130)
     if (sums.length >= 8) {
       chunks = sums.map(s => ({
@@ -342,7 +365,7 @@ export async function POST(req: Request) {
   if (isBroad && !isArc && !isSummary) {
     // Broad summary/overview: weave in a chronological spine of the story.
     try {
-      const chrono = await scrollChrono(slug, wantsEarly ? 18 : 60)
+      const chrono = await scrollChrono(slug, wantsEarly ? 18 : 60, maxChapter)
       if (chrono.length) {
         let extra = chrono.slice(0, 18)
         if (!wantsEarly && chrono.length > 18) {
@@ -357,6 +380,9 @@ export async function POST(req: Request) {
       }
     } catch { /* fall back to semantic-only */ }
   }
+
+  // W6: hard spoiler ceiling — drop anything beyond the reader's progress
+  if (maxChapter) chunks = chunks.filter(c => c.chapter_number <= maxChapter)
 
   // Present ordered material (summaries / arcs) in reading order so it flows.
   if (isBroad || isArc || isSummary) chunks.sort((a, b) => a.chapter_number - b.chapter_number)
@@ -452,7 +478,7 @@ THE BOUNDARY OF YOUR WORLD — absolute:
 - Draw facts ONLY from your story and the passages below — never from outside knowledge, even if you happen to recognize a real-world reference.
 
 Story passages featuring ${characterName}:
-${context}`
+${context}${maxChapter ? `\n\nSPOILER CEILING: The person you're speaking with has only experienced events through chapter ${maxChapter}. Do NOT reveal, hint at, or reference anything that happens after chapter ${maxChapter}. If they ask about later events, stay in character — you can be evasive, mysterious, or say they'll find out in time.` : ''}`
 
   } else {
     // ── Book assistant mode — pure Q&A ──────────────────────────────────────
@@ -469,6 +495,9 @@ ${context}`
     const confidenceNote = lowConf
       ? `\nIMPORTANT — retrieval confidence is LOW for this question: the passages may not actually cover what was asked. Answer ONLY what is clearly and directly supported by them. If they do not genuinely address the question, say so plainly ("I don't find that in this novel") instead of guessing or stretching.\n`
       : ''
+    const spoilerNote = maxChapter
+      ? `\nSPOILER CEILING: The reader has only read through chapter ${maxChapter}. Do NOT reveal, hint at, or reference ANY events, deaths, betrayals, power-ups, or plot twists from chapters after ${maxChapter}. If answering requires later-chapter knowledge, say "that happens beyond where you've read — keep going!" instead.\n`
+      : ''
     systemPrompt = `You are an AI assistant for readers of the novel "${title}" by ${author}.
 Answer using the passages provided below. They were retrieved by relevance and may be out of order or partial — piece the answer together from whatever relevant details genuinely appear across them, and cite chapter numbers when useful.
 
@@ -478,7 +507,7 @@ GROUNDING RULES — do not break these:
 - It's better to say "the passages don't cover that" than to fabricate. Only answer confidently for things actually present in the passages.
 - You may connect and infer across passages, but inferences must be clearly grounded in what's written — not invented.
 - Be COMPLETELY OBJECTIVE: report what the novel actually depicts — including dark, violent, ruthless, or morally grey content — with no moralizing, no sanitizing, and no personal or AI opinion coloring the facts. Pure, neutral lore.
-${confidenceNote}${broadNote}
+${confidenceNote}${spoilerNote}${broadNote}
 Relevant passages:
 ${context}`
   }

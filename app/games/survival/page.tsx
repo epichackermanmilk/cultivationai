@@ -68,7 +68,7 @@ export default function SurvivalPage() {
   // Load novels
   useEffect(() => {
     fetch('/api/novels').then(r => r.json()).then((data: Novel[] | { novels?: Novel[] }) => {
-      setNovels(Array.isArray(data) ? data : (data.novels ?? []))
+      setNovels((Array.isArray(data) ? data : (data.novels ?? [])).filter(n => !('coming_soon' in n)))
     }).catch(() => {})
   }, [])
 

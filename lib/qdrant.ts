@@ -18,16 +18,19 @@ async function qreq(path: string, body: unknown): Promise<any> {
 }
 
 const bySlug = (slug: string) => ({ key: 'slug', match: { value: slug } })
+const chCeil = (ch: number) => ({ key: 'chapter_number', range: { lte: ch } })
 
 // Vector similarity search within one novel.
-export async function matchChunks(embedding: number[], slug: string, count = 6, threshold = 0.2): Promise<ChunkRow[]> {
+export async function matchChunks(embedding: number[], slug: string, count = 6, threshold = 0.2, maxChapter?: number): Promise<ChunkRow[]> {
+  const must: unknown[] = [bySlug(slug)]
+  if (maxChapter) must.push(chCeil(maxChapter))
   const j = await qreq('/points/search', {
     vector: embedding,
-    filter: { must: [bySlug(slug)] },
+    filter: { must },
     limit: count,
     with_payload: true,
     score_threshold: threshold,
-    params: { quantization: { rescore: true } },   // rescore int8 with full vectors for accuracy
+    params: { quantization: { rescore: true } },
   })
   return (j.result ?? []).map((p: any) => ({
     text: p.payload.text, chapter_number: p.payload.chapter_number,
@@ -51,12 +54,13 @@ export async function countChunks(slug: string): Promise<number> {
 }
 
 // One row per chapter (chunk_index=0), in reading order — for the arc-locator title spine.
-export async function scrollTitles(slug: string): Promise<{ chapter_number: number; chapter_title: string }[]> {
+export async function scrollTitles(slug: string, maxChapter?: number): Promise<{ chapter_number: number; chapter_title: string }[]> {
   const out: { chapter_number: number; chapter_title: string }[] = []
   let cursor = -1
   for (let i = 0; i < 12; i++) {
+    const must: unknown[] = [bySlug(slug), { key: 'chunk_index', match: { value: 0 } }, { key: 'chapter_number', range: { gt: cursor, ...(maxChapter ? { lte: maxChapter } : {}) } }]
     const j = await qreq('/points/scroll', {
-      filter: { must: [bySlug(slug), { key: 'chunk_index', match: { value: 0 } }, { key: 'chapter_number', range: { gt: cursor } }] },
+      filter: { must },
       limit: 1000, with_payload: ['chapter_number', 'chapter_title'], order_by: { key: 'chapter_number', direction: 'asc' },
     })
     const pts = j.result?.points ?? []
@@ -87,14 +91,16 @@ const STOP = new Set(['the', 'what', 'who', 'how', 'why', 'when', 'where', 'does
 
 // Keyword retrieval — chunks containing salient (proper-noun) query terms.
 // Complements vector search for exact names/places semantic search ranks poorly.
-export async function keywordSearch(slug: string, message: string, count = 12): Promise<ChunkRow[]> {
+export async function keywordSearch(slug: string, message: string, count = 12, maxChapter?: number): Promise<ChunkRow[]> {
   const terms = Array.from(new Set(
     (message.match(/\b[A-Z][a-zA-Z]{2,}\b/g) ?? []).map(t => t.toLowerCase()).filter(t => !STOP.has(t)),
   )).slice(0, 6)
   if (!terms.length) return []
   try {
+    const must: unknown[] = [bySlug(slug)]
+    if (maxChapter) must.push(chCeil(maxChapter))
     const j = await qreq('/points/scroll', {
-      filter: { must: [bySlug(slug)], should: terms.map(t => ({ key: 'text', match: { text: t } })) },
+      filter: { must, should: terms.map(t => ({ key: 'text', match: { text: t } })) },
       limit: count, with_payload: true,
     })
     return (j.result?.points ?? []).map((p: any) => ({
@@ -105,9 +111,11 @@ export async function keywordSearch(slug: string, message: string, count = 12): 
 }
 
 // Chronological spine from the start of the novel — for broad/summary queries.
-export async function scrollChrono(slug: string, limit = 60): Promise<ChunkRow[]> {
+export async function scrollChrono(slug: string, limit = 60, maxChapter?: number): Promise<ChunkRow[]> {
+  const must: unknown[] = [bySlug(slug)]
+  if (maxChapter) must.push(chCeil(maxChapter))
   const j = await qreq('/points/scroll', {
-    filter: { must: [bySlug(slug)] },
+    filter: { must },
     limit, with_payload: true, order_by: { key: 'chapter_number', direction: 'asc' },
   })
   return (j.result?.points ?? []).map((p: any) => ({

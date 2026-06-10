@@ -44,9 +44,6 @@ export default function Chat({ slug, title, author }: Props) {
   const [characterName, setCharName]    = useState('')
   const [characterProfile, setCharProf] = useState<CharProfile | null>(null)
   const [featuredChars, setFeatured]    = useState<CharProfile[]>([])
-  const [communityChars, setCommunity]  = useState<CharProfile[]>([])
-  const [charSuggestions, setCharSugg]  = useState<string[]>([])  // backward compat
-  const [charInput, setCharInput]       = useState('')
   const [charLoading, setCharLoading]   = useState(false)
   // ── Character memory: rolling summary of older messages ────────────────────
   // Avoids the "amnesiac at message 9" problem in long roleplay sessions.
@@ -54,6 +51,9 @@ export default function Chat({ slug, title, author }: Props) {
   // compact while preserving what the character "remembers" from earlier.
   const [convSummary,    setConvSummary]    = useState('')
   const [summarizedUpTo, setSummarizedUpTo] = useState(0)  // message index last summarised
+  // ── W6: spoiler ceiling ─────────────────────────────────────────────────────
+  const [maxChapter, setMaxChapter]            = useState<number | null>(null)
+  const [spoilerOpen, setSpoilerOpen]          = useState(false)
   // ── Mode explanation popup (shown once when switching to character mode) ────
   const [showModeExplain, setShowModeExplain] = useState(false)
   const bottomRef                       = useRef<HTMLDivElement>(null)
@@ -105,29 +105,24 @@ export default function Chat({ slug, title, author }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [embedState, slug])
 
-  // Load character data once the novel is ready
+  // Load curated character data once the novel is ready
   useEffect(() => {
-    if (embedState !== 'ready' || featuredChars.length > 0 || communityChars.length > 0) return
+    if (embedState !== 'ready' || featuredChars.length > 0) return
     setCharLoading(true)
     fetch(`/api/character/${slug}`)
       .then(r => r.ok ? r.json() : {} as Record<string, unknown>)
       .then((data: Record<string, unknown>) => {
-        const featured:   CharProfile[] = Array.isArray(data.featured)   ? data.featured   as CharProfile[] : []
-        const community:  CharProfile[] = Array.isArray(data.community)  ? data.community  as CharProfile[] : []
-        if (Array.isArray(data.featured))   setFeatured(featured)
-        if (Array.isArray(data.community))  setCommunity(community)
-        if (Array.isArray(data.characters)) setCharSugg(data.characters as string[])
+        const featured: CharProfile[] = Array.isArray(data.featured) ? data.featured as CharProfile[] : []
+        if (featured.length) setFeatured(featured)
 
         // Auto-attach the rich profile if coming from /characters page (?char=NAME)
         const urlChar = urlCharRef.current
         if (urlChar) {
-          const allProfiles = [...featured, ...community]
-          const match = allProfiles.find(p => p.name.toLowerCase() === urlChar.toLowerCase())
+          const match = featured.find(p => p.name.toLowerCase() === urlChar.toLowerCase())
           if (match) {
             setCharProf(match)
-            setCharName(match.name)  // normalise to the canonical casing
+            setCharName(match.name)
           }
-          // If no profile match, the name is already set from the URL effect — treated as free-text
         }
       })
       .catch(() => {})
@@ -139,7 +134,6 @@ export default function Chat({ slug, title, author }: Props) {
   function selectCharacter(profile: CharProfile) {
     setCharName(profile.name)
     setCharProf(profile)
-    setCharInput('')
     setMessages([])
     setConvSummary('')
     setSummarizedUpTo(0)
@@ -148,7 +142,6 @@ export default function Chat({ slug, title, author }: Props) {
   function clearCharacter() {
     setCharName('')
     setCharProf(null)
-    setCharInput('')
     setMessages([])
     setConvSummary('')
     setSummarizedUpTo(0)
@@ -163,7 +156,6 @@ export default function Chat({ slug, title, author }: Props) {
     setSummarizedUpTo(0)
     setCharName('')
     setCharProf(null)
-    setCharInput('')
     setInput('')
     // Show the mode-explanation popup the first time a user switches to character mode
     if (m === 'character' && !localStorage.getItem('nc-char-mode-seen')) {
@@ -278,10 +270,10 @@ export default function Chat({ slug, title, author }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
           slug, title, author, message: text, history,
+          ...(maxChapter ? { maxChapter } : {}),
           ...(chatMode === 'character' && characterName.trim() ? {
             characterName:    characterName.trim(),
             characterProfile: characterProfile ?? undefined,
-            // Pass rolling summary so the character remembers earlier messages
             ...(convSummary ? { convSummary } : {}),
           } : {}),
         }),
@@ -558,6 +550,47 @@ export default function Chat({ slug, title, author }: Props) {
           </button>
         </div>
 
+        {/* ── Spoiler ceiling toggle ── */}
+        <div className="mt-2">
+          <button
+            onClick={() => setSpoilerOpen(v => !v)}
+            className="flex items-center gap-1.5 text-xs transition"
+            style={{ color: maxChapter ? 'rgb(245,158,11)' : 'var(--nc-text2)' }}>
+            <span>{maxChapter ? '🛡' : '🔓'}</span>
+            <span className="font-medium">
+              {maxChapter ? `Spoiler shield: ch. 1–${maxChapter}` : 'Spoiler shield off'}
+            </span>
+            <svg className={`h-3 w-3 transition ${spoilerOpen ? 'rotate-180' : ''}`}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {spoilerOpen && (
+            <div className="mt-1.5 flex items-center gap-2 pl-5">
+              <label className="text-xs" style={{ color: 'var(--nc-text2)' }}>I&apos;ve read up to chapter</label>
+              <input
+                type="number"
+                min={1}
+                value={maxChapter ?? ''}
+                onChange={e => {
+                  const v = parseInt(e.target.value, 10)
+                  setMaxChapter(v > 0 ? v : null)
+                }}
+                placeholder="all"
+                className="w-20 rounded-lg border border-[var(--nc-border)] px-2 py-1 text-xs outline-none focus:border-amber-500"
+                style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}
+              />
+              {maxChapter && (
+                <button
+                  onClick={() => { setMaxChapter(null); setSpoilerOpen(false) }}
+                  className="text-xs text-zinc-500 hover:text-zinc-300 transition">
+                  Clear
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Character picker — shown only in character mode */}
         {chatMode === 'character' && (
           <div className="mt-2 space-y-2.5">
@@ -585,11 +618,11 @@ export default function Chat({ slug, title, author }: Props) {
                   </div>
                 )}
 
-                {/* ── Featured characters ── */}
+                {/* ── Curated characters ── */}
                 {!charLoading && featuredChars.length > 0 && (
                   <div>
                     <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-amber-500/70">
-                      ✦ Featured
+                      ✦ Curated Characters
                     </p>
                     <div className="flex flex-wrap gap-1.5">
                       {featuredChars.map(c => (
@@ -604,56 +637,18 @@ export default function Chat({ slug, title, author }: Props) {
                   </div>
                 )}
 
-                {/* ── Community characters ── */}
-                {!charLoading && communityChars.length > 0 && (
-                  <div>
-                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest"
-                      style={{ color: 'var(--nc-text2)' }}>
-                      Characters
+                {/* ── No characters available / request ── */}
+                {!charLoading && featuredChars.length === 0 && (
+                  <div className="rounded-xl border border-[var(--nc-border)] p-3 text-center"
+                    style={{ background: 'var(--nc-bg)' }}>
+                    <p className="text-xs" style={{ color: 'var(--nc-text2)' }}>
+                      No curated characters for this novel yet.
                     </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {communityChars.map(c => (
-                        <button key={c.name}
-                          onClick={() => selectCharacter(c)}
-                          className="rounded-full border border-[var(--nc-border)] px-2.5 py-0.5 text-xs transition hover:border-amber-500/50 hover:text-amber-400"
-                          style={{ color: 'var(--nc-text2)' }}>
-                          {c.name}
-                        </button>
-                      ))}
-                    </div>
+                    <p className="mt-1 text-[10px] text-zinc-500">
+                      Characters are hand-crafted for accuracy. Want one added?
+                    </p>
                   </div>
                 )}
-
-                {/* ── Free-text: talk to anyone ── */}
-                <div>
-                  {(featuredChars.length > 0 || communityChars.length > 0) && (
-                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest"
-                      style={{ color: 'var(--nc-text2)' }}>
-                      Someone else
-                    </p>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <input
-                      value={charInput}
-                      onChange={e => setCharInput(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter' && charInput.trim()) {
-                          selectCharacter({ name: charInput.trim() })
-                        }
-                      }}
-                      placeholder="Type any character name…"
-                      className="flex-1 rounded-lg border border-[var(--nc-border)] bg-[var(--nc-bg2)] px-3 py-1.5 text-xs placeholder-zinc-500 outline-none focus:border-amber-500 transition"
-                      style={{ color: 'var(--nc-text)' }}
-                      maxLength={80}
-                    />
-                    <button
-                      onClick={() => { if (charInput.trim()) selectCharacter({ name: charInput.trim() }) }}
-                      disabled={!charInput.trim()}
-                      className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5 text-xs text-amber-400 transition hover:bg-amber-500/20 disabled:opacity-40">
-                      Talk →
-                    </button>
-                  </div>
-                </div>
               </>
             )}
 
@@ -685,9 +680,9 @@ export default function Chat({ slug, title, author }: Props) {
             {chatMode === 'book' && (
             <div className="mt-1 flex w-full max-w-lg flex-col gap-3">
               {[
-                'Who are the main characters?',
-                'What is the cultivation system?',
-                'Summarise the first arc',
+                'Explain this novel to me like I just picked it up',
+                'What makes the MC different from other protagonists?',
+                'What are the biggest plot twists without spoiling the ending?',
               ].map(q => (
                 <button
                   key={q}

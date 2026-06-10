@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { cleanGenres } from '@/lib/genres'
+import { FEATURED_SLUG_SET, COMING_SOON_NOVELS } from '@/lib/featured-novels'
 
 const VPS_BASE = process.env.VPS_API_URL
 const VPS_KEY  = process.env.VPS_API_KEY
@@ -58,17 +59,27 @@ export async function GET() {
     // cache ceiling so it can actually be cached — much faster library loads.
     // The novel page (/meta) and the recommender (VPS /novels direct) still fetch
     // the full record with the description, so nothing user-facing is lost.
-    const novels = raw.map(n => {
-      const nn = n as { slug?: string; title?: string; author?: string; total_chapters?: number; genres?: string[]; cover_url?: string }
-      return {
-        slug:           nn.slug,
-        title:          nn.title,
-        author:         nn.author,
-        total_chapters: nn.total_chapters,
-        genres:         cleanGenres(nn.genres),
-        cover_url:      nn.cover_url,
-      }
-    })
+    const featured = raw
+      .map(n => {
+        const nn = n as { slug?: string; title?: string; author?: string; total_chapters?: number; genres?: string[]; cover_url?: string }
+        return {
+          slug:           nn.slug,
+          title:          nn.title,
+          author:         nn.author,
+          total_chapters: nn.total_chapters,
+          genres:         cleanGenres(nn.genres),
+          cover_url:      nn.cover_url,
+        }
+      })
+      .filter(n => n.slug && FEATURED_SLUG_SET.has(n.slug))
+
+    // Inject coming-soon novels that aren't in VPS yet (not scraped/embedded)
+    const liveSlugs = new Set(featured.map(n => n.slug))
+    for (const cs of COMING_SOON_NOVELS) {
+      if (!liveSlugs.has(cs.slug)) featured.push({ ...cs })
+    }
+
+    const novels = featured
     cache = { data: novels, ts: Date.now() }
     return novels
   }).finally(() => { _inflight = null })

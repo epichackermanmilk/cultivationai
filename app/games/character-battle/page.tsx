@@ -70,7 +70,7 @@ function FighterPanel({
   // Load novel list once
   useEffect(() => {
     fetch('/api/novels').then(r => r.json()).then((data: Novel[] | { novels?: Novel[] }) => {
-      const list = Array.isArray(data) ? data : (data.novels ?? [])
+      const list = (Array.isArray(data) ? data : (data.novels ?? [])).filter(n => !('coming_soon' in n))
       setNovels(list)
     }).catch(() => {})
   }, [])

@@ -88,19 +88,17 @@ export default async function CharactersPage() {
         {/* Ad slot — below the roster, well clear of the cards */}
         <AdSlot variant="banner" className="mt-10 rounded-xl" />
 
-        {/* Community note */}
+        {/* Request CTA */}
         <div className="mt-10 rounded-2xl border border-[var(--nc-border)] p-6 text-center"
           style={{ background: 'var(--nc-bg2)' }}>
-          <p className="text-sm font-semibold" style={{ color: 'var(--nc-text)' }}>More characters coming</p>
+          <p className="text-sm font-semibold" style={{ color: 'var(--nc-text)' }}>Want a character added?</p>
           <p className="mt-1.5 max-w-sm mx-auto text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
-            Community characters are auto-generated for every novel. Each story in the library
-            gets its own character roster — open any novel and they appear in Character Chat mode.
+            Every character is hand-crafted for authenticity — their voice, personality, and
+            memories are verified against the actual novel. Tell us who you want to talk to.
           </p>
-          <Link href="/library"
-            className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10
-              px-4 py-2 text-xs font-semibold text-amber-400 transition hover:bg-amber-500/20">
-            Browse 500+ Novels →
-          </Link>
+          <p className="mt-3 text-[10px] text-zinc-500">
+            Use the feedback button (bottom-right) and select &quot;Request a Character&quot;
+          </p>
         </div>
 
       </main>

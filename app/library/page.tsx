@@ -21,6 +21,7 @@ interface Novel {
   genres: string[]
   cover_url: string
   description: string
+  coming_soon?: boolean
 }
 
 // ── Particle canvas ───────────────────────────────────────────────────────────
@@ -152,6 +153,8 @@ export default function LibraryPage() {
     list = filters.sort === 'asc'
       ? [...list].sort((a, b) => a.total_chapters - b.total_chapters)
       : [...list].sort((a, b) => b.total_chapters - a.total_chapters)
+    // Live novels first, coming-soon at the end
+    list.sort((a, b) => (a.coming_soon ? 1 : 0) - (b.coming_soon ? 1 : 0))
     return list
   }, [novels, query, filters])
 
@@ -264,6 +267,8 @@ export default function LibraryPage() {
             )}
           </>
         )}
+
+        <WaitlistSection />
       </main>
       <Footer />
       <FeedbackWidget />
@@ -273,52 +278,132 @@ export default function LibraryPage() {
 
 function NovelCard({ novel }: { novel: Novel }) {
   const [imgErr, setImgErr] = useState(false)
+  const isSoon = novel.coming_soon
 
-  return (
-    <Link href={`/novel/${novel.slug}`} className="group">
-      <div
-        className="overflow-hidden rounded-lg border transition-all duration-200 hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-900/20"
-        style={{ borderColor: 'var(--nc-border)', background: 'var(--nc-bg2)' }}
-      >
-        <div className="relative aspect-[3/4] overflow-hidden" style={{ background: 'var(--nc-bg3)' }}>
-          {novel.cover_url && !imgErr ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={coverSrc(novel.cover_url)}
-              alt={novel.title}
-              loading="lazy"
-              decoding="async"
-              onError={() => setImgErr(true)}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center p-3" style={{ background: 'var(--nc-bg3)' }}>
-              <span className="text-center text-xs font-medium leading-tight" style={{ color: 'var(--nc-text2)' }}>
-                {novel.title}
-              </span>
-            </div>
-          )}
-          <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/70 to-transparent" />
+  const card = (
+    <div
+      className={`overflow-hidden rounded-lg border transition-all duration-200 ${
+        isSoon
+          ? 'opacity-70'
+          : 'hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-900/20'
+      }`}
+      style={{ borderColor: 'var(--nc-border)', background: 'var(--nc-bg2)' }}
+    >
+      <div className="relative aspect-[3/4] overflow-hidden" style={{ background: 'var(--nc-bg3)' }}>
+        {novel.cover_url && !imgErr ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={coverSrc(novel.cover_url)}
+            alt={novel.title}
+            loading="lazy"
+            decoding="async"
+            onError={() => setImgErr(true)}
+            className={`h-full w-full object-cover transition-transform duration-300 ${
+              isSoon ? 'grayscale' : 'group-hover:scale-105'
+            }`}
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center p-3" style={{ background: 'var(--nc-bg3)' }}>
+            <span className="text-center text-xs font-medium leading-tight" style={{ color: 'var(--nc-text2)' }}>
+              {novel.title}
+            </span>
+          </div>
+        )}
+        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/70 to-transparent" />
+        {isSoon ? (
+          <span className="absolute bottom-1.5 right-2 rounded-full bg-zinc-700/80 px-2 py-0.5 text-[10px] font-bold text-zinc-300 backdrop-blur-sm">
+            Coming Soon
+          </span>
+        ) : (
           <span className="absolute bottom-1.5 right-2 text-xs font-medium text-zinc-300">
             {novel.total_chapters.toLocaleString()} ch
           </span>
+        )}
+        {!isSoon && (
           <BookmarkButton
             novel={novel}
             className="absolute right-1.5 top-1.5 h-6 w-6 rounded-full bg-black/40 backdrop-blur-sm hover:bg-black/60"
           />
-        </div>
-        <div className="flex h-[5.5rem] flex-col justify-start p-2">
-          <p className="line-clamp-2 text-xs font-semibold leading-tight group-hover:text-amber-400 transition-colors" style={{ color: 'var(--nc-text)' }}>
-            {novel.title}
-          </p>
-          {novel.author && (
-            <p className="mt-0.5 truncate text-xs" style={{ color: 'var(--nc-muted)' }}>{novel.author}</p>
-          )}
-          {novel.genres.length > 0 && (
-            <p className="mt-1 truncate text-xs text-amber-600/80">{novel.genres[0]}</p>
-          )}
-        </div>
+        )}
       </div>
-    </Link>
+      <div className="flex h-[5.5rem] flex-col justify-start p-2">
+        <p className={`line-clamp-2 text-xs font-semibold leading-tight transition-colors ${
+          isSoon ? '' : 'group-hover:text-amber-400'
+        }`} style={{ color: 'var(--nc-text)' }}>
+          {novel.title}
+        </p>
+        {novel.author && (
+          <p className="mt-0.5 truncate text-xs" style={{ color: 'var(--nc-muted)' }}>{novel.author}</p>
+        )}
+        {novel.genres.length > 0 && (
+          <p className="mt-1 truncate text-xs text-amber-600/80">{novel.genres[0]}</p>
+        )}
+      </div>
+    </div>
+  )
+
+  if (isSoon) return <div className="cursor-default">{card}</div>
+  return <Link href={`/novel/${novel.slug}`} className="group">{card}</Link>
+}
+
+// ── Waitlist section ──────────────────────────────────────────────────────────
+function WaitlistSection() {
+  const [email, setEmail]     = useState('')
+  const [status, setStatus]   = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return
+    setStatus('loading')
+    try {
+      const res = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      })
+      setStatus(res.ok ? 'done' : 'error')
+    } catch {
+      setStatus('error')
+    }
+  }
+
+  return (
+    <div className="mt-12 mb-4 rounded-2xl border border-[var(--nc-border)] p-8 text-center"
+      style={{ background: 'var(--nc-bg2)' }}>
+      <p className="mb-1 text-xs font-bold uppercase tracking-widest text-amber-500/70">Preview</p>
+      <h3 className="text-xl font-bold" style={{ color: 'var(--nc-text)' }}>
+        More novels are on the way
+      </h3>
+      <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
+        We&apos;re hand-indexing every chapter for each novel we add. Join the waitlist and
+        we&apos;ll email you when new titles go live.
+      </p>
+
+      {status === 'done' ? (
+        <p className="mt-5 text-sm font-semibold text-amber-400">You&apos;re on the list! We&apos;ll be in touch.</p>
+      ) : (
+        <form onSubmit={submit} className="mx-auto mt-5 flex max-w-sm gap-2">
+          <input
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="your@email.com"
+            required
+            className="flex-1 rounded-lg border border-zinc-700 px-3 py-2.5 text-sm placeholder-zinc-500 outline-none focus:border-amber-500 transition"
+            style={{ background: 'var(--nc-bg3)', color: 'var(--nc-text)' }}
+          />
+          <button
+            type="submit"
+            disabled={status === 'loading'}
+            className="rounded-lg bg-amber-500 px-5 py-2.5 text-sm font-bold text-black hover:bg-amber-400 transition disabled:opacity-50"
+          >
+            {status === 'loading' ? 'Joining...' : 'Notify Me'}
+          </button>
+        </form>
+      )}
+      {status === 'error' && (
+        <p className="mt-2 text-xs text-red-400">Something went wrong. Please try again.</p>
+      )}
+    </div>
   )
 }

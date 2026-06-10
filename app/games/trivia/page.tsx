@@ -57,7 +57,7 @@ export default function TriviaPage() {
 
   useEffect(() => {
     fetch('/api/novels').then(r => r.json()).then((d: Novel[] | { novels?: Novel[] }) => {
-      setAllNovels(Array.isArray(d) ? d : (d.novels ?? []))
+      setAllNovels((Array.isArray(d) ? d : (d.novels ?? [])).filter(n => !('coming_soon' in n)))
     }).catch(() => {})
   }, [])
 

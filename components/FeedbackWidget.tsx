@@ -2,18 +2,20 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 
-type FeedbackType = 'bug' | 'suggestion' | 'novel_request'
+type FeedbackType = 'bug' | 'suggestion' | 'novel_request' | 'character_request'
 
 const LABELS: Record<FeedbackType, string> = {
-  bug:           '🐛 Bug Report',
-  suggestion:    '💡 Suggestion',
-  novel_request: '📚 Request a Novel',
+  bug:               '🐛 Bug Report',
+  suggestion:        '💡 Suggestion',
+  novel_request:     '📚 Request a Novel',
+  character_request: '🎭 Request a Character',
 }
 
 const PLACEHOLDERS: Record<FeedbackType, string> = {
-  bug:           'Describe what happened and how to reproduce it…',
-  suggestion:    'What feature or improvement would you like to see?',
-  novel_request: 'Paste a novel URL or title you\'d like added…',
+  bug:               'Describe what happened and how to reproduce it…',
+  suggestion:        'What feature or improvement would you like to see?',
+  novel_request:     'Paste a novel URL or title you\'d like added…',
+  character_request: 'Which character and from which novel? e.g. "Linley from Coiling Dragon"',
 }
 
 export default function FeedbackWidget() {

@@ -176,7 +176,7 @@ export default function RecommendPage() {
     fetch('/api/novels')
       .then(r => r.ok ? r.json() : [])
       .then(data => {
-        const novels = Array.isArray(data) ? data : []
+        const novels = (Array.isArray(data) ? data : []).filter(n => !('coming_soon' in n))
         setLibrary(novels)
       })
       .catch(() => {})

@@ -284,7 +284,7 @@ export default function ChatPage() {
   useEffect(() => {
     fetch('/api/novels')
       .then(r => r.json())
-      .then(d => { setNovels(Array.isArray(d) ? d : []); setLoading(false) })
+      .then(d => { const all = Array.isArray(d) ? d : []; setNovels(all.filter(n => !('coming_soon' in n))); setLoading(false) })
       .catch(() => setLoading(false))
   }, [])
 
