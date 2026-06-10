@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Fraunces } from "next/font/google";
+import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/theme-context";
 import { AuthProvider }  from "@/lib/auth-context";
@@ -19,14 +19,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Display face — a refined, high-contrast literary serif for hero + section
-// headings. Evokes the "codex / book" brand while Geist handles all body & UI.
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+// Display face — a geometric, precision-engineered sans for hero + section
+// headings. Expressive yet disciplined; the retro-future voice. Geist still
+// handles all body & UI text.
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-display-src",
   subsets: ["latin"],
   display: "swap",
   weight: ["400", "500", "600", "700"],
-  style: ["normal"],
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://novelcodex.org";
@@ -66,7 +66,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
       {/* Domain lock — if this page is being served from a scraper/reverse-proxy
           clone on a foreign domain, bounce the visitor to the real site. Protects
