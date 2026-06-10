@@ -7,13 +7,24 @@
 
 -- ── profiles (linked to auth.users) ─────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.profiles (
-  id                       uuid        PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email                    text        NOT NULL,
-  tokens                   integer     NOT NULL DEFAULT 100,
-  username                 text,
-  age                      integer     CHECK (age >= 13 AND age <= 120),
-  onboarding_bonus_claimed boolean     NOT NULL DEFAULT false,
-  created_at               timestamptz NOT NULL DEFAULT now()
+  id                           uuid        PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email                        text        NOT NULL,
+  tokens                       integer     NOT NULL DEFAULT 100,
+  username                     text,
+  age                          integer     CHECK (age >= 13 AND age <= 120),
+  onboarding_bonus_claimed     boolean     NOT NULL DEFAULT false,
+  created_at                   timestamptz NOT NULL DEFAULT now(),
+  -- monetization / account state
+  tokens_ever_purchased        integer     NOT NULL DEFAULT 0,
+  ads_disabled                 boolean     NOT NULL DEFAULT false,   -- one-time ad-free purchase or granted
+  subscription_active          boolean     NOT NULL DEFAULT false,   -- active subscriber (cleared on cancel)
+  subscription_tier            text,                                 -- e.g. plus / pro (null = none)
+  -- discord linking
+  discord_user_id              text,
+  discord_verified             boolean     NOT NULL DEFAULT false,
+  discord_link_code            text,
+  discord_link_code_expires_at timestamptz,
+  discord_link_pending_id      text
 );
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can read own profile" ON public.profiles;
