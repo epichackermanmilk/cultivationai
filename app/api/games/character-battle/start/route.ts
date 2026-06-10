@@ -8,6 +8,7 @@ import { createClient } from '@supabase/supabase-js'
 import OpenAI           from 'openai'
 import { parseJsonBody, sanitizeText } from '@/lib/sanitize'
 import { triggerEmbed } from '@/lib/vps'
+import { keywordSearch } from '@/lib/qdrant'
 
 const GAME_COST = 20
 const MAX_CHAPTER_CHUNKS = 8   // chunks per fighter for battle context
@@ -125,19 +126,9 @@ export async function POST(req: Request) {
     // 2. Get relevant chapter excerpts (text mentioning this character's name)
     let chapterContext = ''
     try {
-      let query = sb
-        .from('chunks')
-        .select('text, chapter_number, chapter_title')
-        .eq('slug', novelSlug)
-        .ilike('text', `%${name.split(' ')[0]}%`)   // search by first name token
-        .order('chapter_number', { ascending: true })
-        .limit(MAX_CHAPTER_CHUNKS)
-
-      if (maxChapter) {
-        query = query.lte('chapter_number', maxChapter)
-      }
-
-      const { data: chunks } = await query
+      // Chunks mentioning this character, from Qdrant (legacy Supabase `chunks`
+      // table was removed in the Qdrant migration — games must read Qdrant).
+      const chunks = await keywordSearch(novelSlug, name, MAX_CHAPTER_CHUNKS, maxChapter || undefined)
 
       if (chunks && chunks.length > 0) {
         chapterContext = chunks

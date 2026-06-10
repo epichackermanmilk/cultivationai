@@ -6,6 +6,7 @@ import { cookies }      from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 import OpenAI           from 'openai'
 import { parseJsonBody, sanitizeText } from '@/lib/sanitize'
+import { scrollRange }                 from '@/lib/qdrant'
 import type { SurvivalState }         from '../start/route'
 
 function admin() {
@@ -53,14 +54,9 @@ export async function POST(req: Request) {
     const windowFrom = Math.max(state.chapterFrom, targetChapter - 5)
     const windowTo   = Math.min(state.chapterTo, targetChapter + 15)
 
-    const { data: chunks } = await sb
-      .from('chunks')
-      .select('text, chapter_number')
-      .eq('slug', state.novelSlug)
-      .gte('chapter_number', windowFrom)
-      .lte('chapter_number', windowTo)
-      .order('chapter_number', { ascending: true })
-      .limit(5)
+    // Arc-range chunks from Qdrant (legacy Supabase `chunks` table was removed
+    // in the Qdrant migration — games must read Qdrant like /api/chat does).
+    const chunks = await scrollRange(state.novelSlug, windowFrom, windowTo, 5)
 
     if (chunks && chunks.length > 0) {
       chapterContext = `\n## Novel Events Reference (chapters ${windowFrom}-${windowTo})\n` +

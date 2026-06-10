@@ -334,17 +334,19 @@ ${candidateText}`
     })
     .filter(Boolean)
 
-  // ── Atomically deduct tokens ──────────────────────────────────────────────
+  // ── Atomically deduct tokens (single-statement RPC; fallback pre-migration) ──
+  let remaining = profile.tokens - TOKENS_COST
   try {
-    await sb
-      .from('profiles')
-      .update({ tokens: profile.tokens - TOKENS_COST })
-      .eq('id', user.id)
-      .gte('tokens', TOKENS_COST)
+    const { data: newBal, error: rpcErr } = await sb.rpc('debit_tokens', { p_user: user.id, p_amount: TOKENS_COST })
+    if (rpcErr) {
+      await sb.from('profiles').update({ tokens: profile.tokens - TOKENS_COST }).eq('id', user.id).gte('tokens', TOKENS_COST)
+    } else if (typeof newBal === 'number') {
+      remaining = newBal
+    }
   } catch { /* non-fatal */ }
 
   return NextResponse.json(
     { recommendations: enriched },
-    { headers: { 'X-Tokens-Remaining': String(profile.tokens - TOKENS_COST) } },
+    { headers: { 'X-Tokens-Remaining': String(remaining) } },
   )
 }

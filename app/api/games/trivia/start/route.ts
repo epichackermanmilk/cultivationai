@@ -8,6 +8,7 @@ import { createClient } from '@supabase/supabase-js'
 import OpenAI           from 'openai'
 import { parseJsonBody, sanitizeText } from '@/lib/sanitize'
 import { triggerEmbed } from '@/lib/vps'
+import { scrollChrono } from '@/lib/qdrant'
 
 const TOKENS_PER_QUESTION = 2
 const VALID_COUNTS = [5, 10, 15, 20]
@@ -91,13 +92,10 @@ export async function POST(req: Request) {
   const indexing: string[] = []
   for (const n of novels) {
     try {
-      let q = sb.from('chunks')
-        .select('text, chapter_number')
-        .eq('slug', n.slug)
-        .order('chapter_number', { ascending: true })
-        .limit(40)
-      if (maxChapter) q = q.lte('chapter_number', maxChapter)
-      const { data: chunks } = await q
+      // Pull a chronological sample from Qdrant (the vector store). The legacy
+      // Supabase `chunks` table no longer exists post-migration, so games must
+      // read from Qdrant like /api/chat does.
+      const chunks = await scrollChrono(n.slug, 40, maxChapter || undefined)
       if (chunks && chunks.length > 0) {
         // spread across the range, take CHUNKS_PER_NOVEL
         const step = Math.max(1, Math.floor(chunks.length / CHUNKS_PER_NOVEL))
