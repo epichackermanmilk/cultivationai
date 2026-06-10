@@ -1,6 +1,6 @@
 import OpenAI from 'openai'
 import { matchChunks } from '@/lib/supabase'
-import { scrollTitles, scrollRange, scrollChrono } from '@/lib/qdrant'
+import { scrollTitles, scrollRange, scrollChrono, keywordSearch as qdrantKeyword } from '@/lib/qdrant'
 import { parseJsonBody, sanitizeText } from '@/lib/sanitize'
 import { NextResponse } from 'next/server'
 import { appendFileSync } from 'fs'
@@ -232,7 +232,9 @@ export async function POST(req: Request) {
   // doesn't resemble story prose, so the nearest chunks are scattered or empty.
   // For these we retrieve a CHRONOLOGICAL narrative spine instead so the model
   // has coherent, sequential material to synthesize from.
-  const BROAD_RE = /\b(summar|recap|overview|tl;?dr|first arc|early chapter|beginning|opening|so far|what happens|what'?s? (it|this) about|main plot|story so far|synops|whole (story|book|novel|thing)|entire (story|book|novel)|key events|main events|main characters|premise|plot)\b/i
+  // Prefix-matched (no trailing \b) so "summarize"/"summary"/"synopsis" match —
+  // the old trailing \b made "summar" require being a whole word and never fired.
+  const BROAD_RE = /\b(summar|recap|overview|tl;?dr|first arc|early chapter|beginning|opening|so far|what happens|what'?s? (it|this) about|main plot|story so far|synops|whole (story|book|novel|thing)|entire (story|book|novel)|key events|main events|main characters|premise)/i
   const isBroad = !characterName && BROAD_RE.test(message)
   const wantsEarly = /\b(first arc|early|beginning|start|opening|so far|initial)\b/i.test(message)
 
@@ -277,16 +279,18 @@ export async function POST(req: Request) {
     try { return await matchChunks(emb, slug, PER, th) }
     catch { try { return await matchChunks(emb, slug, 6, 0.25) } catch { return [] } }
   }
-  // Keyword/full-text retrieval complements vectors for exact terms, names, and
-  // specific events that semantic search ranks poorly. Book mode only.
-  // Keyword/FTS retrieval moved off Supabase with the chunks table; vector +
-  // HyDE carry retrieval. (TODO: re-add via a Qdrant full-text payload index.)
-  const keywordSearch = async (): Promise<Row[]> => []
-  const lists: Row[][] = await Promise.all([
+  // Vector (+HyDE) first so we can gauge confidence before adding keyword.
+  const vecLists: Row[][] = await Promise.all([
     safeMatch(queryEmbedding, TH),
     ...(hydeEmbedding ? [safeMatch(hydeEmbedding, TH)] : []),
-    keywordSearch(),
   ])
+  // W9/adaptive-hybrid: best vector cosine (keyword/chrono carry 0/1 sentinels).
+  const topSim = Math.max(0, ...vecLists.flat().map(r => r.similarity).filter(s => s > 0 && s < 0.999))
+  // Keyword/full-text leg ONLY when vector confidence is low — on confident
+  // matches it just adds tangential name-matches that dilute the answer (the eval
+  // measured this regressing well-covered questions). Book mode only.
+  const kwList: Row[] = (!characterName && topSim < 0.42) ? await qdrantKeyword(slug, message, 12) : []
+  const lists: Row[][] = [...vecLists, kwList]
 
   // Reciprocal-rank fusion: a chunk ranked highly by more than one retriever wins.
   const RRF_K = 60
@@ -433,6 +437,12 @@ ${context}`
       : isBroad
       ? `\nThe reader is asking for a summary/overview. The passages below are drawn in READING ORDER from the relevant part of the story. Synthesize across them into a flowing, coherent summary — connect events chronologically rather than answering with isolated facts. It's fine to generalize the throughline of the arc; you do not need a passage for every sentence. Aim for a few tight paragraphs.\n`
       : ''
+    // W9: when the best semantic match is weak, the passages likely don't cover
+    // the question — instruct stricter grounding / explicit abstention.
+    const lowConf = !isArc && !isBroad && topSim < 0.28
+    const confidenceNote = lowConf
+      ? `\nIMPORTANT — retrieval confidence is LOW for this question: the passages may not actually cover what was asked. Answer ONLY what is clearly and directly supported by them. If they do not genuinely address the question, say so plainly ("I don't find that in this novel") instead of guessing or stretching.\n`
+      : ''
     systemPrompt = `You are an AI assistant for readers of the novel "${title}" by ${author}.
 Answer using the passages provided below. They were retrieved by relevance and may be out of order or partial — piece the answer together from whatever relevant details genuinely appear across them, and cite chapter numbers when useful.
 
@@ -442,7 +452,7 @@ GROUNDING RULES — do not break these:
 - It's better to say "the passages don't cover that" than to fabricate. Only answer confidently for things actually present in the passages.
 - You may connect and infer across passages, but inferences must be clearly grounded in what's written — not invented.
 - Be COMPLETELY OBJECTIVE: report what the novel actually depicts — including dark, violent, ruthless, or morally grey content — with no moralizing, no sanitizing, and no personal or AI opinion coloring the facts. Pure, neutral lore.
-${broadNote}
+${confidenceNote}${broadNote}
 Relevant passages:
 ${context}`
   }

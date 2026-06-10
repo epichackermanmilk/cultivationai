@@ -82,6 +82,28 @@ export async function scrollRange(slug: string, start: number, end: number, limi
   return rows.map(({ chunk_index, ...r }: any) => r)
 }
 
+const STOP = new Set(['the', 'what', 'who', 'how', 'why', 'when', 'where', 'does', 'did', 'is', 'are',
+  'was', 'were', 'his', 'her', 'their', 'and', 'for', 'about', 'with', 'this', 'that', 'they', 'him'])
+
+// Keyword retrieval — chunks containing salient (proper-noun) query terms.
+// Complements vector search for exact names/places semantic search ranks poorly.
+export async function keywordSearch(slug: string, message: string, count = 12): Promise<ChunkRow[]> {
+  const terms = Array.from(new Set(
+    (message.match(/\b[A-Z][a-zA-Z]{2,}\b/g) ?? []).map(t => t.toLowerCase()).filter(t => !STOP.has(t)),
+  )).slice(0, 6)
+  if (!terms.length) return []
+  try {
+    const j = await qreq('/points/scroll', {
+      filter: { must: [bySlug(slug)], should: terms.map(t => ({ key: 'text', match: { text: t } })) },
+      limit: count, with_payload: true,
+    })
+    return (j.result?.points ?? []).map((p: any) => ({
+      text: p.payload.text, chapter_number: p.payload.chapter_number,
+      chapter_title: p.payload.chapter_title, similarity: 0,
+    }))
+  } catch { return [] }
+}
+
 // Chronological spine from the start of the novel — for broad/summary queries.
 export async function scrollChrono(slug: string, limit = 60): Promise<ChunkRow[]> {
   const j = await qreq('/points/scroll', {
