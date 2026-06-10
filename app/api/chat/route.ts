@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { matchChunks } from '@/lib/supabase'
+import { matchChunks, getChapterSummaries } from '@/lib/supabase'
 import { scrollTitles, scrollRange, scrollChrono, keywordSearch as qdrantKeyword } from '@/lib/qdrant'
 import { parseJsonBody, sanitizeText } from '@/lib/sanitize'
 import { NextResponse } from 'next/server'
@@ -315,7 +315,31 @@ export async function POST(req: Request) {
     if (arc && arc.length) { chunks = arc; isArc = true }
   }
 
-  if (isBroad && !isArc) {
+  // ── L2 summary layer: ordered / early-story / timeline / progression ────────
+  // Raw chunk retrieval fails on questions that need the early arc IN ORDER (it
+  // pulls scattered or late-story passages). The chapter summaries are a clean
+  // chronological index — use them for these question shapes when available.
+  // Trigger ONLY for ordered-COVERAGE questions (trace / list / timeline /
+  // progression / allies-enemies / in order) — NOT narrative "summarize", which
+  // the full-text chunk spine answers better than terse summaries (measured).
+  let isSummary = false
+  const ORDERED_RE = /\b(trace|list|every|all (the|her|his|major|of)|in order|chronolog|timeline|sequence of|progression|step[- ]by[- ]step|history of|allies|enemies|adversaries|grow stronger|major events|over the (early|course)|between .+ and)\b/i
+  if (!characterName && !isArc && ORDERED_RE.test(message)) {
+    let to = 120
+    const mN = message.match(/first\s+(\d{1,4})/i)
+    if (mN) to = Math.min(parseInt(mN[1], 10) + 8, 200)
+    else if (/\bfirst\s+\w+\s+chapters?\b|\b(early|opening|beginning|initial|start)\b/i.test(message)) to = 80
+    const sums = await getChapterSummaries(slug, 1, to, 130)
+    if (sums.length >= 8) {
+      chunks = sums.map(s => ({
+        text: `[Ch.${s.chapter_number}${s.chapter_title ? ` — ${s.chapter_title}` : ''}] ${s.summary}`,
+        chapter_number: s.chapter_number, chapter_title: s.chapter_title, similarity: 0,
+      }))
+      isSummary = true
+    }
+  }
+
+  if (isBroad && !isArc && !isSummary) {
     // Broad summary/overview: weave in a chronological spine of the story.
     try {
       const chrono = await scrollChrono(slug, wantsEarly ? 18 : 60)
@@ -335,7 +359,7 @@ export async function POST(req: Request) {
   }
 
   // Present ordered material (summaries / arcs) in reading order so it flows.
-  if (isBroad || isArc) chunks.sort((a, b) => a.chapter_number - b.chapter_number)
+  if (isBroad || isArc || isSummary) chunks.sort((a, b) => a.chapter_number - b.chapter_number)
 
   if (chunks.length === 0) {
     const notFoundMsg = characterName
@@ -347,8 +371,8 @@ export async function POST(req: Request) {
   // W1: previously every retrieved chunk was truncated to 900 chars (~150 of its
   // ~500 words), discarding most of what retrieval found. Show chunks fully; for
   // precise questions keep fewer-but-complete chunks (focus > breadth).
-  const CTX_N   = (isBroad || isArc) ? chunks.length : Math.min(chunks.length, 12)
-  const CTX_CAP = (isBroad || isArc) ? 1400 : 2600
+  const CTX_N   = (isBroad || isArc || isSummary) ? chunks.length : Math.min(chunks.length, 12)
+  const CTX_CAP = (isBroad || isArc || isSummary) ? 1400 : 2600
   const context = chunks
     .slice(0, CTX_N)
     .map(c => `[Ch.${c.chapter_number} — ${c.chapter_title}]\n${c.text.slice(0, CTX_CAP)}`)
@@ -432,14 +456,16 @@ ${context}`
 
   } else {
     // ── Book assistant mode — pure Q&A ──────────────────────────────────────
-    const broadNote = isArc
+    const broadNote = isSummary
+      ? `\nThe items below are CONCISE PER-CHAPTER SUMMARIES of the novel in reading order (each tagged with its chapter number). They form a faithful chronological index. Use them to answer in order — trace the progression, list events/relationships/breakthroughs chronologically, and ground claims in the chapter numbers shown. Synthesize a complete, well-ordered answer; you have the whole relevant span here, so be thorough rather than vague.\n`
+      : isArc
       ? `\nThe passages below are the chapters that make up the specific section/arc the reader asked about, in reading order. Walk through what happens across them and synthesize a clear, coherent answer that follows the events in sequence. You don't need a passage for every sentence — convey the throughline of this section. If a detail genuinely isn't in these chapters, say so briefly rather than inventing.\n`
       : isBroad
       ? `\nThe reader is asking for a summary/overview. The passages below are drawn in READING ORDER from the relevant part of the story. Synthesize across them into a flowing, coherent summary — connect events chronologically rather than answering with isolated facts. It's fine to generalize the throughline of the arc; you do not need a passage for every sentence. Aim for a few tight paragraphs.\n`
       : ''
     // W9: when the best semantic match is weak, the passages likely don't cover
     // the question — instruct stricter grounding / explicit abstention.
-    const lowConf = !isArc && !isBroad && topSim < 0.28
+    const lowConf = !isArc && !isBroad && !isSummary && topSim < 0.28
     const confidenceNote = lowConf
       ? `\nIMPORTANT — retrieval confidence is LOW for this question: the passages may not actually cover what was asked. Answer ONLY what is clearly and directly supported by them. If they do not genuinely address the question, say so plainly ("I don't find that in this novel") instead of guessing or stretching.\n`
       : ''
@@ -461,7 +487,7 @@ ${context}`
     model:          'gpt-4o-mini',
     stream:         true,
     stream_options: { include_usage: true },
-    max_tokens:     (isBroad || isArc) ? 1100 : 800,
+    max_tokens:     (isBroad || isArc || isSummary) ? 1100 : 800,
     temperature:    characterName ? 0.7 : 0.3,  // more expressive in roleplay mode
     messages:    [
       { role: 'system', content: systemPrompt },
@@ -509,7 +535,7 @@ ${context}`
     headers: {
       'Content-Type':       'text/plain; charset=utf-8',
       'X-Tokens-Remaining': String(profile.tokens - CHAT_COST),
-      'X-NC-Mode':          isArc ? 'arc' : isBroad ? 'broad' : 'fused',
+      'X-NC-Mode':          isSummary ? 'summary' : isArc ? 'arc' : isBroad ? 'broad' : 'fused',
       'X-NC-Chapters':      dbgNums.length ? `${Math.min(...dbgNums)}-${Math.max(...dbgNums)} n=${chunks.length}` : 'none',
     },
   })
