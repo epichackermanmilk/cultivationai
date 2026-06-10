@@ -3,91 +3,263 @@
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-fraunces);
 }
 
-/* ── Scrollbar ───────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--nc-bg2); }
-::-webkit-scrollbar-thumb { background: var(--nc-border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--nc-muted); }
+/* Literary display face for hero / section headings. Optical sizing on. */
+.font-display {
+  font-family: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
+}
 
-/* ── Theme tokens (dark default) ─────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════════════════
+   NovelCodex Design System
+   ────────────────────────────────────────────────────────────────────────────
+   One source of truth for color, elevation, radius, motion and type. Components
+   consume these tokens (var(--nc-*)) instead of hardcoding zinc-*/amber-* so the
+   whole app themes consistently in dark + light and reads as one product.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Theme tokens — DARK (default) ───────────────────────────────────────────── */
 :root {
-  --nc-bg:     #09090b;   /* zinc-950  */
-  --nc-bg2:    #18181b;   /* zinc-900  */
-  --nc-bg3:    #27272a;   /* zinc-800  */
-  --nc-border: #3f3f46;   /* zinc-700  */
-  --nc-muted:  #71717a;   /* zinc-500  */
-  --nc-text:   #f4f4f5;   /* zinc-100  */
-  --nc-text2:  #a1a1aa;   /* zinc-400  */
-  --nc-amber:  #f59e0b;   /* amber-500 */
-  --nc-amber2: #fbbf24;   /* amber-400 */
+  /* Surfaces (low → high elevation) */
+  --nc-bg:      #09090b;            /* page            */
+  --nc-bg2:     #161618;            /* card / panel    */
+  --nc-bg3:     #232327;            /* input / inset   */
+  --nc-elev:    #2a2a30;            /* raised / hover  */
+
+  /* Lines & text */
+  --nc-border:  #2e2e35;           /* hairline border */
+  --nc-border2: #3f3f46;           /* stronger border */
+  --nc-muted:   #71717a;           /* zinc-500        */
+  --nc-text:    #f4f4f5;           /* primary text    */
+  --nc-text2:   #a1a1aa;           /* secondary text  */
+  --nc-text3:   #71717a;           /* tertiary / hint */
+
+  /* Brand — amber */
+  --nc-amber:   #f59e0b;           /* amber-500 — primary accent */
+  --nc-amber2:  #fbbf24;           /* amber-400 — hover / highlight */
+  --nc-amber-ink: #1a1205;         /* text on amber fills */
+  --nc-amber-soft: rgba(245, 158, 11, 0.10);   /* tinted fill   */
+  --nc-amber-line: rgba(245, 158, 11, 0.28);   /* tinted border */
+  --nc-grad: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+  --nc-grad-text: linear-gradient(135deg, #fcd34d 0%, #f59e0b 60%, #d97706 100%);
+
+  /* Status */
+  --nc-success: #34d399;
+  --nc-danger:  #f87171;
+  --nc-info:    #60a5fa;
+
+  /* Focus ring (a11y) */
+  --nc-ring: rgba(245, 158, 11, 0.55);
+
+  /* Radius scale */
+  --nc-r-sm: 0.5rem;    /* 8  */
+  --nc-r-md: 0.75rem;   /* 12 */
+  --nc-r-lg: 1rem;      /* 16 */
+  --nc-r-xl: 1.25rem;   /* 20 */
+  --nc-r-2xl: 1.5rem;   /* 24 */
+  --nc-r-full: 9999px;
+
+  /* Elevation / shadow scale (tuned for dark — soft, low-spread) */
+  --nc-shadow-sm: 0 1px 2px rgba(0,0,0,0.40);
+  --nc-shadow-md: 0 4px 14px rgba(0,0,0,0.45);
+  --nc-shadow-lg: 0 12px 34px rgba(0,0,0,0.55);
+  --nc-shadow-glow: 0 0 0 1px var(--nc-amber-line), 0 8px 30px rgba(245,158,11,0.10);
+
+  /* Motion */
+  --nc-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --nc-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --nc-dur-fast: 120ms;
+  --nc-dur: 200ms;
+  --nc-dur-slow: 360ms;
+
+  color-scheme: dark;
 }
 
+/* ── Theme tokens — LIGHT ────────────────────────────────────────────────────── */
 html.light {
-  --nc-bg:     #fafaf9;   /* stone-50  */
-  --nc-bg2:    #ffffff;
-  --nc-bg3:    #f5f5f4;   /* stone-100 */
-  --nc-border: #d6d3d1;   /* stone-300 */
-  --nc-muted:  #78716c;   /* stone-500 */
-  --nc-text:   #1c1917;   /* stone-900 */
-  --nc-text2:  #57534e;   /* stone-600 */
-  --nc-amber:  #d97706;   /* amber-600 */
-  --nc-amber2: #b45309;   /* amber-700 */
+  --nc-bg:      #fafaf9;           /* stone-50  */
+  --nc-bg2:     #ffffff;
+  --nc-bg3:     #f4f4f3;           /* stone-100 */
+  --nc-elev:    #ffffff;
+
+  --nc-border:  #e7e5e4;           /* stone-200 */
+  --nc-border2: #d6d3d1;           /* stone-300 */
+  --nc-muted:   #78716c;           /* stone-500 */
+  --nc-text:    #1c1917;           /* stone-900 */
+  --nc-text2:   #57534e;           /* stone-600 */
+  --nc-text3:   #a8a29e;           /* stone-400 */
+
+  --nc-amber:   #d97706;           /* amber-600 — accessible on light */
+  --nc-amber2:  #b45309;           /* amber-700 */
+  --nc-amber-ink: #ffffff;
+  --nc-amber-soft: rgba(217, 119, 6, 0.08);
+  --nc-amber-line: rgba(217, 119, 6, 0.24);
+  --nc-grad: linear-gradient(135deg, #f59e0b 0%, #d97706 55%, #b45309 100%);
+  --nc-grad-text: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+
+  --nc-ring: rgba(217, 119, 6, 0.45);
+
+  --nc-shadow-sm: 0 1px 2px rgba(28,25,23,0.06);
+  --nc-shadow-md: 0 4px 16px rgba(28,25,23,0.08);
+  --nc-shadow-lg: 0 14px 40px rgba(28,25,23,0.12);
+  --nc-shadow-glow: 0 0 0 1px var(--nc-amber-line), 0 8px 30px rgba(217,119,6,0.10);
+
+  color-scheme: light;
 }
 
-html, body {
-  overscroll-behavior-x: none;
-}
+/* ── Base ────────────────────────────────────────────────────────────────────── */
+html, body { overscroll-behavior-x: none; }
 
 body {
   background-color: var(--nc-bg);
   color: var(--nc-text);
-  transition: background-color 0.2s, color 0.2s;
+  transition: background-color var(--nc-dur) var(--nc-ease),
+              color var(--nc-dur) var(--nc-ease);
+  text-rendering: optimizeLegibility;
 }
 
-/* ── Dual range slider ────────────────────────────────────────────────────── */
+/* Selection */
+::selection {
+  background: var(--nc-amber);
+  color: var(--nc-amber-ink);
+}
+
+/* Global keyboard-focus ring — a11y + polish. Mouse clicks stay clean. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--nc-ring);
+  outline-offset: 2px;
+  border-radius: var(--nc-r-sm);
+}
+
+/* Respect reduced-motion globally */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--nc-border2);
+  border-radius: var(--nc-r-full);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--nc-muted); background-clip: padding-box; }
+* { scrollbar-width: thin; scrollbar-color: var(--nc-border2) transparent; }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Reusable primitives — opt-in utility classes that encode the system so pages
+   stop reinventing cards/buttons. Adopt incrementally; nothing is forced.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Brand gradient text */
+.nc-grad-text {
+  background: var(--nc-grad-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Surface card */
+.nc-card {
+  background: var(--nc-bg2);
+  border: 1px solid var(--nc-border);
+  border-radius: var(--nc-r-lg);
+  box-shadow: var(--nc-shadow-sm);
+}
+.nc-card-hover {
+  transition: border-color var(--nc-dur) var(--nc-ease),
+              box-shadow var(--nc-dur) var(--nc-ease),
+              transform var(--nc-dur) var(--nc-ease);
+}
+.nc-card-hover:hover {
+  border-color: var(--nc-amber-line);
+  box-shadow: var(--nc-shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* Primary (gradient) button */
+.nc-btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  background: var(--nc-grad);
+  color: var(--nc-amber-ink);
+  font-weight: 700;
+  border-radius: var(--nc-r-md);
+  padding: 0.625rem 1.25rem;
+  box-shadow: var(--nc-shadow-sm);
+  transition: filter var(--nc-dur) var(--nc-ease), transform var(--nc-dur-fast) var(--nc-ease);
+}
+.nc-btn-primary:hover { filter: brightness(1.06); }
+.nc-btn-primary:active { transform: translateY(1px); }
+.nc-btn-primary:disabled { opacity: 0.5; pointer-events: none; }
+
+/* Secondary (tinted) button */
+.nc-btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  background: var(--nc-amber-soft);
+  color: var(--nc-amber);
+  border: 1px solid var(--nc-amber-line);
+  font-weight: 600;
+  border-radius: var(--nc-r-md);
+  padding: 0.625rem 1.25rem;
+  transition: background var(--nc-dur) var(--nc-ease), border-color var(--nc-dur) var(--nc-ease);
+}
+.nc-btn-ghost:hover { background: var(--nc-amber-line); border-color: var(--nc-amber); }
+
+/* Chip / pill */
+.nc-chip {
+  display: inline-flex; align-items: center; gap: 0.375rem;
+  border-radius: var(--nc-r-full);
+  border: 1px solid var(--nc-border);
+  padding: 0.125rem 0.625rem;
+  font-size: 0.75rem;
+  color: var(--nc-text2);
+  background: var(--nc-bg3);
+}
+
+/* Skeleton shimmer for loading states */
+.nc-skeleton {
+  background: linear-gradient(90deg, var(--nc-bg2) 25%, var(--nc-bg3) 37%, var(--nc-bg2) 63%);
+  background-size: 400% 100%;
+  animation: nc-shimmer 1.4s ease infinite;
+  border-radius: var(--nc-r-md);
+}
+@keyframes nc-shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+
+/* Entrance animations */
+@keyframes nc-fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes nc-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.nc-fade-up { animation: nc-fade-up var(--nc-dur-slow) var(--nc-ease-out) both; }
+.nc-fade-in { animation: nc-fade-in var(--nc-dur) var(--nc-ease) both; }
+
+/* ── Dual range slider (kept, retokenized) ───────────────────────────────────── */
 .nc-range {
-  -webkit-appearance: none;
-  appearance: none;
-  background: transparent;
-  cursor: pointer;
-  position: absolute;
-  width: 100%;
-  height: 0;
-  pointer-events: none;
-  outline: none;
+  -webkit-appearance: none; appearance: none;
+  background: transparent; cursor: pointer; position: absolute;
+  width: 100%; height: 0; pointer-events: none; outline: none;
 }
 .nc-range::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--nc-amber);
-  border: 2px solid var(--nc-bg);
-  cursor: pointer;
-  pointer-events: all;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
-  margin-top: -8px;
+  -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--nc-amber); border: 2px solid var(--nc-bg);
+  cursor: pointer; pointer-events: all; box-shadow: var(--nc-shadow-sm); margin-top: -8px;
 }
 .nc-range::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--nc-amber);
-  border: 2px solid var(--nc-bg);
-  cursor: pointer;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--nc-amber); border: 2px solid var(--nc-bg);
+  cursor: pointer; box-shadow: var(--nc-shadow-sm);
 }
 .nc-range::-webkit-slider-runnable-track { background: transparent; }
 .nc-range::-moz-range-track { background: transparent; }
 
-/* ── Landing page cover-panel scroll animations ───────────────────────────── */
-@keyframes nb-up {
-  from { transform: translateY(0); }
-  to   { transform: translateY(-50%); }
-}
-@keyframes nb-down {
-  from { transform: translateY(-50%); }
-  to   { transform: translateY(0); }
-}
+/* ── Landing page cover-panel scroll animations ──────────────────────────────── */
+@keyframes nb-up   { from { transform: translateY(0); }    to { transform: translateY(-50%); } }
+@keyframes nb-down { from { transform: translateY(-50%); } to { transform: translateY(0); } }
