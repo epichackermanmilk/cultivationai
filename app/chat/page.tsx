@@ -391,7 +391,7 @@ export default function ChatPage() {
   return (
     <div className="flex h-screen flex-col overflow-hidden pb-16 sm:pb-0" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
       {/* Header */}
-      <SiteHeader maxWidth="max-w-[1400px]" rootClassName="shrink-0" />
+      <SiteHeader rootClassName="shrink-0" />
 
       <div className="flex flex-1 overflow-hidden" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
         {/* Mobile backdrop — closes sidebar when tapping outside, sits below header */}

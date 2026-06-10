@@ -4,7 +4,7 @@
 create table if not exists public.profiles (
   id         uuid        primary key references auth.users(id) on delete cascade,
   email      text        not null,
-  tokens     integer     not null default 100,
+  tokens     integer     not null default 40,   -- welcome grant; +10 bonus on profile completion = 50
   created_at timestamptz not null default now()
 );
 

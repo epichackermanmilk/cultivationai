@@ -15,21 +15,20 @@ const G: React.CSSProperties = {
 }
 
 // ── Novel covers — 10 live scraped URLs ───────────────────────────────────────
+// Featured novels — the 8 live during the curated preview (all clickable + working)
 const COVERS = [
-  { src: 'https://static.novelbuddy.com/covers/against-the-gods.png',                                               alt: 'Against the Gods',                        slug: 'against-the-gods'                              },
-  { src: 'https://images.novelbin.me/novel/reverend-insanity.jpg',                                                  alt: 'Reverend Insanity',                       slug: 'reverend-insanity'                             },
-  { src: 'https://images.novelbin.me/novel/shadow-slave.jpg',                                                       alt: 'Shadow Slave',                            slug: 'shadow-slave'                                  },
-  { src: 'https://images.novelbin.me/novel/supreme-magus-novel.jpg',                                               alt: 'Supreme Magus',                           slug: 'supreme-magus'                                 },
-  { src: 'https://images.novelbin.me/novel/reincarnation-of-the-strongest-sword-god.jpg',                          alt: 'Reincarnation of the Strongest Sword God', slug: 'reincarnation-of-the-strongest-sword-god'      },
-  { src: 'https://static.novelbuddy.com/covers/tribulation-of-myriad-races.png',                                    alt: 'Tribulation of Myriad Races',             slug: 'tribulation-of-myriad-races'                   },
-  { src: 'https://images.novelbin.me/novel/the-first-legendary-beast-master.jpg',                                   alt: 'The First Legendary Beast Master',        slug: 'the-first-legendary-beast-master'              },
-  { src: 'https://static.novelbuddy.com/covers/wizard-starting-with-the-knights-breathing-method.png',             alt: 'Wizard',                                  slug: 'wizard-starting-with-the-knights-breathing-method' },
-  { src: 'https://images.novelbin.me/novel/tyrant-sky-martial-soul.jpg',                                            alt: 'Tyrant Sky Martial Soul',                 slug: 'tyrant-sky-martial-soul'                       },
-  { src: 'https://images.novelbin.me/novel/the-mech-touch.jpg',                                                     alt: 'The Mech Touch',                          slug: 'the-mech-touch'                                },
+  { src: 'https://static.novelbuddy.com/covers/against-the-gods.png',       alt: 'Against the Gods',           slug: 'against-the-gods'           },
+  { src: 'https://images.novelbin.me/novel/reverend-insanity.jpg',          alt: 'Reverend Insanity',          slug: 'reverend-insanity'          },
+  { src: 'https://images.novelbin.me/novel/shadow-slave.jpg',               alt: 'Shadow Slave',               slug: 'shadow-slave'               },
+  { src: 'https://images.novelbin.me/novel/supreme-magus-novel.jpg',        alt: 'Supreme Magus',              slug: 'supreme-magus'              },
+  { src: 'https://images.novelbin.me/novel/i-shall-seal-the-heavens.jpg',   alt: 'I Shall Seal the Heavens',   slug: 'i-shall-seal-the-heavens'   },
+  { src: 'https://images.novelbin.me/novel/renegade-immortal.jpg',          alt: 'Renegade Immortal',          slug: 'renegade-immortal'          },
+  { src: 'https://images.novelbin.me/novel/a-will-eternal.jpg',             alt: 'A Will Eternal',             slug: 'a-will-eternal'             },
+  { src: 'https://images.novelbin.me/novel/warlock-of-the-magus-world.jpg', alt: 'Warlock of the Magus World', slug: 'warlock-of-the-magus-world' },
 ]
 
-const COL_A = [COVERS[0], COVERS[2], COVERS[4], COVERS[6], COVERS[8]]
-const COL_B = [COVERS[1], COVERS[3], COVERS[5], COVERS[7], COVERS[9]]
+const COL_A = [COVERS[0], COVERS[2], COVERS[4], COVERS[6]]
+const COL_B = [COVERS[1], COVERS[3], COVERS[5], COVERS[7]]
 
 // ── Scrolling cover panel ─────────────────────────────────────────────────────
 function CoverPanel() {
@@ -256,9 +255,9 @@ const FAQ = [
   {
     category: 'Novels & Content',
     items: [
-      { q: 'Which novels are available?', a: 'We index thousands of titles spanning cultivation, xianxia, fantasy, sci-fi, and more — including Against the Gods, Reverend Insanity, Shadow Slave, Supreme Magus, Reincarnation of the Strongest Sword God, and thousands of others across multiple platforms.' },
+      { q: 'Which novels are available?', a: 'We\'re in curated preview — eight hand-picked, fully-indexed cultivation epics: Reverend Insanity, Against the Gods, Shadow Slave, Supreme Magus, I Shall Seal the Heavens, Renegade Immortal, A Will Eternal, and Warlock of the Magus World. More are on the way — join the waitlist to be notified.' },
       { q: 'Can I request a novel?', a: 'Yes. Use the feedback widget on any page or the support form to request a specific title. Highly requested novels are prioritized.' },
-      { q: 'How often are new novels added?', a: 'New novels are added weekly from the top web-novel platforms. The index is updated continuously as new chapters are published.' },
+      { q: 'How often are new novels added?', a: 'We\'re expanding the curated library steadily during the preview. Join the waitlist and we\'ll email you the moment new titles go live.' },
       { q: 'Who owns the indexed content?', a: 'All original novel content remains the property of its respective authors and publishers. NovelCodex indexes chapter text solely for AI-powered search and conversation, and does not redistribute raw text to end users.' },
     ],
   },
@@ -362,12 +361,12 @@ export default function LandingPage() {
             <p className="mb-1 text-xs font-bold uppercase tracking-widest" style={G}>Welcome</p>
             <h2 className="mb-2 text-xl font-bold" style={{ color: 'var(--nc-text)' }}>NovelCodex</h2>
             <p className="mb-5 text-sm leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
-              Ask anything about thousands of web novels — characters, cultivation systems, plot, lore,
+              Ask anything about eight featured cultivation epics — characters, cultivation systems, plot, lore,
               spoilers — and get instant AI-powered answers from the actual text.
             </p>
             <div className="mb-6 space-y-3">
               {([
-                ['Browse', 'Search thousands of web novels'],
+                ['Browse', 'Eight featured novels, fully indexed'],
                 ['Pick',   'Choose any novel — every one is ready instantly'],
                 ['Ask',    'Chat with the book — characters, lore, anything'],
               ] as [string, string][]).map(([title, desc], idx) => (
@@ -418,8 +417,8 @@ export default function LandingPage() {
             <span style={{ color: 'var(--nc-text)' }}>Inside the book.</span>
           </h1>
           <p className="mb-8 max-w-md text-base leading-relaxed md:text-lg" style={{ color: 'var(--nc-text2)' }}>
-            Ask anything about characters, plot, cultivation systems, and lore across thousands of web novels.
-            NovelCodex knows every chapter.
+            Ask anything about characters, plot, cultivation systems, and lore across eight fully-indexed
+            cultivation epics. NovelCodex knows every chapter.
           </p>
           <div className="flex flex-wrap items-center gap-4">
             {user ? (
@@ -454,10 +453,10 @@ export default function LandingPage() {
       <section className="relative z-10 border-y border-[var(--nc-border)] py-8" style={{ background: 'var(--nc-bg2)' }}>
         <div className="mx-auto max-w-4xl grid grid-cols-2 sm:grid-cols-4 gap-6 px-6 text-center">
           {[
-            { val: '50,000+', label: 'Novels indexed'       },
-            { val: '100M+',   label: 'Chapters searchable'  },
-            { val: '250+',    label: 'Novel platforms'       },
-            { val: '24/7',    label: 'Always up to date'    },
+            { val: '8',       label: 'Featured novels'   },
+            { val: '18,000+', label: 'Chapters indexed'  },
+            { val: '100%',    label: 'Source-grounded'   },
+            { val: '24/7',    label: 'Always up to date' },
           ].map(s => (
             <div key={s.label}>
               <p className="text-2xl font-extrabold" style={G}>{s.val}</p>
@@ -479,7 +478,7 @@ export default function LandingPage() {
           <div className="flex-1 order-2 md:order-1">
             <p className="text-xs font-bold uppercase tracking-widest mb-3" style={G}>Browse the Library</p>
             <h3 className="text-3xl font-bold mb-5" style={{ color: 'var(--nc-text)' }}>
-              Search thousands of web novels
+              Eight hand-picked cultivation epics
             </h3>
             <p className="text-lg leading-relaxed mb-6" style={{ color: 'var(--nc-text2)' }}>
               Filter by genre, chapter count, or title. From Reverend Insanity to Against the Gods — find exactly what you&apos;re looking for, or discover something new.
@@ -549,9 +548,9 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-6">
           <p className="text-center text-xs font-bold uppercase tracking-widest mb-3" style={G}>The Library</p>
           <h2 className="text-center text-3xl font-extrabold mb-12" style={{ color: 'var(--nc-text)' }}>
-            Thousands of novels, one AI
+            Eight worlds, every chapter, one AI
           </h2>
-          <div className="grid grid-cols-5 gap-3 sm:gap-4">
+          <div className="grid grid-cols-4 gap-3 sm:gap-4">
             {COVERS.map((c, i) => (
               <Link key={i} href={`/novel/${c.slug}`}
                 className="overflow-hidden rounded-2xl shadow-2xl shadow-black/70 transition-transform duration-300 hover:scale-[1.03] cursor-pointer block"
@@ -562,8 +561,8 @@ export default function LandingPage() {
             ))}
           </div>
           <p className="text-center text-sm mt-10" style={{ color: 'var(--nc-text2)' }}>
-            New titles added every week.{' '}
-            <Link href="/library" className="font-semibold transition hover:opacity-80" style={G}>Browse the full library →</Link>
+            More worlds opening soon.{' '}
+            <Link href="/library" className="font-semibold transition hover:opacity-80" style={G}>Join the waitlist →</Link>
           </p>
         </div>
       </section>

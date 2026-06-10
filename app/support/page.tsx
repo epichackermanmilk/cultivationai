@@ -16,15 +16,19 @@ const CATEGORIES = [
 const QUICK_ANSWERS = [
   {
     q: 'How do I start chatting with a novel?',
-    a: 'Just pick any novel and start asking — every novel in the library is ready to use. You only spend tokens (10 per message) when you actually chat.',
+    a: 'Pick any featured novel and start asking — all eight are fully indexed and ready instantly. Browsing and picking are free; you only spend tokens (10 per message) when you actually chat.',
+  },
+  {
+    q: 'How many free tokens do I get?',
+    a: 'New accounts start with 40 free tokens, plus 10 more when you add your name and age — 50 total, no credit card required. Each chat message costs 10 tokens.',
   },
   {
     q: 'Where can I get more tokens?',
-    a: 'Visit the Shop from the token widget in the top-right corner. Packs start from $2.',
+    a: 'Open the Shop from the token widget in the top-right corner. New members get a one-time Welcome pack — 500 tokens for $1 — and regular packs start at $4.99. Tokens never expire.',
   },
   {
-    q: 'Can you add [novel name]?',
-    a: 'We automatically scrape thousands of titles and add more weekly. Use the Novel Request category below if you want a specific title prioritised.',
+    q: 'Can you add a specific novel?',
+    a: 'We\'re in curated preview with eight hand-picked, fully-indexed cultivation epics while we expand. Join the waitlist or use the Novel Request category below to tell us what to add next — highly requested titles are prioritised.',
   },
   {
     q: 'I found a factual error in a chat response.',

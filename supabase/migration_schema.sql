@@ -9,7 +9,7 @@
 CREATE TABLE IF NOT EXISTS public.profiles (
   id                           uuid        PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email                        text        NOT NULL,
-  tokens                       integer     NOT NULL DEFAULT 100,
+  tokens                       integer     NOT NULL DEFAULT 40,    -- welcome grant; +10 bonus on profile completion = 50
   username                     text,
   age                          integer     CHECK (age >= 13 AND age <= 120),
   onboarding_bonus_claimed     boolean     NOT NULL DEFAULT false,
@@ -36,7 +36,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS profiles_username_lower_idx ON public.profiles
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email) VALUES (new.id, new.email) ON CONFLICT (id) DO NOTHING;
+  -- Explicitly seed the welcome grant so the column default can never leak (e.g. OAuth signups)
+  INSERT INTO public.profiles (id, email, tokens) VALUES (new.id, new.email, 40) ON CONFLICT (id) DO NOTHING;
   RETURN new;
 END;
 $$;

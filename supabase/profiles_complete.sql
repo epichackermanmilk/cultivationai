@@ -36,8 +36,9 @@ LANGUAGE plpgsql
 SECURITY DEFINER SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email)
-  VALUES (new.id, new.email)
+  -- Explicitly seed the welcome grant so the column default can never leak (e.g. OAuth signups)
+  INSERT INTO public.profiles (id, email, tokens)
+  VALUES (new.id, new.email, 40)
   ON CONFLICT (id) DO NOTHING;
   RETURN new;
 END;

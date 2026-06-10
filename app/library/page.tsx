@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo, useRef, useCallback, Suspense } from 'react'
+import { useEffect, useState, useMemo, useRef, useCallback, Suspense, Fragment } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link          from 'next/link'
 import SiteHeader    from '@/components/SiteHeader'
@@ -22,6 +22,7 @@ interface Novel {
   cover_url: string
   description: string
   coming_soon?: boolean
+  locked?: boolean
 }
 
 // ── Particle canvas ───────────────────────────────────────────────────────────
@@ -105,9 +106,10 @@ export default function LibraryPage() {
   const filterRef  = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
 
-  // Fetch once — data is cached server-side for 90s so this is near-instant
+  // Fetch the full catalogue (featured live + the rest locked) — cached server-side.
+  // Shows the true scale of what's coming while keeping non-featured non-clickable.
   useEffect(() => {
-    fetch('/api/novels')
+    fetch('/api/novels/all')
       .then(async r => { const data = await r.json(); setNovels(Array.isArray(data) ? data : []); setLoading(false) })
       .catch(() => setLoading(false))
   }, [])
@@ -153,8 +155,9 @@ export default function LibraryPage() {
     list = filters.sort === 'asc'
       ? [...list].sort((a, b) => a.total_chapters - b.total_chapters)
       : [...list].sort((a, b) => b.total_chapters - a.total_chapters)
-    // Live novels first, coming-soon at the end
-    list.sort((a, b) => (a.coming_soon ? 1 : 0) - (b.coming_soon ? 1 : 0))
+    // Featured live first, then featured coming-soon, then the locked catalogue
+    const rank = (n: Novel) => (n.locked ? 2 : n.coming_soon ? 1 : 0)
+    list.sort((a, b) => rank(a) - rank(b))
     return list
   }, [novels, query, filters])
 
@@ -175,6 +178,9 @@ export default function LibraryPage() {
   }, [loadMore])
 
   const visibleNovels = filtered.slice(0, visibleCount)
+  // Where the locked catalogue begins (for the "coming soon" section divider)
+  const firstLockedIndex = visibleNovels.findIndex(n => n.locked)
+  const lockedTotal = useMemo(() => filtered.filter(n => n.locked).length, [filtered])
 
   const activeFilterCount = (
     filters.genres.length +
@@ -244,14 +250,30 @@ export default function LibraryPage() {
             {/* Grid with ads injected every 24 cards (≈4 rows at 6-col, 8 rows at 3-col) */}
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {visibleNovels.map((novel, index) => (
-                <>
+                <Fragment key={novel.slug}>
+                  {/* Divider: featured preview above, locked catalogue below */}
+                  {index === firstLockedIndex && firstLockedIndex > 0 && (
+                    <div className="col-span-full mb-1 mt-6">
+                      <div className="rounded-xl border border-[var(--nc-border)] px-5 py-4 text-center"
+                        style={{ background: 'var(--nc-bg2)' }}>
+                        <p className="text-xs font-bold uppercase tracking-widest text-amber-500/70">Coming soon</p>
+                        <p className="mt-1 text-sm font-semibold" style={{ color: 'var(--nc-text)' }}>
+                          {lockedTotal.toLocaleString()} more novels indexing
+                        </p>
+                        <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
+                          A preview of the full library. These unlock as we expand —
+                          join the waitlist below to be notified.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                   {index > 0 && index % 24 === 0 && (
-                    <div key={`ad-${index}`} className="col-span-full">
+                    <div className="col-span-full">
                       <AdSlot variant="banner" className="rounded-xl my-1" />
                     </div>
                   )}
-                  <NovelCard key={novel.slug} novel={novel} />
-                </>
+                  <NovelCard novel={novel} />
+                </Fragment>
               ))}
             </div>
             {filtered.length === 0 && (
@@ -278,13 +300,15 @@ export default function LibraryPage() {
 
 function NovelCard({ novel }: { novel: Novel }) {
   const [imgErr, setImgErr] = useState(false)
-  const isSoon = novel.coming_soon
+  // Both featured "coming soon" and the locked catalogue render behind the barrier.
+  const isBlocked = novel.coming_soon || novel.locked
+  const badge = novel.coming_soon ? 'Coming Soon' : 'Locked'
 
   const card = (
     <div
       className={`overflow-hidden rounded-lg border transition-all duration-200 ${
-        isSoon
-          ? 'opacity-70'
+        isBlocked
+          ? 'opacity-80'
           : 'hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-900/20'
       }`}
       style={{ borderColor: 'var(--nc-border)', background: 'var(--nc-bg2)' }}
@@ -299,7 +323,7 @@ function NovelCard({ novel }: { novel: Novel }) {
             decoding="async"
             onError={() => setImgErr(true)}
             className={`h-full w-full object-cover transition-transform duration-300 ${
-              isSoon ? 'grayscale' : 'group-hover:scale-105'
+              isBlocked ? 'grayscale' : 'group-hover:scale-105'
             }`}
           />
         ) : (
@@ -310,25 +334,35 @@ function NovelCard({ novel }: { novel: Novel }) {
           </div>
         )}
         <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/70 to-transparent" />
-        {isSoon ? (
-          <span className="absolute bottom-1.5 right-2 rounded-full bg-zinc-700/80 px-2 py-0.5 text-[10px] font-bold text-zinc-300 backdrop-blur-sm">
-            Coming Soon
-          </span>
+
+        {isBlocked ? (
+          <>
+            {/* Transparent barrier — blocks interaction + signals locked state */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-black/35 backdrop-blur-[1px]">
+              <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 text-zinc-200/90" stroke="currentColor" strokeWidth={1.8}>
+                <rect x="5" y="11" width="14" height="9" rx="2" />
+                <path d="M8 11V8a4 4 0 018 0v3" strokeLinecap="round" />
+              </svg>
+              <span className="rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-bold text-zinc-200 backdrop-blur-sm">
+                {badge}
+              </span>
+            </div>
+          </>
         ) : (
-          <span className="absolute bottom-1.5 right-2 text-xs font-medium text-zinc-300">
-            {novel.total_chapters.toLocaleString()} ch
-          </span>
-        )}
-        {!isSoon && (
-          <BookmarkButton
-            novel={novel}
-            className="absolute right-1.5 top-1.5 h-6 w-6 rounded-full bg-black/40 backdrop-blur-sm hover:bg-black/60"
-          />
+          <>
+            <span className="absolute bottom-1.5 right-2 text-xs font-medium text-zinc-300">
+              {novel.total_chapters.toLocaleString()} ch
+            </span>
+            <BookmarkButton
+              novel={novel}
+              className="absolute right-1.5 top-1.5 h-6 w-6 rounded-full bg-black/40 backdrop-blur-sm hover:bg-black/60"
+            />
+          </>
         )}
       </div>
       <div className="flex h-[5.5rem] flex-col justify-start p-2">
         <p className={`line-clamp-2 text-xs font-semibold leading-tight transition-colors ${
-          isSoon ? '' : 'group-hover:text-amber-400'
+          isBlocked ? '' : 'group-hover:text-amber-400'
         }`} style={{ color: 'var(--nc-text)' }}>
           {novel.title}
         </p>
@@ -342,7 +376,8 @@ function NovelCard({ novel }: { novel: Novel }) {
     </div>
   )
 
-  if (isSoon) return <div className="cursor-default">{card}</div>
+  // Locked / coming-soon cards are non-interactive (no link, clicks blocked by the barrier)
+  if (isBlocked) return <div className="cursor-default select-none">{card}</div>
   return <Link href={`/novel/${novel.slug}`} className="group">{card}</Link>
 }
 
