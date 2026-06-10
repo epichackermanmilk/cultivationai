@@ -63,6 +63,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => window.clearInterval(id)
   }, [user?.id])
 
+  // Re-sync user data (token balance, perks, Discord status) whenever the tab
+  // regains focus. Without this, a balance change made in Supabase, by the Stripe
+  // webhook, or in another tab stays stale on screen until a full reload.
+  useEffect(() => {
+    if (!user?.id) return
+    let last = Date.now()
+    const resync = () => {
+      if (document.visibilityState !== 'visible') return
+      if (Date.now() - last < 20_000) return   // throttle bursts
+      last = Date.now()
+      refresh()
+    }
+    document.addEventListener('visibilitychange', resync)
+    window.addEventListener('focus', resync)
+    return () => {
+      document.removeEventListener('visibilitychange', resync)
+      window.removeEventListener('focus', resync)
+    }
+  }, [user?.id, refresh])
+
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
     setUser(null)

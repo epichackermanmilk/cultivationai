@@ -75,8 +75,35 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Failed to link account' }, { status: 500 })
   }
 
-  // ── Sync Discord roles (fire-and-forget — don't block response) ───────────────
-  syncDiscordRoles(user.id).catch(e => console.error('[discord/verify] role sync error:', e))
+  // ── Sync Discord roles — AWAIT so we can tell the user the real outcome ───────
+  // (Previously fire-and-forget: verification reported success even when the role
+  //  grant silently failed — e.g. user not in the server, or bot can't manage roles.)
+  let roleStatus: string = 'synced'
+  let roleMessage = 'Your Discord account is linked and your roles have been applied.'
+  try {
+    const sync = await syncDiscordRoles(user.id)
+    roleStatus = sync.status
+    if (!sync.ok) {
+      if (sync.status === 'not_in_server') {
+        roleMessage = 'Account linked — but you haven\'t joined the NovelCodex Discord server yet, so no role could be assigned. Join the server, then hit "Resync roles" on your profile.'
+      } else if (sync.status === 'forbidden') {
+        roleMessage = 'Account linked, but the bot couldn\'t assign your role (permission/role-hierarchy issue). We\'ve logged it — please contact support.'
+      } else if (sync.status === 'no_bot_token') {
+        roleMessage = 'Account linked. Role assignment is temporarily unavailable — try "Resync roles" shortly.'
+      } else {
+        roleMessage = 'Account linked, but role assignment failed. Try "Resync roles" on your profile, or contact support.'
+      }
+    }
+  } catch (e) {
+    console.error('[discord/verify] role sync error:', e)
+    roleStatus = 'error'
+    roleMessage = 'Account linked, but role assignment failed. Try "Resync roles" on your profile.'
+  }
 
-  return NextResponse.json({ ok: true, discordUserId })
+  // Record last sync outcome for observability/debugging (best-effort — column may not exist)
+  try {
+    await sb.from('profiles').update({ discord_role_status: roleStatus }).eq('id', user.id)
+  } catch { /* column optional */ }
+
+  return NextResponse.json({ ok: true, discordUserId, roleStatus, roleSynced: roleStatus === 'synced', message: roleMessage })
 }

@@ -548,11 +548,17 @@ ${context}`
         // if two requests race on the same account.
         if (streamOk) {
           try {
-            await sb
-              .from('profiles')
-              .update({ tokens: profile.tokens - CHAT_COST })
-              .eq('id', user.id)
-              .gte('tokens', CHAT_COST)
+            // Atomic single-statement decrement — prevents concurrent chats from
+            // reading the same balance and under-charging. Falls back to the
+            // guarded update if the RPC isn't deployed yet (pre-migration).
+            const { error: rpcErr } = await sb.rpc('debit_tokens', { p_user: user.id, p_amount: CHAT_COST })
+            if (rpcErr) {
+              await sb
+                .from('profiles')
+                .update({ tokens: profile.tokens - CHAT_COST })
+                .eq('id', user.id)
+                .gte('tokens', CHAT_COST)
+            }
           } catch { /* non-fatal — usage already logged */ }
         }
       }

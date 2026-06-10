@@ -41,3 +41,21 @@ CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users
 --   WHERE tokens = 100 AND tokens_ever_purchased = 0 AND onboarding_bonus_claimed = false;
 -- UPDATE public.profiles SET tokens = 50
 --   WHERE tokens = 110 AND tokens_ever_purchased = 0 AND onboarding_bonus_claimed = true;
+
+-- ────────────────────────────────────────────────────────────────────────────
+-- 4) Atomic token debit (fixes the concurrent-chat under-charge race).
+--    The app calls this RPC; it decrements in a single statement so two parallel
+--    requests can't both read the same balance and under-deduct. Returns the new
+--    balance, or NULL if the user didn't have enough (caller treats NULL as 402).
+-- ────────────────────────────────────────────────────────────────────────────
+CREATE OR REPLACE FUNCTION public.debit_tokens(p_user uuid, p_amount int)
+RETURNS int LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE new_balance int;
+BEGIN
+  UPDATE public.profiles SET tokens = tokens - p_amount
+  WHERE id = p_user AND tokens >= p_amount
+  RETURNING tokens INTO new_balance;
+  RETURN new_balance;   -- NULL when insufficient funds / no row
+END;
+$$;
+REVOKE ALL ON FUNCTION public.debit_tokens(uuid, int) FROM public, anon, authenticated;

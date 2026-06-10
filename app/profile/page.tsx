@@ -184,6 +184,10 @@ export default function ProfilePage() {
       if (!r.ok) { setDiscordError(d.error ?? 'Verification failed'); return }
       setDiscordVerified(true)
       setDiscordStep('verified')
+      // Account linked — but the role grant can still fail (e.g. not in the server).
+      // Surface the real outcome instead of implying everything worked.
+      if (d.roleSynced === false && d.message) setDiscordError(d.message)
+      else setDiscordError(null)
     } catch {
       setDiscordError('Network error — try again')
     } finally {

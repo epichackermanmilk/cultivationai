@@ -65,36 +65,68 @@ export async function sendDiscordDM(discordUserId: string, content: string): Pro
   }
 }
 
-/** Get a guild member's current roles. Returns null if not in server. */
-async function getMemberRoles(discordUserId: string): Promise<string[] | null> {
-  const res = await fetch(`${DISCORD_API}/guilds/${DISCORD_GUILD_ID}/members/${discordUserId}`, {
-    headers: botHeaders(),
-  })
-  if (res.status === 404) return null
-  if (!res.ok) return null
-  const member = await res.json() as { roles: string[] }
-  return member.roles ?? []
+/** Structured outcome so callers can surface real status instead of failing silently. */
+export type DiscordSyncStatus =
+  | 'synced'         // roles applied (or already correct)
+  | 'no_bot_token'   // server misconfig — DISCORD_BOT_TOKEN missing
+  | 'no_link'        // user has no verified Discord linked
+  | 'not_in_server'  // user hasn't joined the guild — can't assign roles
+  | 'forbidden'      // bot lacks MANAGE_ROLES or role hierarchy is wrong
+  | 'error'          // network / unexpected
+export interface DiscordSyncResult {
+  ok: boolean
+  status: DiscordSyncStatus
+  appliedRoles?: string[]
+  error?: string
 }
 
-/** Set a member's full role list (preserving non-NC roles). */
-async function setMemberRoles(discordUserId: string, newRoles: string[]): Promise<boolean> {
-  const res = await fetch(`${DISCORD_API}/guilds/${DISCORD_GUILD_ID}/members/${discordUserId}`, {
-    method:  'PATCH',
-    headers: botHeaders(),
-    body:    JSON.stringify({ roles: newRoles }),
-  })
-  return res.ok
+type MemberResult =
+  | { kind: 'ok'; roles: string[] }
+  | { kind: 'not_in_server' }
+  | { kind: 'error'; status: number; error: string }
+
+/** Get a guild member's current roles, distinguishing "not in server" from errors. */
+async function getMemberRoles(discordUserId: string): Promise<MemberResult> {
+  try {
+    const res = await fetch(`${DISCORD_API}/guilds/${DISCORD_GUILD_ID}/members/${discordUserId}`, { headers: botHeaders() })
+    if (res.status === 404) return { kind: 'not_in_server' }
+    if (!res.ok) {
+      const body = await res.text().catch(() => '')
+      return { kind: 'error', status: res.status, error: body.slice(0, 200) }
+    }
+    const member = await res.json() as { roles: string[] }
+    return { kind: 'ok', roles: member.roles ?? [] }
+  } catch (e) {
+    return { kind: 'error', status: 0, error: String(e) }
+  }
+}
+
+/** Set a member's full role list (preserving non-NC roles). Returns status. */
+async function setMemberRoles(discordUserId: string, newRoles: string[]): Promise<{ ok: boolean; status: number; error?: string }> {
+  try {
+    const res = await fetch(`${DISCORD_API}/guilds/${DISCORD_GUILD_ID}/members/${discordUserId}`, {
+      method:  'PATCH',
+      headers: botHeaders(),
+      body:    JSON.stringify({ roles: newRoles }),
+    })
+    if (res.ok) return { ok: true, status: res.status }
+    const body = await res.text().catch(() => '')
+    return { ok: false, status: res.status, error: body.slice(0, 200) }
+  } catch (e) {
+    return { ok: false, status: 0, error: String(e) }
+  }
 }
 
 // ── Main sync function ─────────────────────────────────────────────────────────
 
 /**
  * Compute the correct NC roles for a user and apply them to Discord.
- * Safe to call on every purchase / subscription change.
- * No-ops silently if user has no linked Discord or isn't in the server.
+ * Safe to call on every purchase / subscription / verification change.
+ * Returns a structured result so callers can detect + surface silent failures
+ * (e.g. user not in the server, or the bot can't manage the roles).
  */
-export async function syncDiscordRoles(supabaseUserId: string): Promise<void> {
-  if (!process.env.DISCORD_BOT_TOKEN) return
+export async function syncDiscordRoles(supabaseUserId: string): Promise<DiscordSyncResult> {
+  if (!process.env.DISCORD_BOT_TOKEN) return { ok: false, status: 'no_bot_token' }
 
   const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -106,7 +138,7 @@ export async function syncDiscordRoles(supabaseUserId: string): Promise<void> {
     .eq('id', supabaseUserId)
     .maybeSingle()
 
-  if (!profile?.discord_user_id || !profile.discord_verified) return
+  if (!profile?.discord_user_id || !profile.discord_verified) return { ok: false, status: 'no_link' }
 
   const discordId  = profile.discord_user_id
   const tokensEver = (profile.tokens_ever_purchased as number) ?? 0
@@ -117,44 +149,40 @@ export async function syncDiscordRoles(supabaseUserId: string): Promise<void> {
 
   // ── Determine desired NC roles ────────────────────────────────────────────────
   const desired = new Set<string>()
-
-  // Base member role — always present once linked
-  desired.add(DISCORD_ROLES.NovelCodex)
-
-  // Subscription roles (mutually upgrade — Scholar gets both)
+  desired.add(DISCORD_ROLES.NovelCodex)               // base — always once linked
   if (subActive && subTier === 'scholar') {
     desired.add(DISCORD_ROLES.Scholar)
-    desired.add(DISCORD_ROLES.Reader)  // Scholar is a superset
+    desired.add(DISCORD_ROLES.Reader)                 // Scholar is a superset
   } else if (subActive) {
     desired.add(DISCORD_ROLES.Reader)
   }
-
-  // Spend tiers (cumulative — higher tier includes lower)
   if (tokensEver >= 20000) {
-    desired.add(DISCORD_ROLES.ImmortalSage)
-    desired.add(DISCORD_ROLES.Sage)
-    desired.add(DISCORD_ROLES.Seeker)
+    desired.add(DISCORD_ROLES.ImmortalSage); desired.add(DISCORD_ROLES.Sage); desired.add(DISCORD_ROLES.Seeker)
   } else if (tokensEver >= 3500) {
-    desired.add(DISCORD_ROLES.Sage)
-    desired.add(DISCORD_ROLES.Seeker)
+    desired.add(DISCORD_ROLES.Sage); desired.add(DISCORD_ROLES.Seeker)
   } else if (tokensEver >= 550) {
     desired.add(DISCORD_ROLES.Seeker)
   }
 
-  // ── Get current roles and compute diff ───────────────────────────────────────
-  const currentRoles = await getMemberRoles(discordId)
-  if (currentRoles === null) return  // not in server — skip silently
-
-  // Keep all non-NC roles (e.g. Omega Bot cultivation roles)
-  const preserved = currentRoles.filter(r => !NC_MANAGED_ROLES.has(r))
-  const newRoles   = [...preserved, ...desired]
-
-  // Only PATCH if something actually changed
-  const changed =
-    currentRoles.filter(r => NC_MANAGED_ROLES.has(r)).sort().join() !==
-    [...desired].sort().join()
-
-  if (changed) {
-    await setMemberRoles(discordId, newRoles)
+  // ── Get current roles ─────────────────────────────────────────────────────────
+  const member = await getMemberRoles(discordId)
+  if (member.kind === 'not_in_server') return { ok: false, status: 'not_in_server' }
+  if (member.kind === 'error') {
+    console.error('[discord] getMemberRoles error', member.status, member.error)
+    return { ok: false, status: 'error', error: `member fetch ${member.status}` }
   }
+
+  const appliedRoles = [...desired]
+  // Already correct? No PATCH needed — that's a success.
+  const changed =
+    member.roles.filter(r => NC_MANAGED_ROLES.has(r)).sort().join() !== [...desired].sort().join()
+  if (!changed) return { ok: true, status: 'synced', appliedRoles }
+
+  const preserved = member.roles.filter(r => !NC_MANAGED_ROLES.has(r))
+  const result = await setMemberRoles(discordId, [...preserved, ...desired])
+  if (result.ok) return { ok: true, status: 'synced', appliedRoles }
+
+  console.error('[discord] setMemberRoles failed', result.status, result.error)
+  // 403 = missing MANAGE_ROLES perm or NC roles sit above the bot's highest role
+  return { ok: false, status: result.status === 403 ? 'forbidden' : 'error', error: `patch ${result.status}` }
 }

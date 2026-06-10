@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   discord_verified             boolean     NOT NULL DEFAULT false,
   discord_link_code            text,
   discord_link_code_expires_at timestamptz,
-  discord_link_pending_id      text
+  discord_link_pending_id      text,
+  discord_role_status          text                                  -- last role-sync outcome (synced/not_in_server/forbidden/error)
 );
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can read own profile" ON public.profiles;
