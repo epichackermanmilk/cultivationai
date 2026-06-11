@@ -2,6 +2,7 @@ import OpenAI from 'openai'
 import { matchChunks, getChapterSummaries } from '@/lib/supabase'
 import { scrollTitles, scrollRange, scrollChrono, keywordSearch as qdrantKeyword } from '@/lib/qdrant'
 import { parseJsonBody, sanitizeText } from '@/lib/sanitize'
+import { getCastContext } from '@/lib/knowledge'
 import { NextResponse } from 'next/server'
 import { appendFileSync } from 'fs'
 import { join } from 'path'
@@ -498,6 +499,12 @@ ${context}${maxChapter ? `\n\nSPOILER CEILING: The person you're speaking with h
     const spoilerNote = maxChapter
       ? `\nSPOILER CEILING: The reader has only read through chapter ${maxChapter}. Do NOT reveal, hint at, or reference ANY events, deaths, betrayals, power-ups, or plot twists from chapters after ${maxChapter}. If answering requires later-chapter knowledge, say "that happens beyond where you've read — keep going!" instead.\n`
       : ''
+    // Extracted cast roster — helps resolve nicknames/titles/aliases to the right
+    // person. Reference only: facts still must come from the passages.
+    const cast = getCastContext(slug)
+    const castNote = cast
+      ? `\nCAST REFERENCE (for resolving names, aliases, and titles to the right person — do NOT state these as facts unless the passages support them):\n${cast}\n`
+      : ''
     systemPrompt = `You are an AI assistant for readers of the novel "${title}" by ${author}.
 Answer using the passages provided below. They were retrieved by relevance and may be out of order or partial — piece the answer together from whatever relevant details genuinely appear across them, and cite chapter numbers when useful.
 
@@ -507,7 +514,7 @@ GROUNDING RULES — do not break these:
 - It's better to say "the passages don't cover that" than to fabricate. Only answer confidently for things actually present in the passages.
 - You may connect and infer across passages, but inferences must be clearly grounded in what's written — not invented.
 - Be COMPLETELY OBJECTIVE: report what the novel actually depicts — including dark, violent, ruthless, or morally grey content — with no moralizing, no sanitizing, and no personal or AI opinion coloring the facts. Pure, neutral lore.
-${confidenceNote}${spoilerNote}${broadNote}
+${confidenceNote}${spoilerNote}${castNote}${broadNote}
 Relevant passages:
 ${context}`
   }
