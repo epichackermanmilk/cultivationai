@@ -251,21 +251,25 @@ export default function LibraryPage() {
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {visibleNovels.map((novel, index) => (
                 <Fragment key={novel.slug}>
-                  {/* Divider: featured preview above, locked catalogue below */}
+                  {/* Boundary: featured (above) → waitlist → locked catalogue (below) */}
                   {index === firstLockedIndex && firstLockedIndex > 0 && (
-                    <div className="col-span-full mb-1 mt-6">
-                      <div className="rounded-xl border border-[var(--nc-border)] px-5 py-4 text-center"
-                        style={{ background: 'var(--nc-bg2)' }}>
-                        <p className="text-xs font-bold uppercase tracking-widest text-amber-500/70">Coming soon</p>
-                        <p className="mt-1 text-sm font-semibold" style={{ color: 'var(--nc-text)' }}>
-                          {lockedTotal.toLocaleString()} more novels indexing
-                        </p>
-                        <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
-                          A preview of the full library. These unlock as we expand —
-                          join the waitlist below to be notified.
-                        </p>
+                    <>
+                      <div className="col-span-full">
+                        <WaitlistSection />
                       </div>
-                    </div>
+                      <div className="col-span-full mb-1 mt-2">
+                        <div className="rounded-xl border border-[var(--nc-border)] px-5 py-4 text-center"
+                          style={{ background: 'var(--nc-bg2)' }}>
+                          <p className="text-xs font-bold uppercase tracking-widest text-amber-500/70">Coming soon</p>
+                          <p className="mt-1 text-sm font-semibold" style={{ color: 'var(--nc-text)' }}>
+                            {lockedTotal.toLocaleString()} more novels indexing
+                          </p>
+                          <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
+                            A preview of the full library — these unlock as we expand.
+                          </p>
+                        </div>
+                      </div>
+                    </>
                   )}
                   {index > 0 && index % 24 === 0 && (
                     <div className="col-span-full">
@@ -289,8 +293,6 @@ export default function LibraryPage() {
             )}
           </>
         )}
-
-        <WaitlistSection />
       </main>
       <Footer />
       <FeedbackWidget />
