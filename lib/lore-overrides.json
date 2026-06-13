@@ -1,0 +1,141 @@
+{
+  "_note": "CURATED overrides on top of the auto-extracted lore.json. Power-system ladders here are hand-authored and VERIFIED against the indexed chapters (every tier name confirmed to appear in the text). The loader prefers these over the extracted power_system; glossary stays from extraction. This is the per-novel curation layer of the shared template.",
+
+  "reverend-insanity": {
+    "power_system": {
+      "name": "Gu Master Cultivation",
+      "type": "ranked",
+      "summary": "Cultivators ('Gu Masters') raise mystical Gu worms in a personal aperture fueled by primeval essence. Strength is measured in Ranks 1-9; each rank has stages initial/middle/upper/peak. Mastery of a 'path' (Dao) is counted in dao marks.",
+      "ladder": [
+        { "tier": "Rank 1-5 Gu Master", "note": "Mortal cultivators. Rank 5 is the mortal ceiling." },
+        { "tier": "Rank 6 Gu Immortal", "note": "Ascended via refining an Immortal Gu + surviving heavenly tribulation; aperture becomes a Blessed Land. Uses immortal essence (does not regenerate)." },
+        { "tier": "Rank 7 Gu Immortal", "note": "Aperture matures into a Grotto-heaven." },
+        { "tier": "Rank 8 Gu Immortal", "note": "Apex powers of an era." },
+        { "tier": "Rank 9 Gu Venerable", "note": "Only a handful in all history; reshape the world and leave 'true inheritances'." }
+      ],
+      "mechanics": ["Gu are refined, hunted, traded, combined into 'killer moves'.", "Mortal essence regenerates; immortal essence does NOT — permanent scarcity.", "Heaven's Will: a sentient fate that shields destined figures and obstructs heretics; 'qi fortune' (luck) can be plundered."],
+      "_confidence": "high"
+    }
+  },
+
+  "against-the-gods": {
+    "power_system": {
+      "name": "Profound Cultivation (Profound Realms → Divine Way)",
+      "type": "ranked",
+      "summary": "Practitioners refine Profound Energy and ascend the nine Profound Realms, each with 10 internal levels, then break into the Divine Way. Profound strength, profound arts, and profound veins/constellations determine power.",
+      "ladder": [
+        { "tier": "Elementary Profound Realm" },
+        { "tier": "Nascent Profound Realm" },
+        { "tier": "True Profound Realm" },
+        { "tier": "Spirit Profound Realm" },
+        { "tier": "Earth Profound Realm" },
+        { "tier": "Sky Profound Realm" },
+        { "tier": "Emperor Profound Realm" },
+        { "tier": "Tyrant Profound Realm" },
+        { "tier": "Sovereign Profound Realm", "note": "Apex of the mortal Profound Realms." },
+        { "tier": "Divine Origin Realm", "note": "Entry to the Divine Way." },
+        { "tier": "Divine Soul Realm" },
+        { "tier": "Divine Tribulation Realm" },
+        { "tier": "Divine Spirit Realm" },
+        { "tier": "Divine King Realm" },
+        { "tier": "Divine Sovereign Realm" },
+        { "tier": "Divine Master Realm", "note": "Pinnacle of the Divine Way." }
+      ],
+      "mechanics": ["Each Profound Realm has 10 levels (and within those, early/middle/peak).", "Profound energy carries attributes (fire, ice, etc.); profound veins set talent."],
+      "_confidence": "high"
+    }
+  },
+
+  "i-shall-seal-the-heavens": {
+    "power_system": {
+      "name": "Cultivation (Qi Condensation → Immortal Ascension)",
+      "type": "ranked",
+      "summary": "Cultivators refine qi through the classic realm ladder, each realm gated by a bottleneck/tribulation. Beyond Immortal Ascension lie higher, less-common realms.",
+      "ladder": [
+        { "tier": "Qi Condensation" },
+        { "tier": "Foundation Establishment" },
+        { "tier": "Core Formation (Gold Core)" },
+        { "tier": "Nascent Soul" },
+        { "tier": "Spirit Severing" },
+        { "tier": "Dao Seeking" },
+        { "tier": "Immortal Ascension (Ascendant)", "note": "Becoming an Ascendant; higher realms (e.g. Dao Realm) exist beyond." }
+      ],
+      "mechanics": ["Each breakthrough faces a tribulation/bottleneck.", "Battle prowess can exceed realm via techniques, treasures, and bloodline."],
+      "_confidence": "high"
+    }
+  },
+
+  "a-will-eternal": {
+    "power_system": {
+      "name": "Cultivation (Qi Condensation → Deva)",
+      "type": "ranked",
+      "summary": "Same broad cultivation framework as the author's other works: refine qi up the realm ladder toward the Deva Realm. Pill/spirit-medicine refinement is a major theme.",
+      "ladder": [
+        { "tier": "Qi Condensation", "note": "Has many internal levels." },
+        { "tier": "Foundation Establishment" },
+        { "tier": "Core Formation" },
+        { "tier": "Nascent Soul" },
+        { "tier": "Spirit Severing" },
+        { "tier": "Deva Realm", "note": "Apex realm reached in the story." }
+      ],
+      "mechanics": ["Medicinal pills and spirit medicines accelerate cultivation; medicinal toxins accumulate.", "Merit points buy resources within sects."],
+      "_confidence": "high"
+    }
+  },
+
+  "shadow-slave": {
+    "power_system": {
+      "name": "Awakened Ascension (non-numeric)",
+      "type": "non-numeric",
+      "summary": "Not a numeric cultivation ladder. Ordinary people are Sleepers; those who survive the Nightmare Spell become Awakened, gaining an Aspect and Aspect Abilities. Power grows by surviving deeper Nightmares and collecting Memories; each Awakened has a hidden True Name. Strength is described by ascension tiers.",
+      "ladder": [
+        { "tier": "Sleeper", "note": "Un-awakened ordinary person." },
+        { "tier": "Aspirant", "note": "Newly entering the Dream Realm / on the cusp of awakening." },
+        { "tier": "Awakened", "note": "Has an Aspect + abilities." },
+        { "tier": "Master" },
+        { "tier": "Saint" },
+        { "tier": "Transcendent" },
+        { "tier": "Sovereign" },
+        { "tier": "Ascended", "note": "Pinnacle tier." }
+      ],
+      "mechanics": ["Awakened gain an Aspect (their core power) and Aspect Abilities.", "Power grows via surviving Nightmares and absorbing Memories.", "Every Awakened guards a secret True Name; soul/shadow powers are central."],
+      "_confidence": "high"
+    }
+  },
+
+  "warlock-of-the-magus-world": {
+    "power_system": {
+      "name": "Magus Ranks",
+      "type": "ranked",
+      "summary": "Practitioners are Magi who cultivate spiritual force and knowledge, ascending Magus grades. Bloodlines are graded and matter greatly. Higher 'transcendent' tiers exist beyond the standard Magus ranks.",
+      "ladder": [
+        { "tier": "Apprentice Magus", "note": "1st-3rd grade apprentice." },
+        { "tier": "(Official) Magus" },
+        { "tier": "Great Magus" },
+        { "tier": "Archmage" },
+        { "tier": "Morning Star", "note": "Transcendent tier above Archmage." },
+        { "tier": "Dark Saint", "note": "Higher transcendent tier (order of top tiers per chapters)." }
+      ],
+      "mechanics": ["Spiritual force, meditation, and magic-array/rune work drive power.", "Bloodlines are graded (up to and beyond Grade A) and confer strong traits."],
+      "_confidence": "medium — standard Magus ranks verified; exact order of the top transcendent tiers should be confirmed against later chapters."
+    }
+  },
+
+  "renegade-immortal": {
+    "power_system": {
+      "name": "Cultivation (early-to-mid verified)",
+      "type": "ranked",
+      "summary": "Classic qi-refinement cultivation ladder. The early-to-mid realms below are verified; this novel's higher realms vary by translation and should be confirmed against the chapters.",
+      "ladder": [
+        { "tier": "Qi Condensation" },
+        { "tier": "Foundation Establishment" },
+        { "tier": "Core Formation" },
+        { "tier": "Nascent Soul" },
+        { "tier": "Spirit Severing" },
+        { "tier": "Ascendant", "note": "Higher realms (e.g. Illusory Yin/Yang and beyond) exist — defer to chapters for exact order." }
+      ],
+      "mechanics": ["Breakthroughs are perilous and resource-hungry; the protagonist's path is famously grim and self-reliant."],
+      "_confidence": "medium — early/mid realms verified; later realms intentionally left to retrieval."
+    }
+  }
+}

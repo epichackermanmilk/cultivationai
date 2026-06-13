@@ -9,6 +9,7 @@
 
 import RAW   from './knowledge.json'
 import LORE  from './lore.json'
+import OVR   from './lore-overrides.json'
 
 export interface KBCharacter {
   name: string; aliases: string[]; affiliation: string; role: string; cultivation: string; one_line: string
@@ -22,12 +23,25 @@ export interface NovelLore { slug: string; power_system?: PowerSystem; glossary?
 
 const CHARS = RAW  as unknown as Record<string, KBNovel>
 const LOREDATA = LORE as unknown as Record<string, NovelLore>
+const OVERRIDES = OVR as unknown as Record<string, { power_system?: PowerSystem }>
 
 export function hasKnowledge(slug: string): boolean {
   return !!CHARS[slug]?.characters?.length
 }
 export function getNovelKnowledge(slug: string): KBNovel | null { return CHARS[slug] ?? null }
-export function getNovelLore(slug: string): NovelLore | null { return LOREDATA[slug] ?? null }
+
+// Merge curated overrides (hand-authored, verified power-system) over the
+// auto-extracted lore. Glossary stays from extraction; power_system prefers the override.
+export function getNovelLore(slug: string): NovelLore | null {
+  const base = LOREDATA[slug]
+  const ovr  = OVERRIDES[slug]
+  if (!base && !ovr) return null
+  return {
+    slug,
+    power_system: ovr?.power_system ?? base?.power_system,
+    glossary:     base?.glossary ?? [],
+  }
+}
 
 export function findCharacter(slug: string, name: string): KBCharacter | null {
   const kb = CHARS[slug]; if (!kb) return null
@@ -37,7 +51,7 @@ export function findCharacter(slug: string, name: string): KBCharacter | null {
 
 // Compact, always-injectable power-system summary (small + high value for these novels).
 export function getPowerSummary(slug: string): string {
-  const ps = LOREDATA[slug]?.power_system
+  const ps = getNovelLore(slug)?.power_system
   if (!ps || (!ps.ladder?.length && !ps.summary)) return ''
   const parts: string[] = []
   if (ps.summary) parts.push(ps.summary.trim())
