@@ -10,6 +10,7 @@
 import RAW   from './knowledge.json'
 import LORE  from './lore.json'
 import OVR   from './lore-overrides.json'
+import KEYF  from './key-facts.json'
 
 export interface KBCharacter {
   name: string; aliases: string[]; affiliation: string; role: string; cultivation: string; one_line: string
@@ -24,6 +25,7 @@ export interface NovelLore { slug: string; power_system?: PowerSystem; glossary?
 const CHARS = RAW  as unknown as Record<string, KBNovel>
 const LOREDATA = LORE as unknown as Record<string, NovelLore>
 const OVERRIDES = OVR as unknown as Record<string, { power_system?: PowerSystem }>
+const KEYFACTS = KEYF as unknown as Record<string, string[]>
 
 export function hasKnowledge(slug: string): boolean {
   return !!CHARS[slug]?.characters?.length
@@ -79,6 +81,11 @@ function mentioned(question: string, term: string): boolean {
 export function getRelevantFacts(slug: string, question: string, opts?: { maxGlossary?: number; maxChars?: number }): string {
   const q = ` ${question.toLowerCase()} `
   const blocks: string[] = []
+
+  // Always-injected marquee facts (protagonist, premise, central device) — fixes
+  // misses where the question references "the protagonist" or a concept by name.
+  const key = KEYFACTS[slug]
+  if (key?.length) blocks.push('Key facts:\n' + key.map(f => `- ${f}`).join('\n'))
 
   const power = getPowerSummary(slug)
   if (power) blocks.push(`Power/cultivation system:\n${power}`)

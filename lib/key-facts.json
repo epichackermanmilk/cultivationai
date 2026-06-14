@@ -1,0 +1,38 @@
+{
+  "_note": "Marquee canonical facts ALWAYS injected into book-mode chat (not query-gated). These are the highest-value, verified essentials a precise answer most often needs: protagonist, premise/central device, power system. Fixes misses where the question references 'the protagonist' or a concept without naming the entity.",
+
+  "reverend-insanity": [
+    "Protagonist: Fang Yuan (Gu Yue Fang Yuan) — a cold, supremely self-interested schemer; to him sentiment is a tool or a weakness.",
+    "Premise: Fang Yuan is reborn ~500 years into the past via the Spring Autumn Cicada — a rank-six time Gu that sends his soul back with all his memories.",
+    "Power system: Gu Master cultivation, Ranks 1-9 (Rank 1-5 mortal, 6-8 Gu Immortal, 9 Gu Venerable)."
+  ],
+  "against-the-gods": [
+    "Protagonist: Yun Che — reborn carrying the Evil God's power/divine origins; wields the Sky Poison Pearl and the Heretic God / Evil God legacy.",
+    "Power system: Profound cultivation — the nine Profound Realms (Elementary → Sovereign), then the Divine Way (Divine Origin → Divine Master)."
+  ],
+  "shadow-slave": [
+    "Protagonist: Sunny — an Awakened with shadow/soul powers; like all Awakened he guards a secret True Name.",
+    "Power system: NOT numeric cultivation — ordinary people are Sleepers; survivors of the Nightmare Spell become Awakened, gain an Aspect and Aspect Abilities, and grow stronger by surviving deeper Nightmares and absorbing Memories.",
+    "Nephis is known by the title 'Changing Star'."
+  ],
+  "supreme-magus": [
+    "Protagonist: Lith (Lith Verhen) — a reincarnated, secretive, pragmatic mage/warrior.",
+    "Setting: a magic world of Mages and Warriors; monsters are ranked up to Emperor Beast."
+  ],
+  "i-shall-seal-the-heavens": [
+    "Protagonist: Meng Hao — a scholar-turned-cultivator, stubborn and shrewd; famous for hoarding and his 'I'll seal the heavens' defiance.",
+    "Power system: Qi Condensation → Foundation Establishment → Core Formation → Nascent Soul → Spirit Severing → Dao Seeking → Immortal Ascension."
+  ],
+  "renegade-immortal": [
+    "Protagonist: Wang Lin — an ordinary-born cultivator whose path is famously grim, ruthless, and self-reliant; he will do anything to survive and grow stronger.",
+    "Power system: classic qi-refinement ladder (Qi Condensation → Foundation Establishment → Core Formation → Nascent Soul → Spirit Severing → Ascendant and beyond)."
+  ],
+  "a-will-eternal": [
+    "Protagonist: Bai Xiaochun — a comedic, shameless, self-preserving cultivator obsessed with living forever. In the Wildlands arc he infiltrates disguised under the alias 'Nightcrypt'. Other epithets include Plaguedevil/Plague Saint.",
+    "Power system: Qi Condensation → Foundation Establishment → Core Formation → Nascent Soul → Spirit Severing → Deva Realm. Pill/spirit-medicine refinement is a central theme."
+  ],
+  "warlock-of-the-magus-world": [
+    "Protagonist: Leylin Farlier — a cold, hyper-rational transmigrator who sacrifices emotion for power, aided by his AI 'Spirit' (the Magus World Chip) that calculates optimal decisions.",
+    "Power system: Magus ranks — Apprentice Magus → Magus → Great Magus → Archmage → higher transcendent tiers; bloodlines are graded and important."
+  ]
+}
