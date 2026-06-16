@@ -130,8 +130,8 @@ export default function TestNewLibrary() {
   }, [byChapters])
 
   const trending = useMemo(() => byChapters.slice(0, 18), [byChapters])
-  const latestPool = useMemo(() => byChapters.slice(0, 50), [byChapters])
-  const LU_PER_PAGE = 10
+  const LU_PER_PAGE = 6                      // 3 rows × 2 cols — keeps the section short
+  const latestPool = useMemo(() => byChapters.slice(0, LU_PER_PAGE * 5), [byChapters]) // 5 pages
   const luPages = Math.max(1, Math.ceil(latestPool.length / LU_PER_PAGE))
   const luSlice = latestPool.slice((luPage - 1) * LU_PER_PAGE, luPage * LU_PER_PAGE)
 
@@ -162,7 +162,7 @@ export default function TestNewLibrary() {
 
       <TestHeader />
 
-      <main className="relative z-10 mx-auto max-w-[1400px] px-4 pb-24 sm:px-6">
+      <main className="relative z-10 mx-auto max-w-[1400px] px-4 pb-12 sm:px-6">
 
         {/* ── Top row (curated, looping, click-to-open) ─────────────────────── */}
         {loading ? (
@@ -172,9 +172,11 @@ export default function TestNewLibrary() {
         )}
 
         {/* ── Tight content frame ───────────────────────────────────────────── */}
-        <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-6 lg:grid-cols-[1fr_340px]">
+        {/* min-w-0 on the 1fr column is critical: without it the inner scroll-rails
+            force the grid track wider than the viewport (horizontal page scroll). */}
+        <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-[minmax(0,1fr)_340px]">
           {/* Left column */}
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-5">
             {/* Trending Today — single scrolling row + arrows */}
             <div>
               <div className="mb-3 flex items-center justify-between">
@@ -202,7 +204,7 @@ export default function TestNewLibrary() {
               <h2 className="mb-3 text-lg font-extrabold tracking-tight">Latest Updates</h2>
               <div className="tnl-panel p-2 sm:p-3">
                 <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
-                  {(loading ? Array.from({ length: 10 }) : luSlice).map((n, i) => n ? (
+                  {(loading ? Array.from({ length: LU_PER_PAGE }) : luSlice).map((n, i) => n ? (
                     <div key={(n as Novel).slug} className="flex gap-3 border-b border-white/[0.06] py-2.5 last:border-0">
                       <Link href={`/testnewlibrary/${(n as Novel).slug}`} className="shrink-0">
                         <Cover novel={n as Novel} className="h-[68px] w-[50px] rounded-lg ring-1 ring-white/10" />
@@ -270,7 +272,7 @@ export default function TestNewLibrary() {
         </div>
 
         {/* ── Announcements ─────────────────────────────────────────────────── */}
-        <section className="mt-8">
+        <section className="mt-6">
           <div className="tnl-panel p-5">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-extrabold tracking-tight">Announcements</h2>
