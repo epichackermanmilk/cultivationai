@@ -11,6 +11,7 @@ import RAW   from './knowledge.json'
 import LORE  from './lore.json'
 import OVR   from './lore-overrides.json'
 import KEYF  from './key-facts.json'
+import CANON from './canon.json'
 
 export interface KBCharacter {
   name: string; aliases: string[]; affiliation: string; role: string; cultivation: string; one_line: string
@@ -26,6 +27,13 @@ const CHARS = RAW  as unknown as Record<string, KBNovel>
 const LOREDATA = LORE as unknown as Record<string, NovelLore>
 const OVERRIDES = OVR as unknown as Record<string, { power_system?: PowerSystem }>
 const KEYFACTS = KEYF as unknown as Record<string, string[]>
+
+export interface CanonRel { a: string; relation: string; b: string; note?: string }
+export interface CanonEvent { chapter_approx?: string; event: string; summary?: string }
+interface CanonNovel { slug: string; relationships?: CanonRel[]; key_events?: CanonEvent[] }
+const CANONDATA = CANON as unknown as Record<string, CanonNovel>
+
+export function getCanon(slug: string): CanonNovel | null { return CANONDATA[slug] ?? null }
 
 export function hasKnowledge(slug: string): boolean {
   return !!CHARS[slug]?.characters?.length
@@ -114,6 +122,20 @@ export function getRelevantFacts(slug: string, question: string, opts?: { maxGlo
       const cul = c.cultivation ? `; ${c.cultivation}` : ''
       return `- ${c.name}${al}${aff}${cul}`
     }).join('\n'))
+  }
+
+  // Relationships referencing a character named in the question — "who is whose
+  // master/family/enemy" facts that plain chunk retrieval misses. SAFETY FILTER:
+  // only inject relationships where BOTH endpoints resolve to a known character in
+  // the verified KB — this drops the noisy auto-extracted edges (to sects, vague
+  // groups, or "his own techniques") that would otherwise risk asserting wrong facts.
+  const rels = CANONDATA[slug]?.relationships ?? []
+  const hitR = rels
+    .filter(r => (mentioned(q, r.a) || mentioned(q, r.b)) && findCharacter(slug, r.a) && findCharacter(slug, r.b))
+    .slice(0, 8)
+  if (hitR.length) {
+    blocks.push('Relationships (reference — confirm against passages):\n' + hitR.map(r =>
+      `- ${r.a} ${r.relation} ${r.b}`).join('\n'))
   }
 
   return blocks.join('\n\n')
