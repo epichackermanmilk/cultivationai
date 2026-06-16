@@ -39,6 +39,10 @@ export function hasKnowledge(slug: string): boolean {
   return !!CHARS[slug]?.characters?.length
 }
 export function getNovelKnowledge(slug: string): KBNovel | null { return CHARS[slug] ?? null }
+export function getKeyFacts(slug: string): string[] { return KEYFACTS[slug] ?? [] }
+export function getProtagonist(slug: string): KBCharacter | null {
+  return CHARS[slug]?.characters.find(c => c.role === 'protagonist') ?? CHARS[slug]?.characters[0] ?? null
+}
 
 // Merge curated overrides (hand-authored, verified power-system) over the
 // auto-extracted lore. Glossary stays from extraction; power_system prefers the override.

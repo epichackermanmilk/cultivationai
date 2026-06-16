@@ -203,7 +203,7 @@ export default function TestNewLibrary() {
                   ))}
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2.5">
-                  <Link href={`/novel/${selected.slug}`} className="rounded-xl px-4 py-2 text-sm font-semibold transition hover:brightness-110"
+                  <Link href={`/testnewlibrary/${selected.slug}`} className="rounded-xl px-4 py-2 text-sm font-semibold transition hover:brightness-110"
                     style={{ background: 'rgba(var(--v),0.95)', boxShadow: `0 0 22px ${rgba(accent, 0.5)}` }}>Open Novel →</Link>
                   <Link href={`/novel/${selected.slug}`} className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold backdrop-blur transition hover:bg-white/10">Chat with this book</Link>
                 </div>
@@ -227,7 +227,7 @@ export default function TestNewLibrary() {
           <Section title="Latest Updates" noTop>
             <div className="tnl-panel divide-y divide-white/5">
               {(loading ? Array.from({ length: 6 }) : latest).map((n, i) => n ? (
-                <Link key={(n as Novel).slug} href={`/novel/${(n as Novel).slug}`} className="flex items-center gap-3 p-3 transition hover:bg-white/5">
+                <Link key={(n as Novel).slug} href={`/testnewlibrary/${(n as Novel).slug}`} className="flex items-center gap-3 p-3 transition hover:bg-white/5">
                   <Cover novel={n as Novel} className="h-16 w-12 shrink-0 rounded-lg ring-1 ring-white/10" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">{(n as Novel).title}</p>
@@ -256,7 +256,7 @@ export default function TestNewLibrary() {
               </div>
               <div className="space-y-1">
                 {(loading ? Array.from({ length: 5 }) : popular).map((n, i) => n ? (
-                  <Link key={(n as Novel).slug} href={`/novel/${(n as Novel).slug}`} onMouseEnter={() => setSelected(n as Novel)}
+                  <Link key={(n as Novel).slug} href={`/testnewlibrary/${(n as Novel).slug}`} onMouseEnter={() => setSelected(n as Novel)}
                     className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-white/5">
                     <span className="w-6 text-center text-lg font-black" style={{ color: i < 3 ? 'rgb(var(--v))' : 'rgba(255,255,255,0.3)' }}>{i + 1}</span>
                     <Cover novel={n as Novel} className="h-14 w-10 shrink-0 rounded-md ring-1 ring-white/10" />
@@ -304,7 +304,7 @@ function Section({ title, children, noTop }: { title: string; children: React.Re
 // ── Grid novel card ───────────────────────────────────────────────────────────
 function NovelCard({ novel, onHover }: { novel: Novel; onHover?: () => void }) {
   return (
-    <Link href={`/novel/${novel.slug}`} onMouseEnter={onHover}
+    <Link href={`/testnewlibrary/${novel.slug}`} onMouseEnter={onHover}
       className="group relative aspect-[3/4] overflow-hidden rounded-2xl ring-1 ring-white/10 transition-all duration-300 hover:-translate-y-1.5 hover:ring-[rgba(var(--v),0.7)]">
       <Cover novel={novel} className="h-full w-full" />
       <div className="absolute inset-x-0 bottom-0 translate-y-1 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-3 transition group-hover:translate-y-0">

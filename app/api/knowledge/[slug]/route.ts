@@ -1,17 +1,23 @@
 // GET /api/knowledge/[slug]
-// Returns the extracted character roster for a novel (canonical names, aliases,
-// affiliation, role, cultivation, one-line). Powers character discovery surfaces.
+// Structured knowledge for a novel: character roster + power system + key facts +
+// protagonist. Powers the Codex Insight panel and character discovery surfaces.
 
 import { NextResponse } from 'next/server'
-import { getNovelKnowledge } from '@/lib/knowledge'
+import { getNovelKnowledge, getNovelLore, getKeyFacts, getProtagonist } from '@/lib/knowledge'
 
 interface RouteContext { params: Promise<{ slug: string }> }
 
 export async function GET(_req: Request, { params }: RouteContext) {
   const { slug } = await params
   const kb = getNovelKnowledge(slug)
-  if (!kb) return NextResponse.json({ slug, characters: [], character_count: 0 })
-  return NextResponse.json(kb, {
-    headers: { 'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600' },
-  })
+  const lore = getNovelLore(slug)
+  return NextResponse.json({
+    slug,
+    characters:    kb?.characters ?? [],
+    character_count: kb?.character_count ?? 0,
+    power_system:  lore?.power_system ?? null,
+    glossary:      lore?.glossary ?? [],
+    key_facts:     getKeyFacts(slug),
+    protagonist:   getProtagonist(slug),
+  }, { headers: { 'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600' } })
 }
