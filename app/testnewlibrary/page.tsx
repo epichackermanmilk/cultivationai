@@ -83,6 +83,7 @@ export default function TestNewLibrary() {
   const [selected, setSelected] = useState<Novel | null>(null)
   const [popTab, setPopTab] = useState<'Weekly' | 'Monthly' | 'All Time'>('Weekly')
   const railRef = useRef<HTMLDivElement>(null)
+  const trendRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetch('/api/novels/all').then(r => r.json()).then((d: Novel[]) => {
@@ -107,6 +108,9 @@ export default function TestNewLibrary() {
 
   const scrollRail = useCallback((dir: number) => {
     railRef.current?.scrollBy({ left: dir * 600, behavior: 'smooth' })
+  }, [])
+  const scrollEl = useCallback((ref: React.RefObject<HTMLDivElement | null>, dir: number) => {
+    ref.current?.scrollBy({ left: dir * 480, behavior: 'smooth' })
   }, [])
 
   return (
@@ -159,7 +163,7 @@ export default function TestNewLibrary() {
       <main className="relative z-10 mx-auto max-w-[1400px] px-4 pb-24 sm:px-6">
 
         {/* ── Featured carousel ─────────────────────────────────────────────── */}
-        <section className="pt-7">
+        <section className="pt-5">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-white/50">Featured</h2>
             <div className="hidden gap-2 sm:flex">
@@ -189,86 +193,77 @@ export default function TestNewLibrary() {
           )}
         </section>
 
-        {/* ── Spotlight (selected novel hero strip) ─────────────────────────── */}
-        {selected && (
-          <section className="mt-6 tnl-panel overflow-hidden p-5 sm:p-6">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-              <Cover novel={selected} className="h-44 w-32 shrink-0 rounded-xl ring-1 ring-white/15" eager />
-              <div className="min-w-0">
-                <h1 className="text-2xl font-extrabold leading-tight sm:text-3xl">{selected.title}</h1>
-                <p className="mt-1 text-sm text-white/60">{selected.author || 'Unknown author'} · {(selected.total_chapters || 0).toLocaleString()} chapters</p>
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {(selected.genres ?? []).slice(0, 5).map(g => (
-                    <span key={g} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs text-white/70">{g}</span>
-                  ))}
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2.5">
-                  <Link href={`/testnewlibrary/${selected.slug}`} className="rounded-xl px-4 py-2 text-sm font-semibold transition hover:brightness-110"
-                    style={{ background: 'rgba(var(--v),0.95)', boxShadow: `0 0 22px ${rgba(accent, 0.5)}` }}>Open Novel →</Link>
-                  <Link href={`/novel/${selected.slug}`} className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold backdrop-blur transition hover:bg-white/10">Chat with this book</Link>
+        {/* ── Tight content frame: Trending + Latest (left), Popular (right) ── */}
+        <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-6 lg:grid-cols-[1fr_340px]">
+          {/* Left column */}
+          <div className="space-y-6">
+            {/* Trending Today — single scrolling row + arrows */}
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-lg font-extrabold tracking-tight">Trending Today</h2>
+                <div className="hidden gap-2 sm:flex">
+                  <button onClick={() => scrollEl(trendRef, -1)} className="tnl-navbtn">‹</button>
+                  <button onClick={() => scrollEl(trendRef, 1)} className="tnl-navbtn">›</button>
                 </div>
               </div>
-            </div>
-          </section>
-        )}
-
-        {/* ── Trending Lately ───────────────────────────────────────────────── */}
-        <Section title="Trending Lately">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            {(loading ? Array.from({ length: 5 }) : trending).map((n, i) => n ? (
-              <NovelCard key={(n as Novel).slug} novel={n as Novel} onHover={() => setSelected(n as Novel)} />
-            ) : <Skeleton key={i} className="aspect-[3/4] rounded-2xl" />)}
-          </div>
-        </Section>
-
-        {/* ── Latest Updates + Popular ──────────────────────────────────────── */}
-        <div className="mt-12 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
-          {/* Latest Updates */}
-          <Section title="Latest Updates" noTop>
-            <div className="tnl-panel divide-y divide-white/5">
-              {(loading ? Array.from({ length: 6 }) : latest).map((n, i) => n ? (
-                <Link key={(n as Novel).slug} href={`/testnewlibrary/${(n as Novel).slug}`} className="flex items-center gap-3 p-3 transition hover:bg-white/5">
-                  <Cover novel={n as Novel} className="h-16 w-12 shrink-0 rounded-lg ring-1 ring-white/10" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">{(n as Novel).title}</p>
-                    <div className="mt-1 flex flex-wrap gap-1.5">
-                      {[0, 1, 2].map(k => {
-                        const ch = ((n as Novel).total_chapters || 0) - k
-                        return ch > 0 ? <span key={k} className="rounded-md bg-white/5 px-2 py-0.5 text-[11px] text-white/60">Ch. {ch}</span> : null
-                      })}
+              <div ref={trendRef} className="tnl-rail flex gap-3 overflow-x-auto pb-1">
+                {(loading ? Array.from({ length: 7 }) : trending).map((n, i) => n ? (
+                  <Link key={(n as Novel).slug} href={`/testnewlibrary/${(n as Novel).slug}`} onMouseEnter={() => setSelected(n as Novel)} className="group w-[148px] shrink-0">
+                    <div className="relative aspect-[3/4] overflow-hidden rounded-xl ring-1 ring-white/10 transition group-hover:-translate-y-1 group-hover:ring-[rgba(var(--v),0.6)]">
+                      <Cover novel={n as Novel} className="h-full w-full" />
                     </div>
-                  </div>
-                  <span className="shrink-0 text-[11px] text-white/40">{(n as Novel).genres?.[0] ?? ''}</span>
-                </Link>
-              ) : <div key={i} className="p-3"><Skeleton className="h-16 rounded-lg" /></div>)}
+                    <p className="mt-1.5 truncate text-[13px] font-semibold">{(n as Novel).title}</p>
+                    <p className="text-[11px] text-white/50">Ch. {(n as Novel).total_chapters || 0}</p>
+                  </Link>
+                ) : <div key={i} className="w-[148px] shrink-0"><Skeleton className="aspect-[3/4] rounded-xl" /></div>)}
+              </div>
             </div>
-          </Section>
 
-          {/* Popular ranking */}
-          <Section title="Popular" noTop>
-            <div className="tnl-panel p-4">
-              <div className="mb-4 flex gap-1 rounded-xl bg-black/30 p-1">
+            {/* Latest Updates — two columns */}
+            <div>
+              <h2 className="mb-3 text-lg font-extrabold tracking-tight">Latest Updates</h2>
+              <div className="tnl-panel grid grid-cols-1 gap-px overflow-hidden sm:grid-cols-2">
+                {(loading ? Array.from({ length: 8 }) : latest).map((n, i) => n ? (
+                  <Link key={(n as Novel).slug} href={`/testnewlibrary/${(n as Novel).slug}`} className="flex items-center gap-3 bg-white/[0.01] p-3 transition hover:bg-white/5">
+                    <Cover novel={n as Novel} className="h-14 w-11 shrink-0 rounded-lg ring-1 ring-white/10" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[13px] font-semibold">{(n as Novel).title}</p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {[0, 1].map(k => { const ch = ((n as Novel).total_chapters || 0) - k; return ch > 0 ? <span key={k} className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] text-white/55">Ch. {ch}</span> : null })}
+                      </div>
+                    </div>
+                  </Link>
+                ) : <div key={i} className="p-3"><Skeleton className="h-14 rounded-lg" /></div>)}
+              </div>
+            </div>
+          </div>
+
+          {/* Right column — Popular */}
+          <div>
+            <h2 className="mb-3 text-lg font-extrabold tracking-tight">Popular</h2>
+            <div className="tnl-panel p-3">
+              <div className="mb-3 flex gap-1 rounded-xl bg-black/30 p-1">
                 {(['Weekly', 'Monthly', 'All Time'] as const).map(t => (
                   <button key={t} onClick={() => setPopTab(t)}
                     className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${popTab === t ? 'text-white' : 'text-white/50 hover:text-white/80'}`}
                     style={popTab === t ? { background: 'rgba(var(--v),0.9)' } : {}}>{t}</button>
                 ))}
               </div>
-              <div className="space-y-1">
-                {(loading ? Array.from({ length: 5 }) : popular).map((n, i) => n ? (
+              <div className="space-y-0.5">
+                {(loading ? Array.from({ length: 6 }) : popular).map((n, i) => n ? (
                   <Link key={(n as Novel).slug} href={`/testnewlibrary/${(n as Novel).slug}`} onMouseEnter={() => setSelected(n as Novel)}
                     className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-white/5">
-                    <span className="w-6 text-center text-lg font-black" style={{ color: i < 3 ? 'rgb(var(--v))' : 'rgba(255,255,255,0.3)' }}>{i + 1}</span>
-                    <Cover novel={n as Novel} className="h-14 w-10 shrink-0 rounded-md ring-1 ring-white/10" />
+                    <span className="w-5 text-center text-base font-black" style={{ color: i < 3 ? 'rgb(var(--v))' : 'rgba(255,255,255,0.3)' }}>{i + 1}</span>
+                    <Cover novel={n as Novel} className="h-12 w-9 shrink-0 rounded-md ring-1 ring-white/10" />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold">{(n as Novel).title}</p>
+                      <p className="truncate text-[13px] font-semibold">{(n as Novel).title}</p>
                       <p className="truncate text-[11px] text-white/50">{((n as Novel).genres ?? []).slice(0, 2).join(', ')}</p>
                     </div>
                   </Link>
-                ) : <div key={i} className="p-2"><Skeleton className="h-14 rounded-md" /></div>)}
+                ) : <div key={i} className="p-2"><Skeleton className="h-12 rounded-md" /></div>)}
               </div>
             </div>
-          </Section>
+          </div>
         </div>
       </main>
 
@@ -288,29 +283,5 @@ export default function TestNewLibrary() {
         .tnl-fadeup { animation: tnl-fadeup .5s cubic-bezier(0.16,1,0.3,1) both; }
       `}</style>
     </div>
-  )
-}
-
-// ── Section wrapper ───────────────────────────────────────────────────────────
-function Section({ title, children, noTop }: { title: string; children: React.ReactNode; noTop?: boolean }) {
-  return (
-    <section className={noTop ? '' : 'mt-12'}>
-      <h2 className="mb-4 text-xl font-extrabold tracking-tight">{title}</h2>
-      <div className="tnl-fadeup">{children}</div>
-    </section>
-  )
-}
-
-// ── Grid novel card ───────────────────────────────────────────────────────────
-function NovelCard({ novel, onHover }: { novel: Novel; onHover?: () => void }) {
-  return (
-    <Link href={`/testnewlibrary/${novel.slug}`} onMouseEnter={onHover}
-      className="group relative aspect-[3/4] overflow-hidden rounded-2xl ring-1 ring-white/10 transition-all duration-300 hover:-translate-y-1.5 hover:ring-[rgba(var(--v),0.7)]">
-      <Cover novel={novel} className="h-full w-full" />
-      <div className="absolute inset-x-0 bottom-0 translate-y-1 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-3 transition group-hover:translate-y-0">
-        <p className="line-clamp-2 text-sm font-bold leading-tight">{novel.title}</p>
-        <p className="mt-0.5 text-[11px] text-white/60">{(novel.total_chapters || 0).toLocaleString()} ch · {novel.genres?.[0] ?? 'Novel'}</p>
-      </div>
-    </Link>
   )
 }
