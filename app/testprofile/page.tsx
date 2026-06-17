@@ -42,6 +42,28 @@ export default function TestProfilePage() {
   const [discordError, setDiscordError] = useState<string | null>(null)
   const bonusTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // ── Avatar upload ────────────────────────────────────────────────────────────
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [avatarBusy, setAvatarBusy] = useState(false)
+  const [avatarErr, setAvatarErr] = useState<string | null>(null)
+
+  async function uploadAvatar(file: File) {
+    setAvatarErr(null); setAvatarBusy(true)
+    try {
+      const fd = new FormData(); fd.append('file', file)
+      const r = await fetch('/api/profile/avatar', { method: 'POST', body: fd })
+      const d = await r.json()
+      if (!r.ok) { setAvatarErr(d.error || 'Upload failed'); return }
+      await refresh()
+    } catch { setAvatarErr('Upload failed — try again') } finally { setAvatarBusy(false) }
+  }
+
+  async function removeAvatar() {
+    setAvatarErr(null); setAvatarBusy(true)
+    try { await fetch('/api/profile/avatar', { method: 'DELETE' }); await refresh() }
+    catch { setAvatarErr('Could not remove') } finally { setAvatarBusy(false) }
+  }
+
   useEffect(() => { if (!loading && !user) router.replace('/testlogin?return=/testprofile') }, [loading, user, router])
 
   useEffect(() => {
@@ -142,13 +164,35 @@ export default function TestProfilePage() {
       <main className="relative z-10 mx-auto max-w-2xl px-4 pb-24 pt-8 sm:px-6">
         {/* Header card */}
         <div className="tnl-panel mb-5 flex items-center gap-4 p-5">
-          <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-2xl font-black" style={{ background: 'rgba(var(--v),0.85)', boxShadow: '0 0 30px rgba(var(--v),0.45)' }}>{initial}</span>
+          <div className="shrink-0">
+            <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden"
+              onChange={e => { const f = e.target.files?.[0]; if (f) uploadAvatar(f); e.target.value = '' }} />
+            <button onClick={() => fileRef.current?.click()} disabled={avatarBusy} title="Change profile picture"
+              className="group relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl text-2xl font-black ring-1 ring-white/15 transition hover:ring-[rgba(var(--v),0.7)]"
+              style={{ background: 'rgba(var(--v),0.85)', boxShadow: '0 0 30px rgba(var(--v),0.45)' }}>
+              {user.avatar_url
+                // eslint-disable-next-line @next/next/no-img-element
+                ? <img src={user.avatar_url} alt="" className="h-full w-full object-cover" />
+                : <span>{initial}</span>}
+              <span className="absolute inset-0 flex items-center justify-center bg-black/55 text-[10px] font-semibold uppercase tracking-wide opacity-0 transition group-hover:opacity-100">
+                {avatarBusy ? '' : 'Change'}
+              </span>
+              {avatarBusy && <span className="absolute inset-0 flex items-center justify-center bg-black/55"><span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" /></span>}
+            </button>
+          </div>
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-xl font-black tracking-tight">{user.username || 'Set your username'}</h1>
             <p className="truncate text-sm text-white/50">{user.email}</p>
             {memberSince && <p className="mt-0.5 text-xs text-white/35">Member since {memberSince}</p>}
+            <div className="mt-1.5 flex items-center gap-3">
+              <button onClick={() => fileRef.current?.click()} disabled={avatarBusy} className="text-xs font-semibold transition hover:brightness-110 disabled:opacity-50" style={{ color: 'rgb(var(--v))' }}>
+                {user.avatar_url ? 'Change picture' : 'Add a picture'}
+              </button>
+              {user.avatar_url && <button onClick={removeAvatar} disabled={avatarBusy} className="text-xs text-white/40 transition hover:text-red-400 disabled:opacity-50">Remove</button>}
+              {avatarErr && <span className="text-xs text-red-400">{avatarErr}</span>}
+            </div>
           </div>
-          <button onClick={signOut} className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-sm font-semibold text-white/75 transition hover:border-red-500/50 hover:text-white">Sign out</button>
+          <button onClick={signOut} className="shrink-0 self-start rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-sm font-semibold text-white/75 transition hover:border-red-500/50 hover:text-white">Sign out</button>
         </div>
 
         {/* Stat cards */}

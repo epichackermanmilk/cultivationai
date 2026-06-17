@@ -73,8 +73,11 @@ export default function TestHeader() {
         </form>
 
         {isAuthed ? (
-          <Link href="/testprofile" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold" style={{ background: 'rgba(var(--v),0.85)' }}>
-            {(user!.username || user!.email || '?')[0]?.toUpperCase()}
+          <Link href="/testprofile" className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-bold ring-1 ring-white/15" style={{ background: 'rgba(var(--v),0.85)' }}>
+            {user!.avatar_url
+              // eslint-disable-next-line @next/next/no-img-element
+              ? <img src={user!.avatar_url} alt="" className="h-full w-full object-cover" />
+              : (user!.username || user!.email || '?')[0]?.toUpperCase()}
           </Link>
         ) : (
           <Link href={`/testlogin?return=${encodeURIComponent(pathname || '/testnewlibrary')}`}

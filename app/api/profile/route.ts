@@ -49,6 +49,7 @@ export async function GET() {
     tokens: profile?.tokens ?? 0,
     username: profile?.username ?? null,
     age: profile?.age ?? null,
+    avatar_url: (user.user_metadata?.avatar_url as string | null | undefined) ?? null,
     onboarding_bonus_claimed: profile?.onboarding_bonus_claimed ?? false,
     email_marketing_consent: profile?.email_marketing_consent ?? false,
   })

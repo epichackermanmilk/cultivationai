@@ -7,6 +7,7 @@ export interface AuthUser {
   email:                   string
   tokens:                  number
   username:                string | null
+  avatar_url:              string | null
   onboarding_bonus_claimed: boolean
   created_at:              string   // ISO timestamp — used for welcome deal countdown
   ads_disabled:            boolean  // true = one-time ad-free purchase or manually granted

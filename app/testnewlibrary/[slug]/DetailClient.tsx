@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { coverSrc } from '@/lib/cover'
 
@@ -46,12 +46,11 @@ export default function DetailClient({ meta }: { meta: Meta }) {
   const [chLoading, setChLoading] = useState(true)
   const [chQuery, setChQuery] = useState('')
   const [chSort, setChSort] = useState<'newest' | 'oldest'>('newest')
-  const [chVisible, setChVisible] = useState(60)
+  const [chPage, setChPage] = useState(1)
   const [similar, setSimilar] = useState<SimNovel[]>([])
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [codex, setCodex] = useState<any>(null)
   const [descOpen, setDescOpen] = useState(false)
-  const sentinel = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetch(`/api/testnewlibrary/chapters/${meta.slug}`).then(r => r.json())
@@ -75,13 +74,25 @@ export default function DetailClient({ meta }: { meta: Meta }) {
     }
     return [...list].sort((a, b) => chSort === 'newest' ? b.chapter_number - a.chapter_number : a.chapter_number - b.chapter_number)
   }, [chapters, chQuery, chSort])
-  useEffect(() => { setChVisible(60) }, [chQuery, chSort])
 
-  useEffect(() => {
-    const el = sentinel.current; if (!el) return
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setChVisible(v => Math.min(v + 60, chFiltered.length)) }, { rootMargin: '600px' })
-    obs.observe(el); return () => obs.disconnect()
-  }, [chFiltered.length])
+  // Paginate — long novels (some 3,000+ chapters) made the page enormous.
+  const CH_PER = 100
+  const chPages = Math.max(1, Math.ceil(chFiltered.length / CH_PER))
+  const page = Math.min(chPage, chPages)
+  const chSlice = chFiltered.slice((page - 1) * CH_PER, page * CH_PER)
+  useEffect(() => { setChPage(1) }, [chQuery, chSort])
+
+  // Compact page numbers with ellipses: 1 … p-1 p p+1 … N
+  const pageNums: (number | '…')[] = (() => {
+    if (chPages <= 7) return Array.from({ length: chPages }, (_, i) => i + 1)
+    const out: (number | '…')[] = [1]
+    const lo = Math.max(2, page - 1), hi = Math.min(chPages - 1, page + 1)
+    if (lo > 2) out.push('…')
+    for (let i = lo; i <= hi; i++) out.push(i)
+    if (hi < chPages - 1) out.push('…')
+    out.push(chPages)
+    return out
+  })()
 
   const ps = codex?.power_system
   const protag = codex?.protagonist
@@ -185,7 +196,7 @@ export default function DetailClient({ meta }: { meta: Meta }) {
               className="mb-3 h-10 w-full rounded-xl border border-white/10 bg-black/30 px-4 text-sm text-white placeholder-white/40 outline-none backdrop-blur transition focus:border-[rgba(var(--v),0.6)]" />
             <div className="tnld-panel divide-y divide-white/5">
               {chLoading ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="p-3.5"><div className="tnld-skel h-4 w-2/3 rounded" /></div>)
-                : chFiltered.slice(0, chVisible).map(c => (
+                : chSlice.map(c => (
                   <Link key={c.chapter_number} href={`/testnewlibrary/${meta.slug}/read/${c.chapter_number}`}
                     className="flex items-center gap-3 px-4 py-3 transition hover:bg-white/[0.04]">
                     <span className="w-12 shrink-0 text-xs font-bold" style={{ color: 'rgb(var(--v))' }}>#{c.chapter_number}</span>
@@ -194,8 +205,30 @@ export default function DetailClient({ meta }: { meta: Meta }) {
                   </Link>
                 ))}
               {!chLoading && chFiltered.length === 0 && <p className="p-6 text-center text-sm text-white/40">No chapters match.</p>}
-              <div ref={sentinel} className="h-1" />
             </div>
+
+            {/* Pager — 100 chapters per page */}
+            {!chLoading && chPages > 1 && (
+              <div className="mt-4 flex flex-col items-center gap-2">
+                <div className="flex flex-wrap items-center justify-center gap-1.5">
+                  <button onClick={() => setChPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                    className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-semibold transition hover:bg-white/10 disabled:opacity-30">‹</button>
+                  {pageNums.map((p, i) => p === '…'
+                    ? <span key={`e${i}`} className="px-1.5 text-sm text-white/35">…</span>
+                    : <button key={p} onClick={() => setChPage(p)}
+                        className="h-8 min-w-8 rounded-lg border px-2 text-sm font-semibold transition"
+                        style={p === page
+                          ? { background: 'rgb(var(--v))', borderColor: 'transparent', color: '#fff' }
+                          : { borderColor: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.8)' }}>{p}</button>
+                  )}
+                  <button onClick={() => setChPage(p => Math.min(chPages, p + 1))} disabled={page === chPages}
+                    className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-semibold transition hover:bg-white/10 disabled:opacity-30">›</button>
+                </div>
+                <p className="text-xs text-white/40">
+                  Showing {((page - 1) * CH_PER + 1).toLocaleString()}–{Math.min(page * CH_PER, chFiltered.length).toLocaleString()} of {chFiltered.length.toLocaleString()}
+                </p>
+              </div>
+            )}
           </section>
 
           {/* Similar novels */}

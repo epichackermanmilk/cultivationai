@@ -1,0 +1,74 @@
+// POST/DELETE /api/profile/avatar — user profile picture.
+// Stored in a public Supabase Storage bucket; the URL is saved on the auth user's
+// metadata (no schema migration needed). Auth via the nc_session cookie.
+
+import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
+
+function admin() {
+  return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+}
+
+const BUCKET = 'avatars'
+const MAX_BYTES = 3 * 1024 * 1024 // 3 MB
+const EXT: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' }
+const ALL_EXTS = ['png', 'jpg', 'webp', 'gif']
+
+async function ensureBucket(sb: ReturnType<typeof admin>) {
+  const { data } = await sb.storage.getBucket(BUCKET)
+  if (!data) {
+    await sb.storage.createBucket(BUCKET, { public: true, fileSizeLimit: MAX_BYTES })
+  }
+}
+
+export async function POST(req: NextRequest) {
+  const token = (await cookies()).get('nc_session')?.value
+  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const sb = admin()
+  const { data: { user }, error } = await sb.auth.getUser(token)
+  if (error || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const form = await req.formData().catch(() => null)
+  const file = form?.get('file')
+  if (!(file instanceof File)) return NextResponse.json({ error: 'No image provided' }, { status: 400 })
+
+  const ext = EXT[file.type]
+  if (!ext) return NextResponse.json({ error: 'Use a PNG, JPG, WEBP or GIF image' }, { status: 400 })
+  if (file.size > MAX_BYTES) return NextResponse.json({ error: 'Image too large (max 3 MB)' }, { status: 400 })
+
+  try {
+    await ensureBucket(sb)
+    const buf = Buffer.from(await file.arrayBuffer())
+    // Remove any prior copies in other formats so we don't leave orphans.
+    await sb.storage.from(BUCKET).remove(ALL_EXTS.filter(e => e !== ext).map(e => `${user.id}.${e}`)).catch(() => {})
+    const path = `${user.id}.${ext}`
+    const { error: upErr } = await sb.storage.from(BUCKET).upload(path, buf, { contentType: file.type, upsert: true })
+    if (upErr) return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
+
+    const pub = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl
+    const avatar_url = `${pub}?v=${Date.now()}` // cache-bust so the new image shows immediately
+    await sb.auth.admin.updateUserById(user.id, { user_metadata: { ...(user.user_metadata ?? {}), avatar_url } })
+    return NextResponse.json({ avatar_url })
+  } catch {
+    return NextResponse.json({ error: 'Could not save image' }, { status: 500 })
+  }
+}
+
+export async function DELETE() {
+  const token = (await cookies()).get('nc_session')?.value
+  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const sb = admin()
+  const { data: { user }, error } = await sb.auth.getUser(token)
+  if (error || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  try {
+    await sb.storage.from(BUCKET).remove(ALL_EXTS.map(e => `${user.id}.${e}`)).catch(() => {})
+    await sb.auth.admin.updateUserById(user.id, { user_metadata: { ...(user.user_metadata ?? {}), avatar_url: null } })
+  } catch { /* non-fatal */ }
+  return NextResponse.json({ avatar_url: null })
+}

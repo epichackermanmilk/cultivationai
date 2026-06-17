@@ -50,12 +50,15 @@ export async function GET() {
   // the UI show password/email management only where it applies.
   const has_password = (user.identities ?? []).some(i => i.provider === 'email')
 
+  const avatar_url = (user.user_metadata?.avatar_url as string | null | undefined) ?? null
+
   return NextResponse.json({
     user: {
       id:                      user.id,
       email:                   user.email,
       tokens:                  tokens ?? 0,
       username,
+      avatar_url,
       onboarding_bonus_claimed,
       created_at,
       ads_disabled,
