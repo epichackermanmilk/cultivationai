@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { coverSrc } from '@/lib/cover'
 
@@ -51,6 +51,8 @@ export default function DetailClient({ meta }: { meta: Meta }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [codex, setCodex] = useState<any>(null)
   const [descOpen, setDescOpen] = useState(false)
+  const simRef = useRef<HTMLElement>(null)
+  const [colH, setColH] = useState<number | undefined>(undefined)
 
   useEffect(() => {
     fetch(`/api/testnewlibrary/chapters/${meta.slug}`).then(r => r.json())
@@ -81,6 +83,20 @@ export default function DetailClient({ meta }: { meta: Meta }) {
   const page = Math.min(chPage, chPages)
   const chSlice = chFiltered.slice((page - 1) * CH_PER, page * CH_PER)
   useEffect(() => { setChPage(1) }, [chQuery, chSort])
+
+  // Match the chapters column height to the Similar Novels box (desktop only) so the
+  // chapter list scrolls internally instead of stretching the page.
+  useEffect(() => {
+    const el = simRef.current
+    if (!el) return
+    const mq = window.matchMedia('(min-width: 1024px)')
+    const update = () => setColH(mq.matches ? el.offsetHeight : undefined)
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    mq.addEventListener('change', update)
+    return () => { ro.disconnect(); mq.removeEventListener('change', update) }
+  }, [similar.length])
 
   // Compact page numbers with ellipses: 1 … p-1 p p+1 … N
   const pageNums: (number | '…')[] = (() => {
@@ -183,9 +199,9 @@ export default function DetailClient({ meta }: { meta: Meta }) {
 
         {/* Chapters + Similar */}
         <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px]">
-          {/* Chapter list */}
-          <section>
-            <div className="mb-3 flex items-center justify-between">
+          {/* Chapter list — height matched to the Similar box; scrolls internally */}
+          <section className="flex min-w-0 flex-col" style={{ height: colH }}>
+            <div className="mb-3 flex shrink-0 items-center justify-between">
               <h2 className="text-lg font-bold">{chapters.length ? `${chapters.length.toLocaleString()} Chapters` : 'Chapters'}</h2>
               <button onClick={() => setChSort(s => s === 'newest' ? 'oldest' : 'newest')}
                 className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold transition hover:bg-white/10">
@@ -193,8 +209,8 @@ export default function DetailClient({ meta }: { meta: Meta }) {
               </button>
             </div>
             <input value={chQuery} onChange={e => setChQuery(e.target.value)} placeholder="Search chapters…"
-              className="mb-3 h-10 w-full rounded-xl border border-white/10 bg-black/30 px-4 text-sm text-white placeholder-white/40 outline-none backdrop-blur transition focus:border-[rgba(var(--v),0.6)]" />
-            <div className="tnld-panel divide-y divide-white/5">
+              className="mb-3 h-10 w-full shrink-0 rounded-xl border border-white/10 bg-black/30 px-4 text-sm text-white placeholder-white/40 outline-none backdrop-blur transition focus:border-[rgba(var(--v),0.6)]" />
+            <div className="tnld-panel tnld-scroll min-h-0 flex-1 divide-y divide-white/5 overflow-y-auto max-h-[70vh] lg:max-h-none">
               {chLoading ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="p-3.5"><div className="tnld-skel h-4 w-2/3 rounded" /></div>)
                 : chSlice.map(c => (
                   <Link key={c.chapter_number} href={`/testnewlibrary/${meta.slug}/read/${c.chapter_number}`}
@@ -209,7 +225,7 @@ export default function DetailClient({ meta }: { meta: Meta }) {
 
             {/* Pager — 100 chapters per page */}
             {!chLoading && chPages > 1 && (
-              <div className="mt-4 flex flex-col items-center gap-2">
+              <div className="mt-3 flex shrink-0 flex-col items-center gap-2">
                 <div className="flex flex-wrap items-center justify-center gap-1.5">
                   <button onClick={() => setChPage(p => Math.max(1, p - 1))} disabled={page === 1}
                     className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-semibold transition hover:bg-white/10 disabled:opacity-30">‹</button>
@@ -232,7 +248,7 @@ export default function DetailClient({ meta }: { meta: Meta }) {
           </section>
 
           {/* Similar novels */}
-          <section>
+          <section ref={simRef} className="self-start">
             <h2 className="mb-3 text-lg font-bold">Similar Novels</h2>
             <div className="tnld-panel space-y-1 p-3">
               {similar.length === 0 ? <p className="p-4 text-center text-sm text-white/40">Finding matches…</p>
@@ -257,6 +273,10 @@ export default function DetailClient({ meta }: { meta: Meta }) {
         .tnld-panel { background: rgba(18,15,30,0.55); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; backdrop-filter: blur(12px); box-shadow: 0 20px 50px rgba(0,0,0,0.4); }
         @keyframes tnld-sh { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
         .tnld-skel { background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.09) 37%, rgba(255,255,255,0.04) 63%); background-size: 400% 100%; animation: tnld-sh 1.4s ease infinite; }
+        .tnld-scroll { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.18) transparent; }
+        .tnld-scroll::-webkit-scrollbar { width: 8px; }
+        .tnld-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.16); border-radius: 8px; }
+        .tnld-scroll::-webkit-scrollbar-track { background: transparent; }
       `}</style>
     </div>
   )
