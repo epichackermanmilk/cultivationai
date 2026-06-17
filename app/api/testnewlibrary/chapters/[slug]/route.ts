@@ -1,9 +1,10 @@
 // GET /api/testnewlibrary/chapters/[slug]
-// Real chapter list (number + title) sourced from the indexed chapters in Qdrant.
-// Cached in-process for an hour (chapters change slowly).
+// Chapter list (number + title) sourced from the scraped novel JSON on the VPS.
+// This needs no embeddings, so every scraped novel gets a chapter list (unlike the
+// old Qdrant path, which only covered curated/indexed novels). Cached in-process 1h.
 
 import { NextResponse } from 'next/server'
-import { scrollTitles } from '@/lib/qdrant'
+import { getChapterList } from '@/lib/vps'
 
 interface RouteContext { params: Promise<{ slug: string }> }
 interface Cache { data: unknown; ts: number }
@@ -17,9 +18,9 @@ export async function GET(_req: Request, { params }: RouteContext) {
     return NextResponse.json(hit.data, { headers: { 'X-Cache': 'HIT' } })
   }
   try {
-    const titles = await scrollTitles(slug) // [{ chapter_number, chapter_title }]
-    titles.sort((a, b) => a.chapter_number - b.chapter_number)
-    const data = { slug, count: titles.length, chapters: titles }
+    const { chapters } = await getChapterList(slug) // [{ chapter_number, title }]
+    const mapped = chapters.map(c => ({ chapter_number: c.chapter_number, chapter_title: c.title }))
+    const data = { slug, count: mapped.length, chapters: mapped }
     cache.set(slug, { data, ts: Date.now() })
     return NextResponse.json(data, { headers: { 'Cache-Control': 'public, s-maxage=3600', 'X-Cache': 'MISS' } })
   } catch {

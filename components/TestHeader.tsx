@@ -15,9 +15,10 @@ interface NavItem { label: string; href: string; auth?: boolean }
 const NAV: NavItem[] = [
   { label: 'Home',      href: '/testnewlibrary' },
   { label: 'Bookmarks', href: '/testbookmarks', auth: true },
-  { label: 'Browse',    href: '/testbrowse' },
-  { label: 'Games',     href: '/testgames',     auth: true },
-  { label: 'Recommend', href: '/testrecommend', auth: true },
+  { label: 'Browse',     href: '/testbrowse' },
+  { label: 'Characters', href: '/testcharacters', auth: true },
+  { label: 'Games',      href: '/testgames',     auth: true },
+  { label: 'Recommend',  href: '/testrecommend', auth: true },
 ]
 
 /** Where a nav link should actually point given the current auth state. Only

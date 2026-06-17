@@ -39,6 +39,36 @@ export async function getNovelFacts(slug: string) {
   return res.json()
 }
 
+// ── On-site reading (cheap, no embeddings) ───────────────────────────────────
+// Chapter list + chapter text come straight from the scraped novel JSON on the
+// VPS, so every scraped novel is readable without the embedding cost (which we
+// reserve for curated chat novels).
+export interface ChapterListItem { chapter_number: number; title: string }
+export interface ChapterContent {
+  slug: string; novel_title: string; chapter_number: number; title: string
+  text: string; total: number; prev: number | null; next: number | null
+}
+
+export async function getChapterList(slug: string): Promise<{ count: number; chapters: ChapterListItem[] }> {
+  try {
+    const res = await fetch(`${BASE}/novels/${slug}/chapters`, { headers, next: { revalidate: 3600 } })
+    if (!res.ok) return { count: 0, chapters: [] }
+    return res.json()
+  } catch {
+    return { count: 0, chapters: [] }
+  }
+}
+
+export async function getChapter(slug: string, n: number): Promise<ChapterContent | null> {
+  try {
+    const res = await fetch(`${BASE}/novels/${slug}/chapter/${n}`, { headers, next: { revalidate: 3600 } })
+    if (!res.ok) return null
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
 // Direct per-novel metadata read — used as a fallback when a freshly-scraped
 // novel hasn't propagated into the cached /novels index yet.
 export async function getNovelMeta(slug: string): Promise<NovelMeta | null> {

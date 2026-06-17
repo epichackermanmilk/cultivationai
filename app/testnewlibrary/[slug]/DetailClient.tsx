@@ -147,10 +147,10 @@ export default function DetailClient({ meta }: { meta: Meta }) {
               </div>
             )}
             <div className="mt-5 flex flex-wrap gap-2.5">
-              <Link href={`/novel/${meta.slug}`} className="rounded-xl px-5 py-2.5 text-sm font-bold transition hover:brightness-110"
-                style={{ background: 'rgb(var(--v))', boxShadow: `0 0 24px ${rgba(accent, 0.55)}` }}>Chat with this Novel</Link>
+              <Link href={`/testnewlibrary/${meta.slug}/read/1`} className="rounded-xl px-5 py-2.5 text-sm font-bold transition hover:brightness-110"
+                style={{ background: 'rgb(var(--v))', boxShadow: `0 0 24px ${rgba(accent, 0.55)}` }}>Read first chapter</Link>
               <button className="rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-white/10">＋ Bookmark</button>
-              <Link href={`/recommend`} className="rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-white/10">Recommend Similar</Link>
+              <Link href={`/testrecommend`} className="rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-white/10">Recommend Similar</Link>
             </div>
 
             {/* ── Codex Insight (unique feature) ─────────────────────────────── */}
@@ -186,10 +186,12 @@ export default function DetailClient({ meta }: { meta: Meta }) {
             <div className="tnld-panel divide-y divide-white/5">
               {chLoading ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="p-3.5"><div className="tnld-skel h-4 w-2/3 rounded" /></div>)
                 : chFiltered.slice(0, chVisible).map(c => (
-                  <div key={c.chapter_number} className="flex items-center gap-3 px-4 py-3 transition hover:bg-white/[0.04]">
+                  <Link key={c.chapter_number} href={`/testnewlibrary/${meta.slug}/read/${c.chapter_number}`}
+                    className="flex items-center gap-3 px-4 py-3 transition hover:bg-white/[0.04]">
                     <span className="w-12 shrink-0 text-xs font-bold" style={{ color: 'rgb(var(--v))' }}>#{c.chapter_number}</span>
                     <span className="min-w-0 flex-1 truncate text-sm text-white/85">{c.chapter_title || `Chapter ${c.chapter_number}`}</span>
-                  </div>
+                    <span className="shrink-0 text-white/25">›</span>
+                  </Link>
                 ))}
               {!chLoading && chFiltered.length === 0 && <p className="p-6 text-center text-sm text-white/40">No chapters match.</p>}
               <div ref={sentinel} className="h-1" />
