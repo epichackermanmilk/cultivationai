@@ -281,23 +281,23 @@ export default function TestChat({ slug, title, author }: Props) {
           <div className="mx-auto mt-2 max-w-2xl space-y-2.5">
             {characterName ? (
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5 rounded-full border border-[rgba(var(--v),0.4)] bg-[rgba(var(--v),0.12)] px-3 py-1">
+                <div className="flex items-center gap-1.5 rounded-full border bg-white/[0.05] px-3 py-1" style={{ borderColor: 'rgba(var(--v),0.6)' }}>
                   {characterProfile?.featured && <span className="text-[10px]" style={{ color: ACCENT }}>✦</span>}
-                  <span className="text-xs font-semibold" style={{ color: ACCENT }}>{characterName}</span>
+                  <span className="text-xs font-semibold text-white">{characterName}</span>
                 </div>
-                <button onClick={clearCharacter} className="text-xs text-white/40 hover:text-white">Change</button>
+                <button onClick={clearCharacter} className="text-xs text-white/50 hover:text-white">Change</button>
               </div>
             ) : (
               <>
                 {charLoading && <div className="flex gap-1.5">{[1, 2, 3].map(i => <div key={i} className="h-6 w-20 animate-pulse rounded-full bg-white/10" />)}</div>}
                 {!charLoading && featuredChars.length > 0 && (
                   <div>
-                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest" style={{ color: ACCENT }}>✦ Curated Characters</p>
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-white/60">✦ Curated Characters</p>
                     <div className="flex flex-wrap gap-1.5">
                       {featuredChars.map(c => (
                         <button key={c.name} onClick={() => selectCharacter(c)}
-                          className="flex items-center gap-1 rounded-full border border-[rgba(var(--v),0.4)] bg-[rgba(var(--v),0.12)] px-2.5 py-0.5 text-xs font-medium transition hover:brightness-110" style={{ color: ACCENT }}>
-                          <span>✦</span>{c.name}
+                          className="flex items-center gap-1 rounded-full border border-white/15 bg-white/[0.04] px-2.5 py-0.5 text-xs font-medium text-white transition hover:border-[rgba(var(--v),0.7)] hover:bg-[rgba(var(--v),0.18)]">
+                          <span style={{ color: ACCENT }}>✦</span>{c.name}
                         </button>
                       ))}
                     </div>
@@ -333,7 +333,7 @@ export default function TestChat({ slug, title, author }: Props) {
               <div className="mt-1 flex w-full max-w-lg flex-col gap-3">
                 {['Explain this novel to me like I just picked it up', 'What makes the MC different from other protagonists?', 'What are the biggest plot twists without spoiling the ending?'].map(q => (
                   <button key={q} onClick={() => { setInput(q); inputRef.current?.focus() }}
-                    className="rounded-xl border border-[rgba(var(--v),0.3)] bg-[rgba(var(--v),0.06)] px-5 py-3.5 text-left text-sm font-medium transition hover:brightness-110" style={{ color: 'rgba(255,255,255,0.85)' }}>✦ {q}</button>
+                    className="rounded-xl border border-white/15 bg-white/[0.03] px-5 py-3.5 text-left text-sm font-medium text-white/85 transition hover:border-[rgba(var(--v),0.65)] hover:bg-white/[0.06] hover:text-white"><span style={{ color: ACCENT }}>✦</span> {q}</button>
                 ))}
               </div>
             )}
@@ -342,8 +342,8 @@ export default function TestChat({ slug, title, author }: Props) {
 
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[88%] whitespace-pre-wrap rounded-2xl border px-4 py-3 text-[15px] leading-relaxed ${msg.role === 'user' ? 'rounded-br-sm border-white/15' : msg.isError ? 'rounded-bl-sm border-red-500/30' : 'rounded-bl-sm border-[rgba(var(--v),0.3)]'}`}
-              style={msg.role === 'user' ? { background: 'rgba(255,255,255,0.06)', color: '#fff' } : msg.isError ? { background: 'rgba(255,255,255,0.04)', color: '#f87171' } : { background: 'rgba(var(--v),0.12)', color: '#fff' }}>
+            <div className={`max-w-[88%] whitespace-pre-wrap rounded-2xl border px-4 py-3 text-[15px] leading-relaxed ${msg.role === 'user' ? 'rounded-br-sm' : msg.isError ? 'rounded-bl-sm border-red-500/40' : 'rounded-bl-sm'}`}
+              style={msg.role === 'user' ? { background: 'rgba(255,255,255,0.07)', color: '#fff', borderColor: 'rgba(255,255,255,0.22)' } : msg.isError ? { background: 'rgba(255,255,255,0.04)', color: '#f87171' } : { background: 'rgba(var(--v),0.14)', color: '#fff', borderColor: 'rgba(var(--v),0.55)' }}>
               {msg.content}
               {msg.role === 'assistant' && msg.content === '' && <span className="ml-0.5 inline-block h-4 w-1 animate-pulse bg-white/50" />}
               {msg.isError && msg.content.includes('shop') && <a href="/shop" className="mt-2 block text-xs font-semibold underline underline-offset-2" style={{ color: ACCENT }}>Go to Shop →</a>}

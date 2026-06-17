@@ -68,26 +68,26 @@ export default async function TestCharactersPage() {
             })
             const chatUrl = `/testnovel/${slug}?char=${encodeURIComponent(char.name)}&mode=character`
             return (
-              <Link key={`${slug}-${char.name}`} href={chatUrl} className="group tnl-panel flex flex-col overflow-hidden transition duration-300 hover:-translate-y-1">
-                <div className="relative h-40 overflow-hidden">
+              <Link key={`${slug}-${char.name}`} href={chatUrl} className="group tnl-panel flex flex-col overflow-hidden border-white/12 transition duration-300 hover:-translate-y-1 hover:border-[rgba(var(--v),0.55)]">
+                <div className="relative h-40 overflow-hidden border-b border-white/10">
                   {coverUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={coverSrc(coverUrl)} alt={novelName} className="h-full w-full object-cover object-top opacity-70 transition duration-500 group-hover:scale-105 group-hover:opacity-90" />
+                    <img src={coverSrc(coverUrl)} alt={novelName} className="h-full w-full object-cover object-top opacity-80 transition duration-500 group-hover:scale-105 group-hover:opacity-100" />
                   ) : <div className="h-full w-full" style={{ background: 'linear-gradient(135deg,#1a1726,#221d33)' }} />}
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24" style={{ background: 'linear-gradient(to top, rgba(18,15,30,0.95), transparent)' }} />
-                  <span className="absolute left-3 top-3 rounded-full border border-[rgba(var(--v),0.4)] bg-black/50 px-2 py-0.5 text-[10px] font-semibold backdrop-blur" style={{ color: 'rgb(var(--v))' }}>{novelName}</span>
-                  <span className="absolute right-3 top-3 rounded-full border border-[rgba(var(--v),0.5)] bg-[rgba(var(--v),0.2)] px-2 py-0.5 text-[10px] font-bold backdrop-blur" style={{ color: 'rgb(var(--v))' }}>✦ Featured</span>
+                  <span className="absolute left-3 top-3 rounded-full border border-white/25 bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur">{novelName}</span>
+                  <span className="absolute right-3 top-3 rounded-full border px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur" style={{ borderColor: 'rgba(var(--v),0.7)', background: 'rgba(var(--v),0.35)' }}>✦ Featured</span>
                 </div>
-                <div className="flex flex-1 flex-col p-4 pt-2">
-                  <h3 className="text-base font-bold">{char.name}</h3>
-                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-white/55">{char.speech_style}</p>
+                <div className="flex flex-1 flex-col p-4 pt-3">
+                  <h3 className="text-base font-bold text-white">{char.name}</h3>
+                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-white/60">{char.speech_style}</p>
                   {chips.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1.5">
-                      {chips.map(t => <span key={t} className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-white/55">{t}</span>)}
+                      {chips.map(t => <span key={t} className="rounded-full border border-white/15 px-2 py-0.5 text-[10px] text-white/65">{t}</span>)}
                     </div>
                   )}
                   <div className="mt-auto pt-4">
-                    <span className="flex items-center justify-center gap-1.5 rounded-xl border border-[rgba(var(--v),0.4)] bg-[rgba(var(--v),0.12)] px-3 py-2 text-xs font-semibold transition group-hover:brightness-110" style={{ color: 'rgb(var(--v))' }}>
+                    <span className="flex items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-white/[0.04] px-3 py-2 text-xs font-bold text-white transition group-hover:border-[rgba(var(--v),0.8)] group-hover:bg-[rgba(var(--v),0.25)]">
                       Chat with {char.name} →
                     </span>
                   </div>
