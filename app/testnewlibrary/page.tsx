@@ -31,74 +31,79 @@ function latestChapters(n: Novel, seed: number) {
   return [0, 1, 2].map(k => ({ num: total - k, time: TIME_LABELS[(seed * 3 + k * 2) % TIME_LABELS.length] })).filter(c => c.num > 0)
 }
 
-// ── Top row: endlessly looping, click-to-select-then-open marquee ─────────────────
-function TopRow({ items, selected, onSelect, accent }: {
-  items: Novel[]; selected: Novel | null; onSelect: (n: Novel) => void; accent: [number, number, number]
+// ── Top row: a looping coverflow. Click any cover → it animates to the center and
+// becomes the selected (highlighted) novel. Click the already-centered one → open.
+// Transform-based so centering is exact; three copies give a seamless infinite loop.
+const CARD_W = 152, CARD_GAP = 14, PERIOD = CARD_W + CARD_GAP
+function TopRow({ items, onSelect, accent }: {
+  items: Novel[]; onSelect: (n: Novel) => void; accent: [number, number, number]
 }) {
   const router = useRouter()
-  const ref = useRef<HTMLDivElement>(null)
-  const boundary = useRef<HTMLButtonElement | null>(null)
-  const paused = useRef(false)
+  const N = items.length
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const [width, setWidth] = useState(0)
+  const [center, setCenter] = useState(N)   // index into the tripled list (middle copy)
+  const [animate, setAnimate] = useState(true)
 
-  // Three copies → always room to wrap in both directions. Start centered.
+  // Measure the viewport width so we can translate the centered card to the middle.
   useEffect(() => {
-    const el = ref.current; if (!el || !items.length) return
-    const id = requestAnimationFrame(() => { const seg = boundary.current?.offsetLeft; if (seg) el.scrollLeft = seg })
+    const el = wrapRef.current; if (!el) return
+    const ro = new ResizeObserver(() => setWidth(el.clientWidth))
+    ro.observe(el); setWidth(el.clientWidth)
+    return () => ro.disconnect()
+  }, [])
+
+  // After a click-driven slide, snap the index back into the middle copy with no
+  // animation (the copies are identical, so the jump is invisible) — keeps the loop infinite.
+  const normalize = useCallback(() => {
+    setCenter(c => {
+      if (c < N) { setAnimate(false); return c + N }
+      if (c >= 2 * N) { setAnimate(false); return c - N }
+      return c
+    })
+  }, [N])
+  useEffect(() => {
+    if (animate) return
+    const id = requestAnimationFrame(() => setAnimate(true))
     return () => cancelAnimationFrame(id)
-  }, [items.length])
+  }, [animate])
 
-  // Seamless wrap on any scroll (auto or manual).
-  useEffect(() => {
-    const el = ref.current; if (!el) return
-    const onScroll = () => {
-      const seg = boundary.current?.offsetLeft; if (!seg) return
-      if (el.scrollLeft > seg * 1.5) el.scrollLeft -= seg
-      else if (el.scrollLeft < seg * 0.5) el.scrollLeft += seg
-    }
-    el.addEventListener('scroll', onScroll, { passive: true })
-    return () => el.removeEventListener('scroll', onScroll)
-  }, [items.length])
+  if (!N) return null
+  const tripled = [...items, ...items, ...items]
+  const centerIdx = ((center % N) + N) % N
+  const translateX = width ? width / 2 - (center * PERIOD + CARD_W / 2) : 0
 
-  // Gentle auto-advance, paused while hovered.
-  useEffect(() => {
-    const el = ref.current; if (!el || !items.length) return
-    let raf = 0
-    const tick = () => { if (!paused.current) el.scrollLeft += 0.45; raf = requestAnimationFrame(tick) }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [items.length])
-
-  const onClick = (n: Novel) => {
-    if (selected?.slug === n.slug) router.push(`/testnewlibrary/${n.slug}`)
-    else onSelect(n)
+  const onClick = (j: number, n: Novel) => {
+    const idx = ((j % N) + N) % N
+    if (idx === centerIdx) { router.push(`/testnewlibrary/${n.slug}`); return }  // already centered → open
+    onSelect(n); setAnimate(true); setCenter(j)                                  // otherwise slide it to center
   }
 
-  const loop = [...items, ...items, ...items]
   return (
-    <div ref={ref}
-      onMouseEnter={() => { paused.current = true }}
-      onMouseLeave={() => { paused.current = false }}
-      className="tnl-rail flex items-center gap-3 overflow-x-auto py-5">
-      {loop.map((n, i) => {
-        const isSel = selected?.slug === n.slug
-        return (
-          <button key={`${n.slug}-${i}`} ref={i === items.length ? boundary : undefined}
-            onClick={() => onClick(n)} title={isSel ? 'Click again to open' : n.title}
-            className={`tnl-sheen relative aspect-[3/4] w-36 shrink-0 overflow-hidden rounded-xl text-left transition-[transform,box-shadow] duration-300 sm:w-40 ${
-              isSel ? 'z-10 scale-110 ring-2' : 'ring-1 ring-white/10'
-            }`}
-            style={isSel ? { boxShadow: `0 18px 50px ${rgba(accent, 0.5)}`, ['--tw-ring-color' as string]: rgba(accent, 0.9) } : {}}>
-            <Cover novel={n} className="h-full w-full" eager={i < items.length && i < 6} />
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent p-2.5">
-              <p className="line-clamp-2 text-[13px] font-bold leading-tight drop-shadow">{n.title}</p>
-            </div>
-            {isSel && (
-              <span className="absolute left-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-[10px] font-bold backdrop-blur"
-                style={{ background: rgba(accent, 0.85) }}>OPEN ↵</span>
-            )}
-          </button>
-        )
-      })}
+    <div ref={wrapRef} className="relative overflow-x-hidden py-6"
+      style={{ maskImage: 'linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent)', WebkitMaskImage: 'linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent)' }}>
+      <div className="flex will-change-transform"
+        onTransitionEnd={normalize}
+        style={{ gap: CARD_GAP, transform: `translateX(${translateX}px)`, transition: animate ? 'transform .45s cubic-bezier(0.22,1,0.36,1)' : 'none' }}>
+        {tripled.map((n, i) => {
+          const isSel = i === center
+          return (
+            <button key={`${n.slug}-${i}`} onClick={() => onClick(i, n)} title={isSel ? 'Click again to open' : n.title}
+              className={`tnl-sheen relative aspect-[3/4] shrink-0 overflow-hidden rounded-xl text-left transition-[transform,box-shadow,opacity] duration-300 ${
+                isSel ? 'z-10 scale-[1.14] ring-2' : 'ring-1 ring-white/10 opacity-70 hover:opacity-100'
+              }`}
+              style={{ width: CARD_W, ...(isSel ? { boxShadow: `0 22px 55px ${rgba(accent, 0.55)}`, ['--tw-ring-color' as string]: rgba(accent, 0.9) } : {}) }}>
+              <Cover novel={n} className="h-full w-full" eager={i >= N && i < N + 6} />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent p-2.5">
+                <p className="line-clamp-2 text-[13px] font-bold leading-tight drop-shadow">{n.title}</p>
+              </div>
+              {isSel && (
+                <span className="absolute left-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-[10px] font-bold backdrop-blur" style={{ background: rgba(accent, 0.85) }}>OPEN ↵</span>
+              )}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -130,7 +135,7 @@ export default function TestNewLibrary() {
   }, [byChapters])
 
   const trending = useMemo(() => byChapters.slice(0, 18), [byChapters])
-  const LU_PER_PAGE = 6                      // 3 rows × 2 cols — keeps the section short
+  const LU_PER_PAGE = 10                     // 5 rows × 2 cols
   const latestPool = useMemo(() => byChapters.slice(0, LU_PER_PAGE * 5), [byChapters]) // 5 pages
   const luPages = Math.max(1, Math.ceil(latestPool.length / LU_PER_PAGE))
   const luSlice = latestPool.slice((luPage - 1) * LU_PER_PAGE, luPage * LU_PER_PAGE)
@@ -168,7 +173,7 @@ export default function TestNewLibrary() {
         {loading ? (
           <div className="flex gap-3 overflow-hidden py-5">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="aspect-[3/4] w-40 shrink-0 rounded-xl" />)}</div>
         ) : (
-          <TopRow items={curated} selected={selected} onSelect={setSelected} accent={accent} />
+          <TopRow items={curated} onSelect={setSelected} accent={accent} />
         )}
 
         {/* ── Tight content frame ───────────────────────────────────────────── */}
