@@ -14,9 +14,9 @@ interface NavItem { label: string; href: string; auth?: boolean }
 
 const NAV: NavItem[] = [
   { label: 'Home',      href: '/testnewlibrary' },
-  { label: 'Bookmarks', href: '/bookmarks',     auth: true },
+  { label: 'Bookmarks', href: '/testbookmarks', auth: true },
   { label: 'Browse',    href: '/testbrowse' },
-  { label: 'Games',     href: '/testgame',      auth: true },
+  { label: 'Games',     href: '/testgames',     auth: true },
   { label: 'Recommend', href: '/testrecommend', auth: true },
 ]
 
@@ -72,7 +72,7 @@ export default function TestHeader() {
         </form>
 
         {isAuthed ? (
-          <Link href="/profile" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold" style={{ background: 'rgba(var(--v),0.85)' }}>
+          <Link href="/testprofile" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold" style={{ background: 'rgba(var(--v),0.85)' }}>
             {(user!.username || user!.email || '?')[0]?.toUpperCase()}
           </Link>
         ) : (
