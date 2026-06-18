@@ -4,9 +4,10 @@
 // localStorage, and "continue reading" progress so the novel page can offer Resume.
 // Content arrives pre-cleaned from the server page. Ad slots flank the text.
 
-import { Fragment, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { track } from '@/lib/analytics'
+import EzoicAd from '@/components/EzoicAd'
 
 interface Props {
   slug: string; novelTitle: string; chapterNumber: number
@@ -23,13 +24,6 @@ const THEMES: Record<ThemeKey, { bg: string; text: string; sub: string; panel: s
 }
 const FONT_PX: Record<FontKey, number> = { sm: 15, md: 17, lg: 20, xl: 23 }
 const FONT_ORDER: FontKey[] = ['sm', 'md', 'lg', 'xl']
-
-function AdSlot({ label, th }: { label: string; th: (typeof THEMES)[ThemeKey] }) {
-  return (
-    <div className="my-8 flex h-24 items-center justify-center rounded-xl border border-dashed text-[11px] uppercase tracking-widest"
-      style={{ borderColor: th.border, color: th.sub, background: th.panel }}>{label}</div>
-  )
-}
 
 export default function ReaderClient({ slug, novelTitle, chapterNumber, heading, body, total, prev, next }: Props) {
   const [theme, setTheme] = useState<ThemeKey>('dark')
@@ -113,18 +107,15 @@ export default function ReaderClient({ slug, novelTitle, chapterNumber, heading,
         <h1 className="text-2xl font-black tracking-tight">{heading || `Chapter ${chapterNumber}`}</h1>
         <p className="mt-1 text-xs" style={{ color: th.sub }}>{novelTitle}</p>
 
-        <AdSlot label="Advertisement — top" th={th} />
+        {/* Top ad (Ezoic placeholder 101) */}
+        <EzoicAd id={101} refreshKey={chapterNumber} className="my-6 min-h-[90px]" />
 
         <article className="space-y-5" style={{ fontSize: FONT_PX[font], lineHeight: 1.85 }}>
-          {body.map((p, i) => (
-            <Fragment key={i}>
-              <p>{p}</p>
-              {body.length > 12 && i === Math.floor(body.length / 3) && <AdSlot label="Advertisement — in-content" th={th} />}
-            </Fragment>
-          ))}
+          {body.map((p, i) => <p key={i}>{p}</p>)}
         </article>
 
-        <AdSlot label="Advertisement — bottom" th={th} />
+        {/* Bottom ad (Ezoic placeholder 102) */}
+        <EzoicAd id={102} refreshKey={chapterNumber} className="my-6 min-h-[90px]" />
 
         <div className="mt-6 flex items-center justify-between gap-3">
           {prev ? <Link href={chapterHref(prev)} className="flex-1 rounded-xl border py-3 text-center text-sm font-semibold transition" style={{ borderColor: th.border }}>‹ Previous</Link> : <div className="flex-1" />}

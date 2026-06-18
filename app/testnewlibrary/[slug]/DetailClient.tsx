@@ -47,7 +47,7 @@ export default function DetailClient({ meta }: { meta: Meta }) {
   const [chapters, setChapters] = useState<Chapter[]>([])
   const [chLoading, setChLoading] = useState(true)
   const [chQuery, setChQuery] = useState('')
-  const [chSort, setChSort] = useState<'newest' | 'oldest'>('newest')
+  const [chSort, setChSort] = useState<'newest' | 'oldest'>('oldest')
   const [chPage, setChPage] = useState(1)
   const [similar, setSimilar] = useState<SimNovel[]>([])
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -118,14 +118,6 @@ export default function DetailClient({ meta }: { meta: Meta }) {
     return out
   })()
 
-  const ps = codex?.power_system
-  const protag = codex?.protagonist
-  const goodFor = useMemo(() => {
-    const g = (meta.genres ?? []).slice(0, 2).join(' & ')
-    const sys = ps?.name ? ` and ${ps.name.replace(/ (system|cultivation)$/i, '')}-style progression` : ''
-    return g ? `Readers who love ${g}${sys}.` : ''
-  }, [meta.genres, ps])
-
   return (
     <div className="tnld relative min-h-screen text-white" style={{ ['--v' as string]: `${accent[0]},${accent[1]},${accent[2]}` }}>
       {/* Living background */}
@@ -189,21 +181,6 @@ export default function DetailClient({ meta }: { meta: Meta }) {
               </Link>
               {resume && <Link href={`/testnewlibrary/${meta.slug}/read/1`} className="rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-white/10">Start over</Link>}
               <Link href={`/testrecommend`} onClick={() => track('recommend_click', { slug: meta.slug })} className="rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-white/10">Recommend Similar</Link>
-            </div>
-
-            {/* ── Codex Insight (unique feature) ─────────────────────────────── */}
-            <div className="tnld-panel mt-6 p-5">
-              <div className="mb-3 flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-md text-xs font-black" style={{ background: 'rgb(var(--v))' }}>✦</span>
-                <h3 className="text-sm font-bold uppercase tracking-wider">Codex Insight</h3>
-                <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-white/50">AI · grounded in the text</span>
-              </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Insight label="Power system" value={ps?.name ?? '—'} sub={ps?.ladder?.length ? `${ps.ladder.length}-tier progression` : ps?.type} />
-                <Insight label="Protagonist" value={protag?.name ?? '—'} sub={protag?.one_line} />
-                <Insight label="Core tags" value={(meta.genres ?? []).slice(0, 3).join(' · ') || '—'} />
-                <Insight label="Good for" value={goodFor || '—'} />
-              </div>
             </div>
           </div>
         </section>
@@ -292,16 +269,6 @@ export default function DetailClient({ meta }: { meta: Meta }) {
         .tnld-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.16); border-radius: 8px; }
         .tnld-scroll::-webkit-scrollbar-track { background: transparent; }
       `}</style>
-    </div>
-  )
-}
-
-function Insight({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div className="rounded-xl border border-white/8 bg-white/[0.03] p-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-white/45">{label}</p>
-      <p className="mt-1 text-sm font-semibold leading-snug">{value}</p>
-      {sub && <p className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-white/55">{sub}</p>}
     </div>
   )
 }
