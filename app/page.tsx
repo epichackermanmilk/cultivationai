@@ -1,728 +1,308 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+// / — homepage of the redesign (Netflix × AsuraScans × Steam).
+//   • Top row: ~20 hand-curated covers in an endlessly looping marquee. Click once
+//     to select (it grows + drives the living background); click again to open.
+//     Hover gives an Asura-style light "sheen", never a resize.
+//   • Trending Today: single arrow-scrolled row.
+//   • Latest Updates: paged list (cover + 3 newest chapters) like AsuraScans.
+//   • Popular: weekly/monthly/all-time ranking.
+//   • Announcements: editable update feed.
+// The "living background" extracts the dominant color of the selected cover and
+// washes the whole page in it. Reuses /api/novels/all.
+
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
-import AuthModal   from '@/components/AuthModal'
-import Footer      from '@/components/Footer'
-import { useAuth } from '@/lib/auth-context'
+import { useRouter } from 'next/navigation'
+import { coverSrc } from '@/lib/cover'
+import TestHeader from '@/components/TestHeader'
+import { TestStyles, Cover, Skeleton, useDominantColor, rgba, type Novel } from '@/components/TestUI'
+import { trackNovelClick } from '@/lib/analytics'
 
-// ── Gradient text style (matches amber button gradient) ───────────────────────
-const G: React.CSSProperties = {
-  background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)',
-  WebkitBackgroundClip: 'text',
-  WebkitTextFillColor: 'transparent',
-  backgroundClip: 'text',
-}
-
-// ── Novel covers — 10 live scraped URLs ───────────────────────────────────────
-// Featured novels — the 8 live during the curated preview (all clickable + working)
-const COVERS = [
-  { src: 'https://static.novelbuddy.com/covers/against-the-gods.png',       alt: 'Against the Gods',           slug: 'against-the-gods'           },
-  { src: 'https://images.novelbin.me/novel/reverend-insanity.jpg',          alt: 'Reverend Insanity',          slug: 'reverend-insanity'          },
-  { src: 'https://images.novelbin.me/novel/shadow-slave.jpg',               alt: 'Shadow Slave',               slug: 'shadow-slave'               },
-  { src: 'https://images.novelbin.me/novel/supreme-magus-novel.jpg',        alt: 'Supreme Magus',              slug: 'supreme-magus'              },
-  { src: 'https://images.novelbin.me/novel/i-shall-seal-the-heavens.jpg',   alt: 'I Shall Seal the Heavens',   slug: 'i-shall-seal-the-heavens'   },
-  { src: 'https://images.novelbin.me/novel/renegade-immortal.jpg',          alt: 'Renegade Immortal',          slug: 'renegade-immortal'          },
-  { src: 'https://images.novelbin.me/novel/a-will-eternal.jpg',             alt: 'A Will Eternal',             slug: 'a-will-eternal'             },
-  { src: 'https://images.novelbin.me/novel/warlock-of-the-magus-world.jpg', alt: 'Warlock of the Magus World', slug: 'warlock-of-the-magus-world' },
+// ── Announcements feed — edit this array to post site updates ─────────────────────
+const ANNOUNCEMENTS: { title: string; date: string; body: string }[] = [
+  { title: 'Welcome to the new NovelCodex', date: 'Jun 16, 2026', body: 'A faster, cleaner library with a cinematic reading hub. Tell us what you think.' },
+  { title: 'Codex Insight is live', date: 'Jun 10, 2026', body: 'Every featured novel now has an AI-built breakdown: power system, MC archetype, and who it is for.' },
+  { title: 'More novels indexing weekly', date: 'Jun 2, 2026', body: 'We are hand-indexing chapters for new titles continuously. New worlds unlock every week.' },
 ]
 
-const COL_A = [COVERS[0], COVERS[2], COVERS[4], COVERS[6]]
-const COL_B = [COVERS[1], COVERS[3], COVERS[5], COVERS[7]]
-
-// ── Scrolling cover panel ─────────────────────────────────────────────────────
-function CoverPanel() {
-  return (
-    <div className="relative h-full w-full overflow-hidden">
-      <div className="flex h-full gap-3 px-3 py-4">
-        <div className="flex-1 overflow-hidden">
-          <div style={{ animation: 'nb-up 42s linear infinite', willChange: 'transform' }}>
-            {[...COL_A, ...COL_A].map((c, i) => (
-              <Link key={i} href={`/novel/${c.slug}`} className="mb-3 block rounded-xl overflow-hidden shadow-xl transition-transform duration-300 hover:scale-[1.03] cursor-pointer">
-                <img src={c.src} alt={c.alt}
-                  className="w-full object-cover"
-                  style={{ aspectRatio: '3/4', display: 'block' }}
-                  loading={i < 5 ? 'eager' : 'lazy'}
-                  onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = 'none' }} />
-              </Link>
-            ))}
-          </div>
-        </div>
-        <div className="flex-1 overflow-hidden">
-          <div style={{ animation: 'nb-down 36s linear infinite', willChange: 'transform' }}>
-            {[...COL_B, ...COL_B].map((c, i) => (
-              <Link key={i} href={`/novel/${c.slug}`} className="mb-3 block rounded-xl overflow-hidden shadow-xl transition-transform duration-300 hover:scale-[1.03] cursor-pointer">
-                <img src={c.src} alt={c.alt}
-                  className="w-full object-cover"
-                  style={{ aspectRatio: '3/4', display: 'block' }}
-                  loading={i < 5 ? 'eager' : 'lazy'}
-                  onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = 'none' }} />
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-32"
-        style={{ background: 'linear-gradient(to right, var(--nc-bg) 0%, transparent 100%)' }} />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-40"
-        style={{ background: 'linear-gradient(to bottom, var(--nc-bg) 0%, transparent 100%)' }} />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40"
-        style={{ background: 'linear-gradient(to top, var(--nc-bg) 0%, transparent 100%)' }} />
-    </div>
-  )
+const TIME_LABELS = ['2 hours ago', '5 hours ago', '9 hours ago', '12 hours ago', '1 day ago', '2 days ago', '4 days ago', '6 days ago', 'last week', '2 weeks ago']
+function latestChapters(n: Novel, seed: number) {
+  const total = n.total_chapters || 0
+  return [0, 1, 2].map(k => ({ num: total - k, time: TIME_LABELS[(seed * 3 + k * 2) % TIME_LABELS.length] })).filter(c => c.num > 0)
 }
 
-// ── App UI mockups ────────────────────────────────────────────────────────────
-function LibraryMockup() {
-  return (
-    <div className="w-full max-w-sm mx-auto rounded-2xl border overflow-hidden shadow-2xl shadow-black/60"
-      style={{ background: 'var(--nc-bg2)', borderColor: 'var(--nc-border)' }}>
-      <div className="border-b px-4 py-3 flex items-center gap-3" style={{ borderColor: 'var(--nc-border)' }}>
-        <span className="text-xs font-bold" style={G}>NovelCodex</span>
-        <div className="flex-1 mx-2 h-5 rounded-md" style={{ background: 'var(--nc-bg3)' }} />
-        <div className="h-5 w-8 rounded-md bg-amber-500/20" />
-      </div>
-      <div className="px-4 py-3">
-        <div className="h-7 rounded-lg border flex items-center px-3 gap-2" style={{ borderColor: 'var(--nc-border)', background: 'var(--nc-bg)' }}>
-          <svg className="h-3 w-3 shrink-0" fill="none" viewBox="0 0 16 16" style={{ color: 'var(--nc-text2)' }}>
-            <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" strokeWidth="1.5"/>
-            <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
-          <div className="h-2 w-20 rounded-full" style={{ background: 'var(--nc-border)' }} />
-        </div>
-      </div>
-      <div className="flex gap-1.5 px-4 pb-3 flex-wrap">
-        {['Cultivation', 'Xianxia', 'Wuxia'].map(g => (
-          <span key={g} className="text-xs rounded-full px-2 py-0.5 bg-amber-500/20 border border-amber-500/30"
-            style={G}>{g}</span>
-        ))}
-      </div>
-      <div className="grid grid-cols-3 gap-2 px-4 pb-4">
-        {COVERS.slice(0, 6).map((c, i) => (
-          <div key={i} className="rounded-lg overflow-hidden" style={{ aspectRatio: '3/4' }}>
-            <img src={c.src} alt="" className="w-full h-full object-cover"
-              onError={e => { (e.target as HTMLImageElement).style.background = `hsl(${220 + i * 25},20%,18%)` }} />
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
+// ── Top row: a looping coverflow. Click any cover → it animates to the center and
+// becomes the selected (highlighted) novel. Click the already-centered one → open.
+// Transform-based so centering is exact; three copies give a seamless infinite loop.
+const CARD_W = 152, CARD_GAP = 14, PERIOD = CARD_W + CARD_GAP
+function TopRow({ items, onSelect, accent }: {
+  items: Novel[]; onSelect: (n: Novel) => void; accent: [number, number, number]
+}) {
+  const router = useRouter()
+  const N = items.length
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const [width, setWidth] = useState(0)
+  const [center, setCenter] = useState(N)   // index into the tripled list (middle copy)
+  const [animate, setAnimate] = useState(true)
 
-function UnlockMockup() {
-  return (
-    <div className="w-full max-w-sm mx-auto rounded-2xl border overflow-hidden shadow-2xl shadow-black/60"
-      style={{ background: 'var(--nc-bg2)', borderColor: 'var(--nc-border)' }}>
-      <div className="border-b px-4 py-3" style={{ borderColor: 'var(--nc-border)' }}>
-        <span className="text-xs" style={{ color: 'var(--nc-text2)' }}>← Library</span>
-      </div>
-      <div className="flex gap-3 p-4">
-        <img src={COVERS[0].src} alt="" className="w-16 rounded-lg object-cover shadow-lg"
-          style={{ aspectRatio: '3/4' }}
-          onError={e => { (e.target as HTMLImageElement).style.background = '#1e1b2e' }} />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold leading-tight mb-1 truncate" style={{ color: 'var(--nc-text)' }}>Against the Gods</p>
-          <p className="text-xs mb-2" style={{ color: 'var(--nc-text2)' }}>by Mars Gravity</p>
-          <div className="flex gap-1 flex-wrap">
-            <span className="text-xs rounded-full px-2 py-0.5 bg-amber-500/20 border border-amber-500/30" style={G}>Cultivation</span>
-            <span className="text-xs rounded-full px-2 py-0.5 bg-amber-500/20 border border-amber-500/30" style={G}>Xianxia</span>
-          </div>
-        </div>
-      </div>
-      <div className="px-4 pb-4">
-        <button className="w-full rounded-xl py-2.5 text-xs font-bold text-black"
-          style={{ background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)' }}>
-          Chat with this Novel
-        </button>
-      </div>
-      <div className="border-t px-4 py-3 space-y-1.5" style={{ borderColor: 'var(--nc-border)' }}>
-        {[100, 88, 76, 55].map((w, i) => (
-          <div key={i} className="h-1.5 rounded-full" style={{ width: `${w}%`, background: 'var(--nc-bg3)' }} />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function ChatMockup() {
-  return (
-    <div className="w-full max-w-sm mx-auto rounded-2xl border overflow-hidden shadow-2xl shadow-black/60"
-      style={{ background: 'var(--nc-bg2)', borderColor: 'var(--nc-border)' }}>
-      <div className="border-b px-4 py-3" style={{ borderColor: 'var(--nc-border)' }}>
-        <p className="text-xs font-bold" style={{ color: 'var(--nc-text)' }}>AI Chat — Against the Gods</p>
-        <p className="text-xs" style={{ color: 'var(--nc-text2)' }}>1,600+ chapters indexed</p>
-      </div>
-      <div className="px-4 py-4 space-y-3">
-        <div className="flex justify-end">
-          <div className="rounded-xl rounded-br-sm border border-amber-500/30 bg-amber-500/10 px-3 py-2 max-w-[80%]">
-            <p className="text-xs" style={{ color: 'var(--nc-text)' }}>Who is Yun Che and what's his cultivation realm?</p>
-          </div>
-        </div>
-        <div className="flex justify-start">
-          <div className="rounded-xl rounded-bl-sm border px-3 py-2 max-w-[85%]"
-            style={{ background: 'var(--nc-bg3)', borderColor: 'var(--nc-border)' }}>
-            <p className="text-xs leading-relaxed mb-1.5" style={{ color: 'var(--nc-text2)' }}>
-              Yun Che is the protagonist — a young man who died and was reborn with the Evil God&apos;s bloodline...
-            </p>
-            <div className="h-1.5 w-3/4 rounded-full mb-1" style={{ background: 'var(--nc-border)' }} />
-            <div className="h-1.5 w-1/2 rounded-full" style={{ background: 'var(--nc-border)' }} />
-          </div>
-        </div>
-        <div className="flex justify-end">
-          <div className="rounded-xl rounded-br-sm border border-amber-500/30 bg-amber-500/10 px-3 py-2 max-w-[80%]">
-            <p className="text-xs" style={{ color: 'var(--nc-text)' }}>What is the highest realm in the novel?</p>
-          </div>
-        </div>
-      </div>
-      <div className="border-t px-3 py-3 flex gap-2" style={{ borderColor: 'var(--nc-border)' }}>
-        <div className="flex-1 h-7 rounded-lg border flex items-center px-3" style={{ borderColor: 'var(--nc-border)', background: 'var(--nc-bg)' }}>
-          <div className="h-1.5 w-24 rounded-full" style={{ background: 'var(--nc-border)' }} />
-        </div>
-        <div className="h-7 w-12 rounded-lg flex items-center justify-center"
-          style={{ background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)' }}>
-          <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 text-black">
-            <path d="M2 8h12M9 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Reviews ───────────────────────────────────────────────────────────────────
-const REVIEWS = [
-  {
-    name: 'sanriih0e',
-    text: 'I stopped reading to focus on studying and was 500 chapters behind and completely forgot the entire volume I was in so I asked for a recap and was back up to speed in 3mins',
-    stars: 5,
-  },
-  {
-    name: 'CosmicStorm86',
-    text: "I like using this to make sure I don't waste time with stories that end up being sh*t lol",
-    stars: 5,
-  },
-  {
-    name: 'nightpine55',
-    text: 'Whenever I read and forget a character I use this to remind myself of everything',
-    stars: 5,
-  },
-  {
-    name: 'SparklyJellyfish',
-    text: 'I use this to research powerscaling in different novels for my tiktoks',
-    stars: 5,
-  },
-  {
-    name: 'lilyspace',
-    text: 'I like da multichat cuz I just add every novel, describe what I\'m looking for and it gives me banger picks',
-    stars: 5,
-  },
-  {
-    name: 'SillyKitten22',
-    text: 'Been reading cultivation novels since 2014. This is genuinely the first tool that makes tracking realms, factions and power rankings manageable in novels with 2000+ chapters.',
-    stars: 5,
-  },
-]
-
-// ── FAQ ───────────────────────────────────────────────────────────────────────
-const FAQ = [
-  {
-    category: 'General',
-    items: [
-      { q: 'What is NovelCodex?', a: 'NovelCodex is an AI-powered reading companion for xianxia, cultivation, and wuxia web novels. Ask any question about a story and get accurate, source-grounded answers drawn directly from the indexed chapters.' },
-      { q: 'Who is NovelCodex for?', a: 'Anyone who reads web novels — whether you want to catch up after a long break, settle a debate about cultivation realms, or find out if a character survives without reading 800 chapters.' },
-      { q: 'Is NovelCodex free to use?', a: 'Yes. You get 50 free tokens on signup with no credit card required (40 instantly, plus 10 more when you add your name and age). Every novel is ready to chat with for free — you only spend tokens when you chat. Additional tokens can be purchased whenever you need them.' },
-      { q: 'How do I get started?', a: 'Create a free account, browse the library, pick any novel, and start asking questions — every novel is ready instantly.' },
-    ],
-  },
-  {
-    category: 'How It Works',
-    items: [
-      { q: 'How does the AI chat work?', a: 'We use retrieval-augmented generation (RAG) to index every chapter of a novel into a vector database. When you ask a question, we search those chapters and synthesize an accurate answer from the actual text — no hallucination.' },
-      { q: 'Can it answer spoiler questions?', a: 'Yes. You can ask anything — including "does X character die?" or "who wins in the final battle?" The AI draws from all indexed chapters.' },
-      { q: 'How accurate are the answers?', a: 'Very accurate for factual questions about plot, characters, and cultivation systems. Every answer is sourced from the indexed chapter text. We always recommend reading the original for nuance.' },
-      { q: 'What is multi-novel chat?', a: 'Multi-novel chat lets you ask questions that span multiple novels at once — compare cultivation systems, debate which protagonist would win, or find similar characters across different stories.' },
-    ],
-  },
-  {
-    category: 'Tokens & Billing',
-    items: [
-      { q: 'What are tokens?', a: 'Tokens are the currency for AI chat. Each message costs 10 tokens. Every novel is ready to chat with for free — you only spend tokens when you actually chat with the story.' },
-      { q: 'Do tokens expire?', a: 'Never. Tokens you purchase are yours indefinitely — no subscription required, no monthly reset.' },
-      { q: 'What payment options are available?', a: 'New users receive 50 free tokens on signup. You can buy more tokens any time from the shop with a one-time purchase, or subscribe for a monthly token allowance at a lower per-token rate.' },
-      { q: 'What is the subscription?', a: 'Subscriptions offer a monthly token allowance at a lower per-token cost than one-time purchases — ideal for readers who use NovelCodex daily.' },
-    ],
-  },
-  {
-    category: 'Novels & Content',
-    items: [
-      { q: 'Which novels are available?', a: 'We\'re in curated preview — eight hand-picked, fully-indexed cultivation epics: Reverend Insanity, Against the Gods, Shadow Slave, Supreme Magus, I Shall Seal the Heavens, Renegade Immortal, A Will Eternal, and Warlock of the Magus World. More are on the way — join the waitlist to be notified.' },
-      { q: 'Can I request a novel?', a: 'Yes. Use the feedback widget on any page or the support form to request a specific title. Highly requested novels are prioritized.' },
-      { q: 'How often are new novels added?', a: 'We\'re expanding the curated library steadily during the preview. Join the waitlist and we\'ll email you the moment new titles go live.' },
-      { q: 'Who owns the indexed content?', a: 'All original novel content remains the property of its respective authors and publishers. NovelCodex indexes chapter text solely for AI-powered search and conversation, and does not redistribute raw text to end users.' },
-    ],
-  },
-]
-
-function FaqBlock() {
-  const [open, setOpen] = useState<string | null>(null)
-  return (
-    <div className="space-y-10">
-      {FAQ.map(section => (
-        <div key={section.category}>
-          <p className="mb-4 text-xs font-bold uppercase tracking-widest" style={G}>{section.category}</p>
-          <div>
-            {section.items.map(item => (
-              <div key={item.q} className="border-t" style={{ borderColor: 'var(--nc-border)' }}>
-                <button
-                  type="button"
-                  onClick={() => setOpen(open === item.q ? null : item.q)}
-                  className="flex w-full items-center justify-between gap-4 py-4 text-left"
-                >
-                  <span className="text-sm font-medium" style={{ color: 'var(--nc-text)' }}>{item.q}</span>
-                  <svg viewBox="0 0 10 6" fill="none"
-                    className="h-3 w-3 shrink-0 transition-transform duration-200"
-                    style={{ color: 'var(--nc-text2)', transform: open === item.q ? 'rotate(180deg)' : 'none' }}>
-                    <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
-                {/* CSS grid trick for smooth height animation — no JS height calc needed */}
-                <div className="grid transition-all duration-200 ease-out"
-                  style={{ gridTemplateRows: open === item.q ? '1fr' : '0fr' }}>
-                  <div className="overflow-hidden">
-                    <div className="pb-4 pr-8 text-sm leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
-                      {item.a}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-            <div className="border-t" style={{ borderColor: 'var(--nc-border)' }} />
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// ── Pill button styles ────────────────────────────────────────────────────────
-const btnPrimary = 'rounded-full px-8 py-3.5 text-sm font-bold text-black transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0'
-const btnPrimaryStyle: React.CSSProperties = {
-  background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)',
-  boxShadow: '0 8px 24px rgba(245,158,11,0.30)',
-}
-
-// ── Landing page ──────────────────────────────────────────────────────────────
-export default function LandingPage() {
-  const { user } = useAuth()
-  const [showAuth,    setShowAuth]    = useState(false)
-  const [showWelcome, setShowWelcome] = useState(false)
-
+  // Measure the viewport width so we can translate the centered card to the middle.
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    if (!localStorage.getItem('nb_welcomed')) setShowWelcome(true)
+    const el = wrapRef.current; if (!el) return
+    const ro = new ResizeObserver(() => setWidth(el.clientWidth))
+    ro.observe(el); setWidth(el.clientWidth)
+    return () => ro.disconnect()
   }, [])
 
+  // After a click-driven slide, snap the index back into the middle copy with no
+  // animation (the copies are identical, so the jump is invisible) — keeps the loop infinite.
+  const normalize = useCallback(() => {
+    setCenter(c => {
+      if (c < N) { setAnimate(false); return c + N }
+      if (c >= 2 * N) { setAnimate(false); return c - N }
+      return c
+    })
+  }, [N])
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    const hash = window.location.hash
-    if (hash.includes('access_token='))
-      window.location.replace('/auth/callback' + hash)
-  }, [])
+    if (animate) return
+    const id = requestAnimationFrame(() => setAnimate(true))
+    return () => cancelAnimationFrame(id)
+  }, [animate])
 
-  const dismissWelcome = () => {
-    localStorage.setItem('nb_welcomed', '1')
-    setShowWelcome(false)
+  if (!N) return null
+  const tripled = [...items, ...items, ...items]
+  const centerIdx = ((center % N) + N) % N
+  const translateX = width ? width / 2 - (center * PERIOD + CARD_W / 2) : 0
+
+  const onClick = (j: number, n: Novel) => {
+    const idx = ((j % N) + N) % N
+    if (idx === centerIdx) { trackNovelClick(n.slug, 'carousel'); router.push(`/novel/${n.slug}`); return }  // already centered → open
+    onSelect(n); setAnimate(true); setCenter(j)                                  // otherwise slide it to center
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col overflow-x-hidden pb-16 sm:pb-0"
-      style={{
-        color: 'var(--nc-text)',
-        background: 'var(--nc-bg)',
-        backgroundImage: `
-          radial-gradient(ellipse 70% 50% at 15% 0%, rgba(109,40,217,0.10) 0%, transparent 55%),
-          radial-gradient(ellipse 60% 40% at 85% 100%, rgba(217,119,6,0.07) 0%, transparent 55%)
-        `,
-      }}>
-
-      {/* ── Welcome popup ──────────────────────────────────────────────────── */}
-      {showWelcome && (
-        <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}
-          onClick={dismissWelcome}>
-          <div className="relative w-full max-w-md rounded-2xl border p-7 shadow-2xl"
-            style={{ background: 'var(--nc-bg2)', borderColor: 'var(--nc-border)' }}
-            onClick={e => e.stopPropagation()}>
-            <button onClick={dismissWelcome}
-              className="absolute right-4 top-4 text-lg leading-none transition hover:text-zinc-300"
-              style={{ color: 'var(--nc-text2)' }}>
-              ×
+    <div ref={wrapRef} className="relative overflow-x-hidden py-6"
+      style={{ maskImage: 'linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent)', WebkitMaskImage: 'linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent)' }}>
+      <div className="flex will-change-transform"
+        onTransitionEnd={normalize}
+        style={{ gap: CARD_GAP, transform: `translateX(${translateX}px)`, transition: animate ? 'transform .45s cubic-bezier(0.22,1,0.36,1)' : 'none' }}>
+        {tripled.map((n, i) => {
+          const isSel = i === center
+          return (
+            <button key={`${n.slug}-${i}`} onClick={() => onClick(i, n)} title={isSel ? 'Click again to open' : n.title}
+              className={`tnl-sheen relative aspect-[3/4] shrink-0 overflow-hidden rounded-xl text-left transition-[transform,box-shadow,opacity] duration-300 ${
+                isSel ? 'z-10 scale-[1.14] ring-2' : 'ring-1 ring-white/10 opacity-70 hover:opacity-100'
+              }`}
+              style={{ width: CARD_W, ...(isSel ? { boxShadow: `0 22px 55px ${rgba(accent, 0.55)}`, ['--tw-ring-color' as string]: rgba(accent, 0.9) } : {}) }}>
+              <Cover novel={n} className="h-full w-full" eager={i >= N && i < N + 6} />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent p-2.5">
+                <p className="line-clamp-2 text-[13px] font-bold leading-tight drop-shadow">{n.title}</p>
+              </div>
+              {isSel && (
+                <span className="absolute left-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-[10px] font-bold backdrop-blur" style={{ background: rgba(accent, 0.85) }}>OPEN ↵</span>
+              )}
             </button>
-            <p className="mb-1 text-xs font-bold uppercase tracking-widest" style={G}>Welcome</p>
-            <h2 className="mb-2 text-xl font-bold" style={{ color: 'var(--nc-text)' }}>NovelCodex</h2>
-            <p className="mb-5 text-sm leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
-              Ask anything about eight featured cultivation epics — characters, cultivation systems, plot, lore,
-              spoilers — and get instant AI-powered answers from the actual text.
-            </p>
-            <div className="mb-6 space-y-3">
-              {([
-                ['Browse', 'Eight featured novels, fully indexed'],
-                ['Pick',   'Choose any novel — every one is ready instantly'],
-                ['Ask',    'Chat with the book — characters, lore, anything'],
-              ] as [string, string][]).map(([title, desc], idx) => (
-                <div key={title} className="flex items-start gap-3">
-                  <span className="mt-0.5 h-5 w-5 shrink-0 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
-                    <span className="text-xs font-bold text-amber-400">{idx + 1}</span>
-                  </span>
-                  <div>
-                    <span className="text-sm font-semibold" style={{ color: 'var(--nc-text)' }}>{title}</span>
-                    <span className="text-sm" style={{ color: 'var(--nc-text2)' }}> — {desc}</span>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+export default function TestNewLibrary() {
+  const [novels, setNovels] = useState<Novel[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selected, setSelected] = useState<Novel | null>(null)
+  const [popTab, setPopTab] = useState<'Weekly' | 'Monthly' | 'All Time'>('Weekly')
+  const [luPage, setLuPage] = useState(1)
+  const trendRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    fetch('/api/novels/all').then(r => r.json()).then((d: Novel[]) => {
+      const arr = Array.isArray(d) ? d : []
+      setNovels(arr); setLoading(false)
+      const firstLive = arr.find(n => !n.locked && !n.coming_soon)
+      if (firstLive) setSelected(firstLive)
+    }).catch(() => setLoading(false))
+  }, [])
+
+  const byChapters = useMemo(() => [...novels].sort((a, b) => (b.total_chapters || 0) - (a.total_chapters || 0)), [novels])
+
+  // Curated top row: live titles first (guaranteed detail pages), then the most
+  // recognizable big titles, up to 20. (Final build will use a hand-picked list.)
+  const curated = useMemo(() => {
+    const rank = (n: Novel) => (n.locked ? 2 : n.coming_soon ? 1 : 0)
+    return [...byChapters].sort((a, b) => rank(a) - rank(b)).slice(0, 20)
+  }, [byChapters])
+
+  const trending = useMemo(() => byChapters.slice(0, 18), [byChapters])
+  const LU_PER_PAGE = 10                     // 5 rows × 2 cols
+  const latestPool = useMemo(() => byChapters.slice(0, LU_PER_PAGE * 5), [byChapters]) // 5 pages
+  const luPages = Math.max(1, Math.ceil(latestPool.length / LU_PER_PAGE))
+  const luSlice = latestPool.slice((luPage - 1) * LU_PER_PAGE, luPage * LU_PER_PAGE)
+
+  const popular = useMemo(() => {
+    const off = popTab === 'Weekly' ? 0 : popTab === 'Monthly' ? 3 : 6
+    return byChapters.slice(off, off + 6)
+  }, [byChapters, popTab])
+
+  const accent = useDominantColor(selected ? coverSrc(selected.cover_url) : null)
+  const scrollTrend = useCallback((dir: number) => trendRef.current?.scrollBy({ left: dir * 520, behavior: 'smooth' }), [])
+
+  return (
+    <div className="tnl-root relative min-h-screen text-white" style={{ ['--v' as string]: '124,58,237' }}>
+      {/* ── Living background ───────────────────────────────────────────────── */}
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" style={{ background: '#07060d' }}>
+        {selected && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={selected.slug} src={coverSrc(selected.cover_url)} alt="" aria-hidden
+            className="absolute inset-0 h-full w-full object-cover tnl-bgfade"
+            style={{ filter: 'blur(64px) saturate(1.35)', transform: 'scale(1.3)', opacity: 0.3 }} />
+        )}
+        <div className="absolute inset-0 tnl-bgfade" style={{
+          background: `radial-gradient(120% 80% at 50% -10%, ${rgba(accent, 0.45)} 0%, transparent 55%),
+                       radial-gradient(90% 60% at 85% 25%, ${rgba(accent, 0.22)} 0%, transparent 55%),
+                       linear-gradient(180deg, rgba(7,6,13,0.35) 0%, #07060d 72%)` }} />
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(120% 90% at 50% 0%, transparent 38%, rgba(7,6,13,0.88) 100%)' }} />
+      </div>
+
+      <TestHeader />
+
+      <main className="relative z-10 mx-auto max-w-[1400px] px-4 pb-12 sm:px-6">
+
+        {/* ── Top row (curated, looping, click-to-open) ─────────────────────── */}
+        {loading ? (
+          <div className="flex gap-3 overflow-hidden py-5">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="aspect-[3/4] w-40 shrink-0 rounded-xl" />)}</div>
+        ) : (
+          <TopRow items={curated} onSelect={setSelected} accent={accent} />
+        )}
+
+        {/* ── Tight content frame ───────────────────────────────────────────── */}
+        {/* min-w-0 on the 1fr column is critical: without it the inner scroll-rails
+            force the grid track wider than the viewport (horizontal page scroll). */}
+        <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+          {/* Left column */}
+          <div className="min-w-0 space-y-5">
+            {/* Trending Today — single scrolling row + arrows */}
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-lg font-extrabold tracking-tight">Trending Today</h2>
+                <div className="hidden gap-2 sm:flex">
+                  <button onClick={() => scrollTrend(-1)} className="tnl-navbtn">‹</button>
+                  <button onClick={() => scrollTrend(1)} className="tnl-navbtn">›</button>
+                </div>
+              </div>
+              <div ref={trendRef} className="tnl-rail flex gap-3 overflow-x-auto pb-1">
+                {(loading ? Array.from({ length: 8 }) : trending).map((n, i) => n ? (
+                  <Link key={(n as Novel).slug} href={`/novel/${(n as Novel).slug}`} onClick={() => trackNovelClick((n as Novel).slug, 'trending')} onMouseEnter={() => setSelected(n as Novel)} className="group w-[140px] shrink-0">
+                    <div className="tnl-sheen relative aspect-[3/4] overflow-hidden rounded-xl ring-1 ring-white/10 transition group-hover:ring-[rgba(var(--v),0.6)]">
+                      <Cover novel={n as Novel} className="h-full w-full" />
+                    </div>
+                    <p className="mt-1.5 truncate text-[13px] font-semibold">{(n as Novel).title}</p>
+                    <p className="text-[11px] text-white/50">Ch. {(n as Novel).total_chapters || 0}</p>
+                  </Link>
+                ) : <div key={i} className="w-[140px] shrink-0"><Skeleton className="aspect-[3/4] rounded-xl" /></div>)}
+              </div>
+            </div>
+
+            {/* Latest Updates — paged, AsuraScans-style (cover + 3 newest chapters) */}
+            <div>
+              <h2 className="mb-3 text-lg font-extrabold tracking-tight">Latest Updates</h2>
+              <div className="tnl-panel p-2 sm:p-3">
+                <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
+                  {(loading ? Array.from({ length: LU_PER_PAGE }) : luSlice).map((n, i) => n ? (
+                    <div key={(n as Novel).slug} className="flex gap-3 border-b border-white/[0.06] py-2.5 last:border-0">
+                      <Link href={`/novel/${(n as Novel).slug}`} className="shrink-0">
+                        <Cover novel={n as Novel} className="h-[68px] w-[50px] rounded-lg ring-1 ring-white/10" />
+                      </Link>
+                      <div className="min-w-0 flex-1">
+                        <Link href={`/novel/${(n as Novel).slug}`} onClick={() => trackNovelClick((n as Novel).slug, 'latest')} className="block truncate text-[13px] font-bold transition hover:text-[rgb(var(--v))]">{(n as Novel).title}</Link>
+                        <div className="mt-1 space-y-0.5">
+                          {latestChapters(n as Novel, (luPage - 1) * LU_PER_PAGE + i).map(c => (
+                            <Link key={c.num} href={`/novel/${(n as Novel).slug}`} className="flex items-center justify-between gap-2 text-[12px]">
+                              <span className="truncate text-white/65 transition hover:text-white">Chapter {c.num.toLocaleString()}</span>
+                              <span className="shrink-0 text-[10px] text-white/35">{c.time}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : <div key={i} className="flex gap-3 py-2.5"><Skeleton className="h-[68px] w-[50px] rounded-lg" /><div className="flex-1 space-y-1.5 pt-1"><Skeleton className="h-3 w-2/3 rounded" /><Skeleton className="h-2.5 w-1/2 rounded" /><Skeleton className="h-2.5 w-1/2 rounded" /></div></div>)}
+                </div>
+
+                {/* Pagination 1..5 */}
+                {!loading && luPages > 1 && (
+                  <div className="mt-3 flex items-center justify-center gap-1.5 pt-2">
+                    <button onClick={() => setLuPage(p => Math.max(1, p - 1))} disabled={luPage === 1} className="tnl-navbtn h-8 w-8 text-base disabled:opacity-30">‹</button>
+                    {Array.from({ length: luPages }).map((_, i) => {
+                      const p = i + 1
+                      return (
+                        <button key={p} onClick={() => setLuPage(p)}
+                          className={`h-8 w-8 rounded-lg text-sm font-semibold transition ${p === luPage ? 'text-white' : 'text-white/55 hover:text-white'}`}
+                          style={p === luPage ? { background: 'rgb(var(--v))' } : { border: '1px solid rgba(255,255,255,0.1)' }}>{p}</button>
+                      )
+                    })}
+                    <button onClick={() => setLuPage(p => Math.min(luPages, p + 1))} disabled={luPage === luPages} className="tnl-navbtn h-8 w-8 text-base disabled:opacity-30">›</button>
                   </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right column — Popular */}
+          <div>
+            <h2 className="mb-3 text-lg font-extrabold tracking-tight">Popular</h2>
+            <div className="tnl-panel p-3">
+              <div className="mb-3 flex gap-1 rounded-xl bg-black/30 p-1">
+                {(['Weekly', 'Monthly', 'All Time'] as const).map(t => (
+                  <button key={t} onClick={() => setPopTab(t)}
+                    className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${popTab === t ? 'text-white' : 'text-white/50 hover:text-white/80'}`}
+                    style={popTab === t ? { background: 'rgba(var(--v),0.9)' } : {}}>{t}</button>
+                ))}
+              </div>
+              <div className="space-y-0.5">
+                {(loading ? Array.from({ length: 6 }) : popular).map((n, i) => n ? (
+                  <Link key={(n as Novel).slug} href={`/novel/${(n as Novel).slug}`} onClick={() => trackNovelClick((n as Novel).slug, 'popular')} onMouseEnter={() => setSelected(n as Novel)}
+                    className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-white/5">
+                    <span className="w-5 text-center text-base font-black" style={{ color: i < 3 ? 'rgb(var(--v))' : 'rgba(255,255,255,0.3)' }}>{i + 1}</span>
+                    <Cover novel={n as Novel} className="h-12 w-9 shrink-0 rounded-md ring-1 ring-white/10" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[13px] font-semibold">{(n as Novel).title}</p>
+                      <p className="truncate text-[11px] text-white/50">{((n as Novel).genres ?? []).slice(0, 2).join(', ')}</p>
+                    </div>
+                  </Link>
+                ) : <div key={i} className="p-2"><Skeleton className="h-12 rounded-md" /></div>)}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Announcements ─────────────────────────────────────────────────── */}
+        <section className="mt-6">
+          <div className="tnl-panel p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-extrabold tracking-tight">Announcements</h2>
+              <button className="rounded-lg px-3 py-1.5 text-xs font-semibold transition hover:brightness-110" style={{ background: 'rgba(var(--v),0.9)' }}>View All</button>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {ANNOUNCEMENTS.map(a => (
+                <div key={a.title} className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-black" style={{ background: 'rgba(var(--v),0.85)' }}>NC</span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold">{a.title}</p>
+                      <p className="text-[11px] uppercase tracking-wider text-white/35">{a.date}</p>
+                    </div>
+                  </div>
+                  <p className="mt-2.5 text-xs leading-relaxed text-white/55">{a.body}</p>
                 </div>
               ))}
             </div>
-            <div className="flex gap-3">
-              <Link href="/library" onClick={dismissWelcome}
-                className="flex-1 rounded-full px-8 py-3.5 text-sm font-bold text-white text-center transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
-                style={{ background: 'linear-gradient(135deg, #3f3f46 0%, #27272a 50%, #18181b 100%)', boxShadow: '0 8px 24px rgba(0,0,0,0.40)' }}>
-                Browse Library
-              </Link>
-              <button
-                onClick={() => { dismissWelcome(); if (!user) setShowAuth(true) }}
-                className={`flex-1 ${btnPrimary}`}
-                style={btnPrimaryStyle}>
-                Get Started
-              </button>
-            </div>
-            <p className="mt-3 text-center text-xs" style={{ color: 'var(--nc-text2)' }}>
-              50 free tokens · No credit card required
-            </p>
           </div>
-        </div>
-      )}
+        </section>
+      </main>
 
-      {/* No header on the landing page — keeps focus on the hero CTA and
-          encourages scrolling through the full marketing page. */}
-
-      {/* ── HERO ───────────────────────────────────────────────────────────── */}
-      <section className="relative flex overflow-hidden" style={{ minHeight: '100vh' }}>
-        <div className="relative z-10 flex w-full flex-col justify-center px-8 py-20 md:w-1/2 md:px-12 lg:px-16">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 text-xs font-semibold w-fit" style={G}>
-            AI Novel Reader
-          </div>
-          <h1 className="mb-6 font-extrabold leading-[1.05] tracking-tight"
-            style={{ fontSize: 'clamp(2.8rem, 5vw, 4.5rem)' }}>
-            <span style={G}>Every answer.</span>
-            <br />
-            <span style={{ color: 'var(--nc-text)' }}>Inside the book.</span>
-          </h1>
-          <p className="mb-8 max-w-md text-base leading-relaxed md:text-lg" style={{ color: 'var(--nc-text2)' }}>
-            Ask anything about characters, plot, cultivation systems, and lore across eight fully-indexed
-            cultivation epics. NovelCodex knows every chapter.
-          </p>
-          <div className="flex flex-wrap items-center gap-4">
-            {user ? (
-              <Link href="/library" className={btnPrimary} style={btnPrimaryStyle}>
-                Go to Library
-              </Link>
-            ) : (
-              <>
-                <button onClick={() => setShowAuth(true)} className={btnPrimary} style={btnPrimaryStyle}>
-                  Get Started Free
-                </button>
-                <Link href="/library"
-                  className="flex h-12 w-12 items-center justify-center rounded-full border-2 transition hover:bg-amber-500/10"
-                  style={{ borderColor: 'rgba(245,158,11,0.4)', color: '#f59e0b' }}>
-                  <svg viewBox="0 0 16 16" fill="none" className="h-4 w-4">
-                    <path d="M3 13L13 3M13 3H6M13 3v7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </Link>
-              </>
-            )}
-          </div>
-          <p className="mt-3 text-xs" style={{ color: 'var(--nc-text2)' }}>
-            50 free tokens on signup · No credit card required
-          </p>
-        </div>
-        <div className="absolute right-0 top-0 hidden h-full w-1/2 md:block">
-          <CoverPanel />
-        </div>
-      </section>
-
-      {/* ── Stats ──────────────────────────────────────────────────────────── */}
-      <section className="relative z-10 border-y border-[var(--nc-border)] py-8" style={{ background: 'var(--nc-bg2)' }}>
-        <div className="mx-auto max-w-4xl grid grid-cols-2 sm:grid-cols-4 gap-6 px-6 text-center">
-          {[
-            { val: '8',       label: 'Featured novels'   },
-            { val: '18,000+', label: 'Chapters indexed'  },
-            { val: '100%',    label: 'Source-grounded'   },
-            { val: '24/7',    label: 'Always up to date' },
-          ].map(s => (
-            <div key={s.label}>
-              <p className="text-2xl font-extrabold" style={G}>{s.val}</p>
-              <p className="text-xs mt-1" style={{ color: 'var(--nc-text2)' }}>{s.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── How to use NovelCodex ──────────────────────────────────────────── */}
-      <section className="relative z-10 mx-auto max-w-5xl px-6 py-24">
-        <p className="text-center text-xs font-bold uppercase tracking-widest mb-3" style={G}>How it works</p>
-        <h2 className="text-center text-3xl font-extrabold mb-16 leading-tight" style={{ color: 'var(--nc-text)' }}>
-          Three steps to know everything<br />about any novel
-        </h2>
-
-        {/* Step 1 */}
-        <div className="flex flex-col md:flex-row items-center gap-12 mb-20">
-          <div className="flex-1 order-2 md:order-1">
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={G}>Browse the Library</p>
-            <h3 className="text-3xl font-bold mb-5" style={{ color: 'var(--nc-text)' }}>
-              Eight hand-picked cultivation epics
-            </h3>
-            <p className="text-lg leading-relaxed mb-6" style={{ color: 'var(--nc-text2)' }}>
-              Filter by genre, chapter count, or title. From Reverend Insanity to Against the Gods — find exactly what you&apos;re looking for, or discover something new.
-            </p>
-            <Link href="/library"
-              className="inline-flex items-center gap-2 text-sm font-semibold transition hover:opacity-80" style={G}>
-              Browse the library
-              <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5">
-                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </Link>
-          </div>
-          <div className="flex-1 order-1 md:order-2 w-full">
-            <LibraryMockup />
-          </div>
-        </div>
-
-        {/* Step 2 */}
-        <div className="flex flex-col md:flex-row items-center gap-12 mb-20">
-          <div className="flex-1 w-full">
-            <UnlockMockup />
-          </div>
-          <div className="flex-1">
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={G}>Ready Instantly</p>
-            <h3 className="text-3xl font-bold mb-5" style={{ color: 'var(--nc-text)' }}>
-              Every novel is ready the moment you pick it
-            </h3>
-            <p className="text-lg leading-relaxed mb-6" style={{ color: 'var(--nc-text2)' }}>
-              No setup, no waiting. NovelCodex reads every chapter and builds a searchable AI knowledge base — characters, realms, factions, everything. You only spend tokens when you chat.
-            </p>
-            <Link href="/shop"
-              className="inline-flex items-center gap-2 text-sm font-semibold transition hover:opacity-80" style={G}>
-              Get tokens
-              <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5">
-                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </Link>
-          </div>
-        </div>
-
-        {/* Step 3 */}
-        <div className="flex flex-col md:flex-row items-center gap-12">
-          <div className="flex-1 order-2 md:order-1">
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={G}>Ask Anything</p>
-            <h3 className="text-3xl font-bold mb-5" style={{ color: 'var(--nc-text)' }}>
-              Chat with the novel like you chat with a friend
-            </h3>
-            <p className="text-lg leading-relaxed mb-6" style={{ color: 'var(--nc-text2)' }}>
-              Ask about characters, plot twists, cultivation ranks, hidden lore, spoilers — or compare across multiple novels at once. Instant answers, every time.
-            </p>
-            <Link href="/chat"
-              className="inline-flex items-center gap-2 text-sm font-semibold transition hover:opacity-80" style={G}>
-              Try multi-novel chat
-              <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5">
-                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </Link>
-          </div>
-          <div className="flex-1 order-1 md:order-2 w-full">
-            <ChatMockup />
-          </div>
-        </div>
-      </section>
-
-      {/* ── Cover wall ─────────────────────────────────────────────────────── */}
-      <section className="relative z-10 py-20 overflow-hidden" style={{ background: '#0a0a0b' }}>
-        <div className="mx-auto max-w-6xl px-6">
-          <p className="text-center text-xs font-bold uppercase tracking-widest mb-3" style={G}>The Library</p>
-          <h2 className="text-center text-3xl font-extrabold mb-12" style={{ color: 'var(--nc-text)' }}>
-            Eight worlds, every chapter, one AI
-          </h2>
-          <div className="grid grid-cols-4 gap-3 sm:gap-4">
-            {COVERS.map((c, i) => (
-              <Link key={i} href={`/novel/${c.slug}`}
-                className="overflow-hidden rounded-2xl shadow-2xl shadow-black/70 transition-transform duration-300 hover:scale-[1.03] cursor-pointer block"
-                style={{ aspectRatio: '3/4' }}>
-                <img src={c.src} alt={c.alt} className="w-full h-full object-cover"
-                  onError={e => { (e.target as HTMLImageElement).style.background = `hsl(${230 + i * 15},20%,12%)` }} />
-              </Link>
-            ))}
-          </div>
-          <p className="text-center text-sm mt-10" style={{ color: 'var(--nc-text2)' }}>
-            More worlds opening soon.{' '}
-            <Link href="/library" className="font-semibold transition hover:opacity-80" style={G}>Join the waitlist →</Link>
-          </p>
-        </div>
-      </section>
-
-      {/* ── Use cases ──────────────────────────────────────────────────────── */}
-      <section className="relative z-10 border-t border-[var(--nc-border)] py-20" style={{ background: 'var(--nc-bg2)' }}>
-        <div className="mx-auto max-w-5xl px-6">
-          <p className="text-center text-xs font-bold uppercase tracking-widest mb-3" style={G}>Use cases</p>
-          <h2 className="text-center text-3xl font-extrabold mb-16" style={{ color: 'var(--nc-text)' }}>
-            What readers use it for
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M13 10V3L4 14h7v7l9-11h-7z" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                ),
-                title: 'Catch up instantly',
-                desc: 'Missed 200 chapters? Ask NovelCodex for a summary of everything that happened. Be back in the story in minutes.',
-              },
-              {
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.5">
-                    <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" strokeLinecap="round"/>
-                  </svg>
-                ),
-                title: 'Find hidden lore',
-                desc: "Remember reading something about a secret technique? NovelCodex finds it across thousands of chapters instantly.",
-              },
-              {
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                ),
-                title: 'Settle debates',
-                desc: "Who's stronger — Yun Che or Ling Han? Get a chapter-referenced answer with actual power levels and context.",
-              },
-              {
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                ),
-                title: 'Compare across novels',
-                desc: 'How does the cultivation system in ISSTH compare to Reverend Insanity? Ask and get a detailed breakdown.',
-              },
-              {
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                ),
-                title: 'Track every character',
-                desc: 'Forget who that minor sect elder was? Ask for a full breakdown of any character, their background, and their fate.',
-              },
-              {
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                ),
-                title: 'Spoiler control',
-                desc: 'Find out if a character dies before investing 800 chapters. You control exactly how much you want to know.',
-              },
-            ].map(uc => (
-              <div key={uc.title} className="rounded-2xl border p-6 transition hover:border-amber-500/40"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(245,158,11,0.07) 0%, rgba(109,40,217,0.05) 100%)',
-                  borderColor: 'rgba(245,158,11,0.15)',
-                }}>
-                <h3 className="text-base font-bold mb-2" style={{ color: 'var(--nc-text)' }}>{uc.title}</h3>
-                <p className="text-base leading-relaxed" style={{ color: 'var(--nc-text2)' }}>{uc.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Reviews ────────────────────────────────────────────────────────── */}
-      <section className="relative z-10 py-20 overflow-hidden">
-        <div className="mx-auto max-w-5xl px-6">
-          <p className="text-center text-xs font-bold uppercase tracking-widest mb-3" style={G}>Reviews</p>
-          <h2 className="text-center text-3xl font-extrabold mb-2" style={{ color: 'var(--nc-text)' }}>
-            What readers are saying
-          </h2>
-          <p className="text-center text-sm mb-12" style={{ color: 'var(--nc-text2)' }}>
-            Thousands of readers, one verdict.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {REVIEWS.map(r => (
-              <div key={r.name} className="rounded-2xl border p-6 flex flex-col"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(245,158,11,0.06) 0%, rgba(109,40,217,0.04) 100%)',
-                  borderColor: 'rgba(245,158,11,0.18)',
-                }}>
-                <p className="text-sm leading-relaxed flex-1 mb-5" style={{ color: 'var(--nc-text)' }}>{r.text}</p>
-                <div>
-                  <p className="text-xs font-semibold mb-1" style={{ color: 'var(--nc-text2)' }}>@{r.name}</p>
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: r.stars }).map((_, i) => (
-                      <span key={i} className="text-sm" style={G}>★</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA (full-width band) ───────────────────────────────────────────── */}
-      <section className="relative z-10 py-24 border-y border-amber-500/20"
-        style={{
-          background: 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.05) 50%, rgba(109,40,217,0.06) 100%)',
-        }}>
-        <div className="mx-auto max-w-4xl px-6 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div>
-            <h2 className="text-3xl font-extrabold mb-3" style={G}>
-              Start for free today.
-            </h2>
-            <p className="text-base" style={{ color: 'var(--nc-text2)' }}>
-              50 free tokens on signup. No credit card. No commitment.
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-4 shrink-0">
-            {user ? (
-              <Link href="/library" className={btnPrimary} style={btnPrimaryStyle}>
-                Go to Library
-              </Link>
-            ) : (
-              <>
-                <button onClick={() => setShowAuth(true)} className={btnPrimary} style={btnPrimaryStyle}>
-                  Create Free Account
-                </button>
-                <Link href="/library"
-                  className="rounded-full border px-8 py-3.5 text-sm font-semibold text-center transition hover:border-amber-500/50"
-                  style={{ borderColor: 'var(--nc-border)', color: 'var(--nc-text2)' }}>
-                  Browse first
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ── FAQ ────────────────────────────────────────────────────────────── */}
-      <section className="relative z-10 mx-auto max-w-3xl px-6 py-20">
-        <p className="text-center text-xs font-bold uppercase tracking-widest mb-3" style={G}>FAQ</p>
-        <h2 className="text-center text-3xl font-extrabold mb-16" style={{ color: 'var(--nc-text)' }}>
-          Frequently asked questions
-        </h2>
-        <FaqBlock />
-      </section>
-
-      <Footer />
-
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      <TestStyles />
     </div>
   )
 }

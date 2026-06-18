@@ -54,14 +54,14 @@ export default function ReaderClient({ slug, novelTitle, chapterNumber, heading,
   }, [slug, chapterNumber, novelTitle])
 
   const th = THEMES[theme]
-  const chapterHref = (k: number) => `/testnewlibrary/${slug}/read/${k}`
+  const chapterHref = (k: number) => `/novel/${slug}/read/${k}`
 
   return (
     <div className="relative min-h-screen transition-colors" style={{ background: th.bg, color: th.text, ['--v' as string]: '124,58,237', visibility: ready ? 'visible' : 'hidden' }}>
       {/* Top bar */}
       <header className="sticky top-0 z-50 backdrop-blur" style={{ background: th.header, borderBottom: `1px solid ${th.border}` }}>
         <div className="mx-auto flex h-14 max-w-3xl items-center gap-3 px-4">
-          <Link href={`/testnewlibrary/${slug}`} className="shrink-0 text-sm transition hover:opacity-100" style={{ color: th.sub }}>← Novel</Link>
+          <Link href={`/novel/${slug}`} className="shrink-0 text-sm transition hover:opacity-100" style={{ color: th.sub }}>← Novel</Link>
           <div className="min-w-0 flex-1 text-center">
             <p className="truncate text-sm font-bold">{novelTitle}</p>
             <p className="text-[11px]" style={{ color: th.sub }}>Chapter {chapterNumber}{total ? ` / ${total.toLocaleString()}` : ''}</p>
@@ -120,7 +120,7 @@ export default function ReaderClient({ slug, novelTitle, chapterNumber, heading,
 
         <div className="mt-6 flex items-center justify-between gap-3">
           {prev ? <Link href={chapterHref(prev)} className="flex-1 rounded-xl border py-3 text-center text-sm font-semibold transition" style={{ borderColor: th.border }}>‹ Previous</Link> : <div className="flex-1" />}
-          <Link href={`/testnewlibrary/${slug}`} className="rounded-xl border px-4 py-3 text-sm font-semibold transition" style={{ borderColor: th.border }}>Chapters</Link>
+          <Link href={`/novel/${slug}`} className="rounded-xl border px-4 py-3 text-sm font-semibold transition" style={{ borderColor: th.border }}>Chapters</Link>
           {next ? <Link href={chapterHref(next)} className="flex-1 rounded-xl py-3 text-center text-sm font-bold text-white transition hover:brightness-110" style={{ background: 'rgb(var(--v))' }}>Next ›</Link>
             : <div className="flex-1 rounded-xl py-3 text-center text-sm" style={{ background: th.panel, color: th.sub }}>The End</div>}
         </div>

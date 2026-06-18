@@ -37,7 +37,7 @@ export default async function ReaderPage({ params }: Props) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 text-white" style={{ background: '#07060d' }}>
         <p className="text-lg text-white/70">Chapter not available.</p>
-        <Link href={`/testnewlibrary/${slug}`} className="rounded-xl px-4 py-2 text-sm font-semibold" style={{ background: 'rgb(124,58,237)' }}>← Back to novel</Link>
+        <Link href={`/novel/${slug}`} className="rounded-xl px-4 py-2 text-sm font-semibold" style={{ background: 'rgb(124,58,237)' }}>← Back to novel</Link>
       </div>
     )
   }

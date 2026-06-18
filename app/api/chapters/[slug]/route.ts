@@ -1,4 +1,4 @@
-// GET /api/testnewlibrary/chapters/[slug]
+// GET /api/chapters/[slug]
 // Chapter list (number + title) sourced from the scraped novel JSON on the VPS.
 // This needs no embeddings, so every scraped novel gets a chapter list (unlike the
 // old Qdrant path, which only covered curated/indexed novels). Cached in-process 1h.

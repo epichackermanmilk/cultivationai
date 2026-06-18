@@ -2,7 +2,7 @@
 
 // Sticky glass header shared by every /test* page. Mirrors the AsuraScans top bar:
 // logo · centered nav · search · auth control. Account-gated destinations route
-// through /testlogin?return=<dest> when signed out so users land back where they
+// through /login?return=<dest> when signed out so users land back where they
 // intended after authenticating.
 
 import Link from 'next/link'
@@ -14,19 +14,19 @@ import { track, trackNav, trackSearch } from '@/lib/analytics'
 interface NavItem { label: string; href: string; auth?: boolean }
 
 const NAV: NavItem[] = [
-  { label: 'Home',      href: '/testnewlibrary' },
-  { label: 'Bookmarks', href: '/testbookmarks', auth: true },
-  { label: 'Browse',     href: '/testbrowse' },
-  { label: 'Characters', href: '/testcharacters', auth: true },
-  { label: 'Games',      href: '/testgames',     auth: true },
-  { label: 'Recommend',  href: '/testrecommend', auth: true },
+  { label: 'Home',      href: '/' },
+  { label: 'Bookmarks', href: '/bookmarks', auth: true },
+  { label: 'Browse',     href: '/browse' },
+  { label: 'Characters', href: '/characters', auth: true },
+  { label: 'Games',      href: '/games',     auth: true },
+  { label: 'Recommend',  href: '/recommend', auth: true },
 ]
 
 /** Where a nav link should actually point given the current auth state. Only
- *  account-gated links (auth === true) bounce through /testlogin when signed out. */
+ *  account-gated links (auth === true) bounce through /login when signed out. */
 export function gatedHref(dest: string, isAuthed: boolean, auth = false): string {
   if (!auth || isAuthed) return dest
-  return `/testlogin?return=${encodeURIComponent(dest)}`
+  return `/login?return=${encodeURIComponent(dest)}`
 }
 
 export default function TestHeader() {
@@ -41,7 +41,7 @@ export default function TestHeader() {
     e.preventDefault()
     const v = q.trim()
     trackSearch(v, 'header')
-    router.push(v ? `/testbrowse?q=${encodeURIComponent(v)}` : '/testbrowse')
+    router.push(v ? `/browse?q=${encodeURIComponent(v)}` : '/browse')
   }
 
   const active = (href: string) => pathname === href || pathname.startsWith(href + '/')
@@ -49,7 +49,7 @@ export default function TestHeader() {
   return (
     <header className="sticky top-0 z-50 tnl-glass">
       <div className="mx-auto flex h-16 max-w-[1400px] items-center gap-4 px-4 sm:px-6">
-        <Link href="/testnewlibrary" className="flex shrink-0 items-center gap-2">
+        <Link href="/" className="flex shrink-0 items-center gap-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl text-sm font-black"
             style={{ background: 'rgba(var(--v),0.9)', boxShadow: '0 0 20px rgba(var(--v),0.5)' }}>NC</span>
           <span className="hidden text-lg font-bold tracking-tight sm:block">NovelCodex</span>
@@ -76,12 +76,12 @@ export default function TestHeader() {
 
         {isAuthed ? (
           <div className="flex shrink-0 items-center gap-2">
-            <Link href="/testshop" onClick={() => trackNav('tokens')} title="Buy tokens"
+            <Link href="/shop" onClick={() => trackNav('tokens')} title="Buy tokens"
               className="flex items-center gap-1.5 rounded-full border border-white/12 bg-white/5 px-3 py-1.5 text-sm font-bold transition hover:border-[rgba(var(--v),0.6)] hover:bg-white/10">
               <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="rgb(var(--v))"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
               {(user!.tokens ?? 0).toLocaleString()}
             </Link>
-            <Link href="/testprofile" className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full text-sm font-bold ring-1 ring-white/15" style={{ background: 'rgba(var(--v),0.85)' }}>
+            <Link href="/profile" className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full text-sm font-bold ring-1 ring-white/15" style={{ background: 'rgba(var(--v),0.85)' }}>
               {user!.avatar_url
                 // eslint-disable-next-line @next/next/no-img-element
                 ? <img src={user!.avatar_url} alt="" className="h-full w-full object-cover" />
@@ -89,7 +89,7 @@ export default function TestHeader() {
             </Link>
           </div>
         ) : (
-          <Link href={`/testlogin?return=${encodeURIComponent(pathname || '/testnewlibrary')}`} onClick={() => track('signin_click', { source: 'header' })}
+          <Link href={`/login?return=${encodeURIComponent(pathname || '/')}`} onClick={() => track('signin_click', { source: 'header' })}
             className="shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition hover:brightness-110"
             style={{ background: 'rgba(var(--v),0.9)', boxShadow: '0 0 18px rgba(var(--v),0.4)' }}>Sign in</Link>
         )}

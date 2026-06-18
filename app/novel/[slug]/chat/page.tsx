@@ -1,7 +1,7 @@
 // /testnovel/[slug] — themed chat experience (Ask the Book / Character Chat) for
 // curated novels. Server component: loads novel meta, renders a glass shell + the
 // purple-themed TestChat. Chat is reserved for curated novels to keep embed costs
-// down; discovery/reading happen on /testnewlibrary.
+// down; discovery/reading happen on /.
 
 import Link from 'next/link'
 import { getNovelMeta } from '@/lib/vps'
@@ -31,13 +31,13 @@ export default async function TestNovelChat({ params }: Props) {
 
       {/* Top bar */}
       <header className="flex shrink-0 items-center gap-3 border-b border-white/10 px-4 py-3" style={{ background: 'rgba(10,8,18,0.6)', backdropFilter: 'blur(16px)' }}>
-        <Link href="/testcharacters" className="shrink-0 text-sm text-white/60 transition hover:text-white">← Characters</Link>
+        <Link href="/characters" className="shrink-0 text-sm text-white/60 transition hover:text-white">← Characters</Link>
         <div className="h-4 w-px bg-white/15" />
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-sm font-bold" style={{ color: 'rgb(var(--v))' }}>{title}</h1>
           {author && <p className="text-xs text-white/45">{author}</p>}
         </div>
-        <Link href={`/testnewlibrary/${slug}`} className="shrink-0 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/75 transition hover:text-white">View novel</Link>
+        <Link href={`/novel/${slug}`} className="shrink-0 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/75 transition hover:text-white">View novel</Link>
       </header>
 
       <div className="flex flex-1 overflow-hidden">

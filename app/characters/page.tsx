@@ -1,206 +1,112 @@
-import Link        from 'next/link'
+// /characters — curated character roster, redesigned to the /test* standard.
+// This is where chat lives now (curated novels only — keeps embed costs down).
+// Each card opens the themed chat at /testnovel/[slug]?char=…&mode=character.
+
+import Link from 'next/link'
 import { listNovels } from '@/lib/vps'
 import { FEATURED_CHARACTERS } from '@/lib/featured-characters'
-import SiteHeader  from '@/components/SiteHeader'
-import FeedbackWidget from '@/components/FeedbackWidget'
-import Footer        from '@/components/Footer'
-import AdSlot        from '@/components/AdSlot'
+import { coverSrc } from '@/lib/cover'
+import TestHeader from '@/components/TestHeader'
+import { TestStyles } from '@/components/TestUI'
 
-// ── Readable novel names ──────────────────────────────────────────────────────
 const NOVEL_NAMES: Record<string, string> = {
-  'reverend-insanity':       'Reverend Insanity',
-  'renegade-immortal':       'Renegade Immortal',
-  'against-the-gods':        'Against the Gods',
-  'a-will-eternal':          'A Will Eternal',
-  'i-shall-seal-the-heavens':'I Shall Seal the Heavens',
-  'warlock-of-the-magus-world': 'Warlock of the Magus World',
-  'shadow-slave':            'Shadow Slave',
-  'supreme-magus':           'Supreme Magus',
+  'reverend-insanity': 'Reverend Insanity', 'renegade-immortal': 'Renegade Immortal',
+  'against-the-gods': 'Against the Gods', 'a-will-eternal': 'A Will Eternal',
+  'i-shall-seal-the-heavens': 'I Shall Seal the Heavens', 'warlock-of-the-magus-world': 'Warlock of the Magus World',
+  'shadow-slave': 'Shadow Slave', 'supreme-magus': 'Supreme Magus',
 }
-
-// ── Fallback cover images (from our scraped sources) ─────────────────────────
 const FALLBACK_COVERS: Record<string, string> = {
-  'reverend-insanity':        'https://images.novelbin.me/novel/reverend-insanity.jpg',
-  'renegade-immortal':        'https://images.novelbin.me/novel/renegade-immortal.jpg',
-  'against-the-gods':         'https://static.novelbuddy.com/covers/against-the-gods.png',
-  'a-will-eternal':           'https://images.novelbin.me/novel/a-will-eternal.jpg',
+  'reverend-insanity': 'https://images.novelbin.me/novel/reverend-insanity.jpg',
+  'renegade-immortal': 'https://images.novelbin.me/novel/renegade-immortal.jpg',
+  'against-the-gods': 'https://static.novelbuddy.com/covers/against-the-gods.png',
+  'a-will-eternal': 'https://images.novelbin.me/novel/a-will-eternal.jpg',
   'i-shall-seal-the-heavens': 'https://images.novelbin.me/novel/i-shall-seal-the-heavens.jpg',
-  'warlock-of-the-magus-world':'https://images.novelbin.me/novel/warlock-of-the-magus-world.jpg',
-  'shadow-slave':             'https://images.novelbin.me/novel/shadow-slave.jpg',
-  'supreme-magus':            'https://images.novelbin.me/novel/supreme-magus-novel.jpg',
+  'warlock-of-the-magus-world': 'https://images.novelbin.me/novel/warlock-of-the-magus-world.jpg',
+  'shadow-slave': 'https://images.novelbin.me/novel/shadow-slave.jpg',
+  'supreme-magus': 'https://images.novelbin.me/novel/supreme-magus-novel.jpg',
 }
 
-export default async function CharactersPage() {
-  // ── Fetch novel covers from VPS ──────────────────────────────────────────────
-  let coverMap: Record<string, string> = {}
+export default async function TestCharactersPage() {
+  const coverMap: Record<string, string> = {}
   try {
     const novels = await listNovels()
-    for (const n of novels) {
-      if (n.cover_url) coverMap[n.slug] = n.cover_url
-    }
-  } catch {
-    // VPS unreachable — use fallback covers
-  }
+    for (const n of novels) if (n.cover_url) coverMap[n.slug] = n.cover_url
+  } catch { /* VPS unreachable — fallbacks */ }
 
-  // ── Build featured character entries ─────────────────────────────────────────
   const entries = Object.entries(FEATURED_CHARACTERS).flatMap(([slug, chars]) =>
     chars.map(char => ({
       slug,
       novelName: NOVEL_NAMES[slug] ?? slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-      coverUrl:  coverMap[slug] ?? FALLBACK_COVERS[slug] ?? '',
+      coverUrl: coverMap[slug] ?? FALLBACK_COVERS[slug] ?? '',
       char,
     }))
   )
 
   return (
-    <div className="min-h-screen pb-16 sm:pb-0" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
+    <div className="tnl-root relative min-h-screen text-white" style={{ ['--v' as string]: '124,58,237' }}>
+      <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: '#07060d' }}>
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(90% 55% at 50% -10%, rgba(var(--v),0.24) 0%, transparent 55%)' }} />
+      </div>
 
-      {/* Header */}
-      <SiteHeader />
+      <TestHeader />
 
-      <main className="mx-auto max-w-6xl px-4 py-14">
-
-        {/* Hero */}
+      <main className="relative z-10 mx-auto max-w-[1400px] px-4 pb-24 pt-10 sm:px-6">
         <div className="mb-10 text-center">
-          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-amber-500/70">✦ Featured</p>
-          <h2 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--nc-text)' }}>
-            Step into the story
-          </h2>
-          <p className="mt-3 max-w-md mx-auto text-sm leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
-            Chat with iconic characters from the novels you love. Each one speaks from the end of their
-            journey — with every memory, scar, and secret intact.
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.3em]" style={{ color: 'rgb(var(--v))' }}>✦ Character Chat</p>
+          <h1 className="text-3xl font-black tracking-tight sm:text-5xl">Talk to the legends</h1>
+          <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-white/55">
+            Chat with hand-crafted characters from our curated novels. Each speaks from the end of their journey —
+            every memory, scar, and secret intact, grounded in the actual text.
           </p>
         </div>
 
-        {/* Character grid */}
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {entries.map(({ slug, novelName, coverUrl, char }) => (
-            <CharacterCard
-              key={`${slug}-${char.name}`}
-              slug={slug}
-              novelName={novelName}
-              coverUrl={coverUrl}
-              char={char}
-            />
-          ))}
+          {entries.map(({ slug, novelName, coverUrl, char }) => {
+            const chips = char.core_traits.slice(0, 2).map(t => {
+              const c = t.split(' — ')[0]
+              return c.length > 32 ? c.slice(0, 30) + '…' : c
+            })
+            const chatUrl = `/novel/${slug}/chat?char=${encodeURIComponent(char.name)}&mode=character`
+            return (
+              <Link key={`${slug}-${char.name}`} href={chatUrl} className="group tnl-panel flex flex-col overflow-hidden border-white/12 transition duration-300 hover:-translate-y-1 hover:border-[rgba(var(--v),0.55)]">
+                <div className="relative h-40 overflow-hidden border-b border-white/10">
+                  {coverUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={coverSrc(coverUrl)} alt={novelName} className="h-full w-full object-cover object-top opacity-80 transition duration-500 group-hover:scale-105 group-hover:opacity-100" />
+                  ) : <div className="h-full w-full" style={{ background: 'linear-gradient(135deg,#1a1726,#221d33)' }} />}
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24" style={{ background: 'linear-gradient(to top, rgba(18,15,30,0.95), transparent)' }} />
+                  <span className="absolute left-3 top-3 rounded-full border border-white/25 bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur">{novelName}</span>
+                  <span className="absolute right-3 top-3 rounded-full border px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur" style={{ borderColor: 'rgba(var(--v),0.7)', background: 'rgba(var(--v),0.35)' }}>✦ Featured</span>
+                </div>
+                <div className="flex flex-1 flex-col p-4 pt-3">
+                  <h3 className="text-base font-bold text-white">{char.name}</h3>
+                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-white/60">{char.speech_style}</p>
+                  {chips.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {chips.map(t => <span key={t} className="rounded-full border border-white/15 px-2 py-0.5 text-[10px] text-white/65">{t}</span>)}
+                    </div>
+                  )}
+                  <div className="mt-auto pt-4">
+                    <span className="flex items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-white/[0.04] px-3 py-2 text-xs font-bold text-white transition group-hover:border-[rgba(var(--v),0.8)] group-hover:bg-[rgba(var(--v),0.25)]">
+                      Chat with {char.name} →
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            )
+          })}
         </div>
 
-        {/* Ad slot — below the roster, well clear of the cards */}
-        <AdSlot variant="banner" className="mt-10 rounded-xl" />
-
-        {/* Request CTA */}
-        <div className="mt-10 rounded-2xl border border-[var(--nc-border)] p-6 text-center"
-          style={{ background: 'var(--nc-bg2)' }}>
-          <p className="text-sm font-semibold" style={{ color: 'var(--nc-text)' }}>Want a character added?</p>
-          <p className="mt-1.5 max-w-sm mx-auto text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
-            Every character is hand-crafted for authenticity — their voice, personality, and
-            memories are verified against the actual novel. Tell us who you want to talk to.
-          </p>
-          <p className="mt-3 text-[10px] text-zinc-500">
-            Use the feedback button (bottom-right) and select &quot;Request a Character&quot;
+        <div className="mt-10 tnl-panel p-6 text-center">
+          <p className="text-sm font-semibold">Want a character added?</p>
+          <p className="mx-auto mt-1.5 max-w-sm text-xs leading-relaxed text-white/55">
+            Every character is hand-crafted for authenticity — voice, personality, and memories verified against the novel.
+            Use the feedback button and select &quot;Request a Character&quot;.
           </p>
         </div>
-
       </main>
 
-      <Footer />
-      <FeedbackWidget />
-    </div>
-  )
-}
-
-// ── Character card ─────────────────────────────────────────────────────────────
-function CharacterCard({
-  slug, novelName, coverUrl, char,
-}: {
-  slug:      string
-  novelName: string
-  coverUrl:  string
-  char: {
-    name: string
-    speech_style: string
-    core_traits: string[]
-    motivation: string
-    featured: true
-  }
-}) {
-  // Show at most 2 traits as chips (keep cards compact)
-  const chips = char.core_traits.slice(0, 2).map(t => {
-    // Strip the " — specific detail" suffix if present
-    const clean = t.split(' — ')[0]
-    return clean.length > 32 ? clean.slice(0, 30) + '…' : clean
-  })
-
-  const chatUrl = `/novel/${slug}?char=${encodeURIComponent(char.name)}&mode=character`
-
-  return (
-    <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--nc-border)] transition-all duration-300 hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/5"
-      style={{ background: 'var(--nc-bg2)' }}>
-
-      {/* Cover strip */}
-      <div className="relative h-40 overflow-hidden bg-zinc-900">
-        {coverUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={coverUrl}
-            alt={novelName}
-            className="h-full w-full object-cover object-top opacity-70 transition duration-500 group-hover:opacity-90 group-hover:scale-105"
-          />
-        ) : (
-          <div className="h-full w-full" style={{ background: 'linear-gradient(135deg, #1c1917 0%, #292524 100%)' }} />
-        )}
-        {/* Gradient fade bottom */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24"
-          style={{ background: 'linear-gradient(to top, var(--nc-bg2) 0%, transparent 100%)' }} />
-
-        {/* Novel name chip */}
-        <div className="absolute top-3 left-3">
-          <span className="inline-block rounded-full border border-amber-500/30 bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-amber-400 backdrop-blur-sm">
-            {novelName}
-          </span>
-        </div>
-
-        {/* ✦ Featured badge */}
-        <div className="absolute top-3 right-3">
-          <span className="inline-block rounded-full border border-amber-500/40 bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300 backdrop-blur-sm">
-            ✦ Featured
-          </span>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="flex flex-1 flex-col p-4 pt-2">
-        {/* Character name */}
-        <h3 className="text-base font-bold text-amber-300">{char.name}</h3>
-
-        {/* Speech style as tagline — 2 lines */}
-        <p className="mt-1 text-xs leading-relaxed line-clamp-2" style={{ color: 'var(--nc-text2)' }}>
-          {char.speech_style}
-        </p>
-
-        {/* Trait chips */}
-        {chips.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {chips.map(t => (
-              <span key={t}
-                className="rounded-full border border-[var(--nc-border)] px-2 py-0.5 text-[10px]"
-                style={{ color: 'var(--nc-text2)' }}>
-                {t}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* CTA */}
-        <div className="mt-auto pt-4">
-          <Link
-            href={chatUrl}
-            className="flex items-center justify-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-400 transition hover:bg-amber-500/20 hover:border-amber-500/60 hover:text-amber-300"
-          >
-            Chat with {char.name} →
-          </Link>
-        </div>
-      </div>
+      <TestStyles />
     </div>
   )
 }

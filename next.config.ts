@@ -32,6 +32,21 @@ const nextConfig: NextConfig = {
         destination: '/novel/heavens-proud-daughters-please-return-my-happy-ending-to-me',
         permanent: true,
       },
+      // ── Test → production migration (the test designs are now the live pages) ──
+      { source: '/testnewlibrary', destination: '/', permanent: true },
+      { source: '/testnewlibrary/:path*', destination: '/novel/:path*', permanent: true },
+      { source: '/testnovel/:slug', destination: '/novel/:slug/chat', permanent: true },
+      { source: '/testbrowse', destination: '/browse', permanent: true },
+      { source: '/testcharacters', destination: '/characters', permanent: true },
+      { source: '/testgames', destination: '/games', permanent: true },
+      { source: '/testrecommend', destination: '/recommend', permanent: true },
+      { source: '/testbookmarks', destination: '/bookmarks', permanent: true },
+      { source: '/testprofile', destination: '/profile', permanent: true },
+      { source: '/testshop', destination: '/shop', permanent: true },
+      { source: '/testlogin', destination: '/login', permanent: true },
+      { source: '/api/testnewlibrary/chapters/:slug', destination: '/api/chapters/:slug', permanent: true },
+      // The old catalogue lives at /browse now
+      { source: '/library', destination: '/browse', permanent: true },
     ]
   },
 

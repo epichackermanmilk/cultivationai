@@ -105,7 +105,7 @@ export default function NovelSocial({ slug }: { slug: string }) {
           <div>
             <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-white/45">{rating.mine ? 'Your rating' : 'Rate this novel'}</p>
             {user ? <Stars value={rating.mine ?? 0} onPick={pickRating} />
-              : <Link href={`/testlogin?return=/testnewlibrary/${slug}`} className="text-sm font-semibold" style={{ color: 'rgb(var(--v))' }}>Sign in to rate →</Link>}
+              : <Link href={`/login?return=/novel/${slug}`} className="text-sm font-semibold" style={{ color: 'rgb(var(--v))' }}>Sign in to rate →</Link>}
           </div>
         </div>
       </div>
@@ -138,7 +138,7 @@ export default function NovelSocial({ slug }: { slug: string }) {
           ) : (
             <div className="tnld-panel mb-4 flex items-center justify-between gap-3 p-4">
               <p className="text-sm text-white/60">Sign in to join the conversation.</p>
-              <Link href={`/testlogin?return=/testnewlibrary/${slug}`} className="shrink-0 rounded-lg px-4 py-1.5 text-sm font-bold text-white transition hover:brightness-110" style={{ background: 'rgb(var(--v))' }}>Sign in</Link>
+              <Link href={`/login?return=/novel/${slug}`} className="shrink-0 rounded-lg px-4 py-1.5 text-sm font-bold text-white transition hover:brightness-110" style={{ background: 'rgb(var(--v))' }}>Sign in</Link>
             </div>
           )}
 

@@ -1,6 +1,6 @@
 'use client'
 
-// /testlogin — a full-page, professional sign-in experience (replacing the corner
+// /login — a full-page, professional sign-in experience (replacing the corner
 // popup). Styled to match the /test* redesign: dark, glassy, purple accent. Honors
 // ?return=<path> so account-gated nav lands users back where they intended.
 
@@ -28,7 +28,7 @@ function LoginInner() {
   const sp = useSearchParams()
   const { user, refresh, loading: authLoading } = useAuth()
 
-  const returnTo = isSafeReturn(sp.get('return')) ? sp.get('return')! : '/testnewlibrary'
+  const returnTo = isSafeReturn(sp.get('return')) ? sp.get('return')! : '/'
 
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')

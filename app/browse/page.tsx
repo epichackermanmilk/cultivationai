@@ -1,6 +1,6 @@
 'use client'
 
-// /testbrowse — the full catalogue with theme/genre filtering (the redesigned
+// /browse — the full catalogue with theme/genre filtering (the redesigned
 // successor to /library). AsuraScans "Browse Series" toolbar: an independent live
 // search, a sort dropdown, a 2-column genre tag picker, and a chapters min/max
 // popover — all uniform pill controls — over a responsive poster grid. Reuses
@@ -181,7 +181,7 @@ function NovelCard({ n }: { n: Novel }) {
     </div>
   )
   if (blocked) return <div className="cursor-default select-none">{inner}</div>
-  return <Link href={`/testnewlibrary/${n.slug}`} onClick={() => trackNovelClick(n.slug, 'browse')}>{inner}</Link>
+  return <Link href={`/novel/${n.slug}`} onClick={() => trackNovelClick(n.slug, 'browse')}>{inner}</Link>
 }
 
 function BrowseInner() {

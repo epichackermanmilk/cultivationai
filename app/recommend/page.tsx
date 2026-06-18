@@ -1,411 +1,253 @@
 'use client'
 
+// /recommend — AI recommendations, redesigned to the /test* standard. Cinematic
+// hero, cover-art picker with quick-picks, spoiler-safe toggle, and rich result
+// cards. Same backend as /recommend (/api/recommend, X-Tokens-Remaining). Signed-out
+// users are sent to /login?return=/recommend.
+
 import { useState, useEffect, useRef } from 'react'
-import Link        from 'next/link'
-import SiteHeader from '@/components/SiteHeader'
-import Footer      from '@/components/Footer'
-import AdSlot      from '@/components/AdSlot'
-import FeedbackWidget from '@/components/FeedbackWidget'
+import Link from 'next/link'
+import TestHeader from '@/components/TestHeader'
+import { TestStyles, Cover, Skeleton, type Novel } from '@/components/TestUI'
 import { useAuth } from '@/lib/auth-context'
 import { matchesSearch } from '@/lib/search'
+import { track } from '@/lib/analytics'
 
-const G: React.CSSProperties = {
-  background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)',
-  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-}
-
-interface Novel {
-  slug: string; title: string; author: string
-  total_chapters: number; genres: string[]; cover_url: string; description: string
-}
 interface Rec extends Novel { blurb: string }
 
-// ── Novel search picker ───────────────────────────────────────────────────────
-function NovelPicker({
-  library, selected, onAdd, onRemove,
-}: {
-  library: Novel[]
-  selected: Novel[]
-  onAdd: (n: Novel) => void
-  onRemove: (slug: string) => void
+// ── Searchable cover picker with quick-picks ────────────────────────────────────────
+function NovelPicker({ library, selected, onAdd, onRemove }: {
+  library: Novel[]; selected: Novel[]; onAdd: (n: Novel) => void; onRemove: (slug: string) => void
 }) {
-  const [query, setQuery]     = useState('')
-  const [open, setOpen]       = useState(false)
-  const wrapRef               = useRef<HTMLDivElement>(null)
-
-  const selectedSlugs = new Set(selected.map(n => n.slug))
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
+  const wrap = useRef<HTMLDivElement>(null)
+  const sel = new Set(selected.map(n => n.slug))
   const q = query.trim()
-  const filtered = q.length >= 1
-    ? library.filter(n =>
-        !selectedSlugs.has(n.slug) &&
-        (matchesSearch(n.title, q) || matchesSearch(n.author, q))
-      ).slice(0, 8)
-    // Empty query but focused → show a few suggestions so the picker is discoverable
-    : library.filter(n => !selectedSlugs.has(n.slug)).slice(0, 8)
-
+  const results = (q ? library.filter(n => !sel.has(n.slug) && (matchesSearch(n.title, q) || matchesSearch(n.author || '', q))) : []).slice(0, 8)
+  const quickPicks = library.filter(n => !sel.has(n.slug)).slice(0, 8)
   useEffect(() => {
-    const h = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', h)
-    return () => document.removeEventListener('mousedown', h)
+    const h = (e: MouseEvent) => { if (wrap.current && !wrap.current.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h)
   }, [])
 
   return (
-    <div ref={wrapRef} className="relative">
-      {/* Selected chips */}
+    <div ref={wrap}>
+      {/* Selected as cover chips */}
       {selected.length > 0 && (
-        <div className="mb-3 flex flex-wrap gap-2">
+        <div className="mb-4 flex flex-wrap gap-3">
           {selected.map(n => (
-            <span key={n.slug}
-              className="flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-300">
-              {n.title.length > 30 ? n.title.slice(0, 28) + '…' : n.title}
-              <button onClick={() => onRemove(n.slug)} className="ml-0.5 text-amber-400/60 hover:text-amber-400 transition">×</button>
-            </span>
+            <div key={n.slug} className="group relative w-[68px]">
+              <Cover novel={n} className="aspect-[3/4] w-full rounded-lg ring-1 ring-[rgba(var(--v),0.5)]" />
+              <button onClick={() => onRemove(n.slug)} title="Remove"
+                className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/80 text-xs text-white ring-1 ring-white/20 transition hover:bg-red-500">×</button>
+              <p className="mt-1 line-clamp-2 text-[10px] leading-tight text-white/60">{n.title}</p>
+            </div>
           ))}
         </div>
       )}
 
-      {selected.length < 5 && (
+      {selected.length < 5 ? (
         <div className="relative">
-          <input
-            value={query}
-            onChange={e => { setQuery(e.target.value); setOpen(true) }}
-            onFocus={() => setOpen(true)}
-            placeholder="Search novels by title or author…"
-            className="w-full rounded-xl border border-[var(--nc-border)] bg-[var(--nc-bg2)] px-4 py-3 text-sm placeholder-zinc-500 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
-            style={{ color: 'var(--nc-text)' }}
-          />
-          {open && filtered.length > 0 && (
-            <div className="absolute z-30 mt-1 w-full rounded-xl border border-[var(--nc-border)] shadow-2xl overflow-hidden"
-              style={{ background: 'var(--nc-bg2)' }}>
-              {filtered.map(n => (
-                <button key={n.slug}
-                  onClick={() => { onAdd(n); setQuery(''); setOpen(false) }}
-                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-zinc-800/60">
-                  <img src={n.cover_url} alt={n.title}
-                    className="h-10 w-7 shrink-0 rounded object-cover"
-                    onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+          <div className="relative">
+            <svg className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" strokeLinecap="round" /></svg>
+            <input value={query} onChange={e => { setQuery(e.target.value); setOpen(true) }} onFocus={() => setOpen(true)}
+              placeholder="Search novels by title or author…"
+              className="h-11 w-full rounded-xl border border-white/10 bg-black/40 pl-10 pr-3 text-sm text-white placeholder-white/35 outline-none transition focus:border-[rgba(var(--v),0.6)]" />
+          </div>
+          {open && results.length > 0 && (
+            <div className="absolute z-30 mt-1.5 w-full overflow-hidden rounded-xl border border-white/10 bg-[#100d1c] shadow-2xl">
+              {results.map(n => (
+                <button key={n.slug} onClick={() => { onAdd(n); setQuery(''); setOpen(false) }}
+                  className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition hover:bg-white/5">
+                  <Cover novel={n} className="h-12 w-9 shrink-0 rounded ring-1 ring-white/10" />
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium" style={{ color: 'var(--nc-text)' }}>{n.title}</p>
-                    <p className="text-xs" style={{ color: 'var(--nc-text2)' }}>{n.author} · {n.genres[0]}</p>
+                    <p className="truncate text-sm font-medium">{n.title}</p>
+                    <p className="truncate text-xs text-white/50">{n.author} · {n.genres?.[0]}</p>
                   </div>
                 </button>
               ))}
             </div>
           )}
+
+          {/* Quick-picks when nothing typed */}
+          {!q && (
+            <div className="mt-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/40">Popular picks</p>
+              <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-8">
+                {quickPicks.map(n => (
+                  <button key={n.slug} onClick={() => onAdd(n)} title={n.title} className="tnl-sheen group relative aspect-[3/4] overflow-hidden rounded-lg ring-1 ring-white/10 transition hover:ring-[rgba(var(--v),0.6)]">
+                    <Cover novel={n} className="h-full w-full" />
+                    <span className="absolute inset-0 flex items-center justify-center bg-black/0 text-2xl font-light text-white opacity-0 transition group-hover:bg-black/40 group-hover:opacity-100">+</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      )}
-      {selected.length >= 5 && (
-        <p className="text-xs text-zinc-500">Maximum 5 novels selected</p>
-      )}
+      ) : <p className="text-xs text-white/45">Maximum 5 novels selected</p>}
     </div>
   )
 }
 
-// ── Recommendation card ───────────────────────────────────────────────────────
-function RecCard({ rec }: { rec: Rec }) {
+function RecCard({ rec, i }: { rec: Rec; i: number }) {
   return (
-    <div className="flex gap-4 rounded-2xl border border-[var(--nc-border)] p-4 transition hover:border-amber-500/30"
-      style={{ background: 'var(--nc-bg2)' }}>
-      {/* Cover */}
+    <div className="tnl-panel tnl-fadeup flex gap-4 p-4" style={{ animationDelay: `${i * 60}ms` }}>
       <Link href={`/novel/${rec.slug}`} className="shrink-0">
-        <img
-          src={rec.cover_url} alt={rec.title}
-          className="h-32 w-22 rounded-lg object-cover shadow-lg transition hover:scale-105"
-          style={{ width: '88px' }}
-          onError={e => {
-            const t = e.target as HTMLImageElement
-            t.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(rec.title)}&size=120&background=27272a&color=f59e0b&bold=true`
-          }}
-        />
+        <Cover novel={rec} className="h-40 w-[108px] rounded-lg ring-1 ring-white/10 transition hover:ring-[rgba(var(--v),0.6)]" />
       </Link>
-
-      {/* Info */}
       <div className="flex min-w-0 flex-col gap-1.5">
         <div>
-          <Link href={`/novel/${rec.slug}`}>
-            <h3 className="line-clamp-2 text-sm font-semibold leading-snug transition hover:text-amber-400"
-              style={{ color: 'var(--nc-text)' }}>{rec.title}</h3>
-          </Link>
-          <p className="text-xs" style={{ color: 'var(--nc-text2)' }}>{rec.author}</p>
+          <Link href={`/novel/${rec.slug}`}><h3 className="line-clamp-2 text-base font-bold leading-snug transition hover:text-[rgb(var(--v))]">{rec.title}</h3></Link>
+          <p className="text-xs text-white/50">{rec.author}{rec.total_chapters ? ` · ${rec.total_chapters.toLocaleString()} ch` : ''}</p>
         </div>
-
-        {/* Genres */}
         <div className="flex flex-wrap gap-1">
-          {rec.genres.slice(0, 3).map(g => (
-            <span key={g} className="rounded-full border px-2 py-0.5 text-[10px]"
-              style={{ borderColor: 'var(--nc-border)', color: 'var(--nc-text2)' }}>{g}</span>
-          ))}
-          <span className="rounded-full border px-2 py-0.5 text-[10px]"
-            style={{ borderColor: 'var(--nc-border)', color: 'var(--nc-text2)' }}>
-            {rec.total_chapters.toLocaleString()} ch
-          </span>
+          {(rec.genres ?? []).slice(0, 3).map(g => <span key={g} className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-white/55">{g}</span>)}
         </div>
-
-        {/* AI blurb */}
-        <p className="text-xs leading-relaxed italic" style={{ color: 'var(--nc-text2)' }}>
-          &ldquo;{rec.blurb}&rdquo;
-        </p>
-
-        {/* CTA */}
-        <Link href={`/novel/${rec.slug}`}
-          className="mt-auto w-fit rounded-lg bg-amber-500/10 border border-amber-500/30 px-3 py-1 text-xs font-semibold text-amber-400 transition hover:bg-amber-500/20">
-          View Novel →
-        </Link>
+        <p className="text-sm italic leading-relaxed text-white/70">&ldquo;{rec.blurb}&rdquo;</p>
+        <Link href={`/novel/${rec.slug}`} className="mt-auto w-fit rounded-lg px-3.5 py-1.5 text-xs font-bold text-white transition hover:brightness-110" style={{ background: 'rgb(var(--v))' }}>View Novel →</Link>
       </div>
     </div>
   )
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
-export default function RecommendPage() {
+export default function TestRecommendPage() {
   const { user, updateTokens } = useAuth()
-  const [mode, setMode]           = useState<'novels' | 'description'>('novels')
-  const [library, setLibrary]     = useState<Novel[]>([])
+  const [mode, setMode] = useState<'novels' | 'description'>('novels')
+  const [library, setLibrary] = useState<Novel[]>([])
   const [libLoading, setLibLoading] = useState(true)
-  const [selected, setSelected]   = useState<Novel[]>([])
-  const [query, setQuery]         = useState('')
-  const [loading, setLoading]     = useState(false)
-  const [results, setResults]     = useState<Rec[] | null>(null)
-  const [error, setError]         = useState<string | null>(null)
+  const [selected, setSelected] = useState<Novel[]>([])
+  const [query, setQuery] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [results, setResults] = useState<Rec[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [spoilerSafe, setSpoilerSafe] = useState(false)
 
-  // Load library for the picker
   useEffect(() => {
-    fetch('/api/novels')
-      .then(r => r.ok ? r.json() : [])
-      .then(data => {
-        const novels = (Array.isArray(data) ? data : []).filter(n => !('coming_soon' in n))
-        setLibrary(novels)
-      })
-      .catch(() => {})
-      .finally(() => setLibLoading(false))
+    fetch('/api/novels').then(r => r.ok ? r.json() : []).then(d => {
+      setLibrary((Array.isArray(d) ? d : []).filter((n: Novel) => !('coming_soon' in n)))
+    }).catch(() => {}).finally(() => setLibLoading(false))
   }, [])
 
   async function getRecommendations() {
     if (loading) return
-    if (mode === 'novels' && selected.length === 0) {
-      setError('Select at least one novel you enjoy')
-      return
-    }
-    if (mode === 'description' && !query.trim()) {
-      setError('Describe what kind of novel you want')
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-    setResults(null)
-
+    if (mode === 'novels' && selected.length === 0) { setError('Select at least one novel you enjoy'); return }
+    if (mode === 'description' && !query.trim()) { setError('Describe what kind of novel you want'); return }
+    setLoading(true); setError(null); setResults(null)
     try {
-      const body = mode === 'novels'
-        ? { mode, slugs: selected.map(n => n.slug), spoilerSafe }
-        : { mode, query: query.trim(), spoilerSafe }
-
-      const res = await fetch('/api/recommend', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(body),
-      })
-
+      const body = mode === 'novels' ? { mode, slugs: selected.map(n => n.slug), spoilerSafe } : { mode, query: query.trim(), spoilerSafe }
+      const res = await fetch('/api/recommend', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error ?? 'Something went wrong — please try again')
-        return
-      }
-
-      // Update token display
+      if (!res.ok) { setError(data.error ?? 'Something went wrong — please try again'); return }
       const remaining = res.headers.get('X-Tokens-Remaining')
-      if (remaining !== null) {
-        const n = parseInt(remaining, 10)
-        if (!isNaN(n)) updateTokens(n)
-      }
-
+      if (remaining !== null) { const n = parseInt(remaining, 10); if (!isNaN(n)) updateTokens(n) }
+      track('recommend_run', { mode, spoiler_safe: spoilerSafe, results: (data.recommendations ?? []).length })
       setResults(data.recommendations ?? [])
-    } catch {
-      setError('Could not reach the recommendation service — please try again')
-    } finally {
-      setLoading(false)
-    }
+    } catch { setError('Could not reach the recommendation service — please try again') } finally { setLoading(false) }
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col pb-16 sm:pb-0" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
-      {/* Header */}
-      <SiteHeader />
+    <div className="tnl-root relative min-h-screen text-white" style={{ ['--v' as string]: '124,58,237' }}>
+      <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: '#07060d' }}>
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(85% 55% at 50% -10%, rgba(var(--v),0.30) 0%, transparent 55%), radial-gradient(60% 50% at 85% 110%, rgba(var(--v),0.16) 0%, transparent 55%)' }} />
+      </div>
 
-      <div className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-4 py-12">
-        <aside className="hidden xl:block w-40 shrink-0"><AdSlot variant="side" /></aside>
-        <main className="mx-auto min-w-0 flex-1 max-w-3xl">
-        {/* Title */}
-        <div className="mb-10 text-center">
-          <h1 className="mb-3 text-4xl sm:text-5xl font-extrabold tracking-tight" style={G}>Discover Your Next Novel</h1>
-          <p className="text-base" style={{ color: 'var(--nc-text2)' }}>
-            AI-powered recommendations · <span className="text-amber-400 font-medium">10 tokens</span> per search
+      <TestHeader />
+
+      <main className="relative z-10 mx-auto max-w-3xl px-4 pb-24 pt-14 sm:px-6">
+        {/* Hero */}
+        <div className="mb-9 text-center">
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.3em]" style={{ color: 'rgb(var(--v))' }}>✦ AI Curator</p>
+          <h1 className="text-3xl font-black tracking-tight sm:text-5xl">Discover your next obsession</h1>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/55">
+            Tell us what you love — our curator reads the lore of thousands of novels and finds the ones built for you.
+            <span className="ml-1" style={{ color: 'rgb(var(--v))' }}>10 tokens</span> per search.
           </p>
         </div>
 
         {/* Mode toggle */}
-        <div className="mb-6 flex rounded-xl border border-[var(--nc-border)] p-1 gap-1"
-          style={{ background: 'var(--nc-bg2)' }}>
-          {([['novels', 'Based on novels I like'], ['description', 'Describe what I want']] as const).map(([m, label]) => (
+        <div className="mb-6 flex gap-1 rounded-2xl p-1 tnl-panel">
+          {([['novels', '❤  Novels I like'], ['description', '✎  Describe what I want']] as const).map(([m, label]) => (
             <button key={m} onClick={() => { setMode(m); setResults(null); setError(null) }}
-              className={`flex-1 rounded-lg py-2.5 text-sm font-medium transition ${mode === m ? 'bg-amber-500 text-black' : 'hover:bg-zinc-800/50'}`}
-              style={mode !== m ? { color: 'var(--nc-text2)' } : {}}>
-              {label}
-            </button>
+              className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition ${mode === m ? 'text-white' : 'text-white/55 hover:text-white'}`}
+              style={mode === m ? { background: 'rgb(var(--v))' } : {}}>{label}</button>
           ))}
         </div>
 
         {/* Input panel */}
-        <div className="mb-6 rounded-2xl border border-[var(--nc-border)] p-5"
-          style={{ background: 'var(--nc-bg2)' }}>
+        <div className="mb-6 tnl-panel p-5">
           {mode === 'novels' ? (
             <>
-              <label className="mb-3 block text-sm font-medium" style={{ color: 'var(--nc-text)' }}>
-                Select up to 5 novels you enjoy
-              </label>
-              {libLoading
-                ? <div className="h-12 animate-pulse rounded-xl bg-zinc-800" />
-                : <NovelPicker
-                    library={library}
-                    selected={selected}
-                    onAdd={n => setSelected(prev => [...prev, n])}
-                    onRemove={slug => setSelected(prev => prev.filter(n => n.slug !== slug))}
-                  />
-              }
+              <label className="mb-3 block text-sm font-medium">Pick up to 5 novels you enjoy</label>
+              {libLoading ? <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-8">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="aspect-[3/4] rounded-lg" />)}</div> :
+                <NovelPicker library={library} selected={selected}
+                  onAdd={n => setSelected(p => p.length < 5 ? [...p, n] : p)} onRemove={slug => setSelected(p => p.filter(n => n.slug !== slug))} />}
             </>
           ) : (
             <>
-              <label className="mb-3 block text-sm font-medium" style={{ color: 'var(--nc-text)' }}>
-                Describe what you&apos;re looking for
-              </label>
-              <textarea
-                value={query}
-                onChange={e => setQuery(e.target.value)}
+              <label className="mb-3 block text-sm font-medium">Describe what you&apos;re looking for</label>
+              <textarea value={query} onChange={e => setQuery(e.target.value)} rows={4} maxLength={500}
                 placeholder="e.g. A slow-burn cultivation story with a clever MC who uses strategy over brute force, set in ancient China with political intrigue…"
-                rows={4}
-                maxLength={500}
-                className="w-full resize-none rounded-xl border border-[var(--nc-border)] bg-[var(--nc-bg)] px-4 py-3 text-sm placeholder-zinc-500 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
-                style={{ color: 'var(--nc-text)' }}
-              />
-              <p className="mt-1 text-right text-xs text-zinc-600">{query.length}/500</p>
+                className="w-full resize-none rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder-white/35 outline-none transition focus:border-[rgba(var(--v),0.6)]" />
+              <p className="mt-1 text-right text-xs text-white/35">{query.length}/500</p>
             </>
           )}
         </div>
 
-        {/* Spoiler-safe toggle */}
-        <div className="mb-5 rounded-xl border border-[var(--nc-border)] p-4"
-          style={{ background: 'var(--nc-bg2)' }}>
+        {/* Spoiler-safe */}
+        <div className="mb-5 tnl-panel p-4">
           <label className="flex cursor-pointer items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--nc-text)' }}>
-                🛡️ Spoiler-safe mode
-              </p>
-              <p className="mt-0.5 text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
-                Blurbs will describe premise and tone only — no plot twists, deaths, or endings revealed.
-              </p>
+              <p className="text-sm font-medium">🛡️ Spoiler-safe mode</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-white/55">Blurbs describe premise and tone only — no plot twists, deaths, or endings revealed.</p>
             </div>
-            {/* iOS-style toggle */}
-            <button
-              type="button"
-              onClick={() => setSpoilerSafe(v => !v)}
-              className={`relative h-6 w-11 shrink-0 rounded-full border transition-colors duration-200 ${
-                spoilerSafe
-                  ? 'border-amber-500 bg-amber-500'
-                  : 'border-zinc-600 bg-zinc-700'
-              }`}
-            >
-              <span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${
-                spoilerSafe ? 'translate-x-5' : 'translate-x-0'
-              }`} />
+            <button type="button" onClick={() => setSpoilerSafe(v => !v)}
+              className="relative h-6 w-11 shrink-0 rounded-full border transition-colors"
+              style={spoilerSafe ? { borderColor: 'rgb(var(--v))', background: 'rgb(var(--v))' } : { borderColor: 'rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.1)' }}>
+              <span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${spoilerSafe ? 'translate-x-5' : ''}`} />
             </button>
           </label>
-          {spoilerSafe && (
-            <p className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs leading-relaxed text-amber-400/80">
-              ⚠ Heads up: spoiler-safe blurbs may feel less compelling. Some novels hook readers specifically because of a key plot element (e.g. a shocking betrayal or a unique power) — hiding it might make the recommendation less exciting than it really is.
-            </p>
-          )}
         </div>
 
-        {/* Auth gate */}
         {!user ? (
-          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5 text-center">
-            <p className="mb-3 text-sm" style={{ color: 'var(--nc-text2)' }}>
-              Sign in to get AI-powered recommendations
-            </p>
-            <Link href="/library"
-              className="rounded-full bg-amber-500 px-6 py-2 text-sm font-semibold text-black hover:bg-amber-400 transition">
-              Sign In
-            </Link>
+          <div className="rounded-2xl border border-[rgba(var(--v),0.25)] bg-[rgba(var(--v),0.06)] p-5 text-center">
+            <p className="mb-3 text-sm text-white/70">Sign in to get AI-powered recommendations</p>
+            <Link href="/login?return=/recommend" className="inline-block rounded-full px-6 py-2 text-sm font-semibold transition hover:brightness-110" style={{ background: 'rgb(var(--v))' }}>Sign in</Link>
           </div>
         ) : (
-          <button
-            onClick={getRecommendations}
-            disabled={loading}
-            className="w-full rounded-xl py-3.5 text-sm font-bold text-black transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0"
-            style={{ background: 'linear-gradient(135deg,#fbbf24 0%,#f59e0b 50%,#d97706 100%)', boxShadow: '0 6px 20px rgba(245,158,11,0.30)' }}>
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent" />
-                Finding your next obsession…
-              </span>
-            ) : (
-              '✨ Get Recommendations  (10 tokens)'
-            )}
+          <button onClick={getRecommendations} disabled={loading}
+            className="w-full rounded-xl py-3.5 text-sm font-bold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-50"
+            style={{ background: 'rgb(var(--v))', boxShadow: '0 10px 30px rgba(var(--v),0.45)' }}>
+            {loading ? <span className="flex items-center justify-center gap-2"><span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />Finding your next obsession…</span> : '✨ Get Recommendations  (10 tokens)'}
           </button>
         )}
 
-        {/* Error */}
         {error && (
           <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/5 px-4 py-3 text-sm text-red-400">
-            {error}
-            {error.includes('shop') && (
-              <Link href="/shop" className="ml-2 font-semibold underline underline-offset-2">Go to Shop →</Link>
-            )}
+            {error}{error.includes('shop') && <Link href="/shop" className="ml-2 font-semibold underline underline-offset-2">Go to Shop →</Link>}
           </div>
         )}
 
-        {/* Results */}
         {results !== null && (
           <div className="mt-8">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold" style={{ color: 'var(--nc-text)' }}>
-                Your Recommendations
-              </h2>
-              <span className="text-xs" style={{ color: 'var(--nc-text2)' }}>{results.length} found</span>
+              <h2 className="text-lg font-bold">Your Recommendations</h2>
+              <span className="text-xs text-white/50">{results.length} found</span>
             </div>
-
             {results.length === 0 ? (
-              <div className="rounded-2xl border border-[var(--nc-border)] p-8 text-center text-sm" style={{ color: 'var(--nc-text2)' }}>
-                No close matches found — try adjusting your selection or description.
-              </div>
+              <div className="tnl-panel p-8 text-center text-sm text-white/55">No close matches found — try adjusting your selection or description.</div>
             ) : (
-              <div className="flex flex-col gap-4">
-                {results.map(rec => <RecCard key={rec.slug} rec={rec} />)}
-              </div>
+              <div className="flex flex-col gap-4">{results.map((rec, i) => <RecCard key={rec.slug} rec={rec} i={i} />)}</div>
             )}
-
-            <button
-              onClick={getRecommendations}
-              disabled={loading}
-              className="mt-6 w-full rounded-xl border border-[var(--nc-border)] py-3 text-sm font-medium transition hover:border-amber-500/50 hover:text-amber-400 disabled:opacity-40"
-              style={{ color: 'var(--nc-text2)' }}>
+            <button onClick={getRecommendations} disabled={loading}
+              className="mt-6 w-full rounded-xl border border-white/10 py-3 text-sm font-medium text-white/70 transition hover:border-[rgba(var(--v),0.5)] hover:text-white disabled:opacity-40">
               {loading ? 'Searching…' : 'Try Again  (10 tokens)'}
             </button>
-
-            {/* Ad slot — only shown alongside results, never over the input */}
-            {results.length > 0 && <AdSlot variant="banner" className="mt-6 rounded-xl" />}
           </div>
         )}
-        </main>
-        <aside className="hidden xl:block w-40 shrink-0"><AdSlot variant="side" /></aside>
-      </div>
+      </main>
 
-      <Footer />
-      <FeedbackWidget />
+      <TestStyles />
     </div>
   )
 }

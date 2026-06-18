@@ -63,7 +63,7 @@ export default function DetailClient({ meta }: { meta: Meta }) {
   }, [meta.slug])
 
   useEffect(() => {
-    fetch(`/api/testnewlibrary/chapters/${meta.slug}`).then(r => r.json())
+    fetch(`/api/chapters/${meta.slug}`).then(r => r.json())
       .then(d => { setChapters(d.chapters ?? []); setChLoading(false) }).catch(() => setChLoading(false))
     fetch(`/api/knowledge/${meta.slug}`).then(r => r.json()).then(setCodex).catch(() => {})
     fetch('/api/novels/all').then(r => r.json()).then((all: (SimNovel & { locked?: boolean })[]) => {
@@ -132,7 +132,7 @@ export default function DetailClient({ meta }: { meta: Meta }) {
       {/* Top bar */}
       <header className="sticky top-0 z-50 tnld-glass">
         <div className="mx-auto flex h-14 max-w-[1200px] items-center gap-3 px-4 sm:px-6">
-          <Link href="/testnewlibrary" className="flex items-center gap-2 text-sm font-semibold text-white/80 hover:text-white">
+          <Link href="/" className="flex items-center gap-2 text-sm font-semibold text-white/80 hover:text-white">
             <span className="text-lg">‹</span> Library
           </Link>
           <span className="ml-auto truncate text-sm font-medium text-white/50">{meta.title}</span>
@@ -174,13 +174,13 @@ export default function DetailClient({ meta }: { meta: Meta }) {
               </div>
             )}
             <div className="mt-5 flex flex-wrap gap-2.5">
-              <Link href={`/testnewlibrary/${meta.slug}/read/${resume ?? 1}`} onClick={() => track('read_start', { slug: meta.slug, chapter: resume ?? 1, resumed: !!resume })}
+              <Link href={`/novel/${meta.slug}/read/${resume ?? 1}`} onClick={() => track('read_start', { slug: meta.slug, chapter: resume ?? 1, resumed: !!resume })}
                 className="rounded-xl px-5 py-2.5 text-sm font-bold transition hover:brightness-110"
                 style={{ background: 'rgb(var(--v))', boxShadow: `0 0 24px ${rgba(accent, 0.55)}` }}>
                 {resume ? `Continue · Ch ${resume}` : 'Read first chapter'}
               </Link>
-              {resume && <Link href={`/testnewlibrary/${meta.slug}/read/1`} className="rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-white/10">Start over</Link>}
-              <Link href={`/testrecommend`} onClick={() => track('recommend_click', { slug: meta.slug })} className="rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-white/10">Recommend Similar</Link>
+              {resume && <Link href={`/novel/${meta.slug}/read/1`} className="rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-white/10">Start over</Link>}
+              <Link href={`/recommend`} onClick={() => track('recommend_click', { slug: meta.slug })} className="rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-white/10">Recommend Similar</Link>
             </div>
           </div>
         </section>
@@ -201,7 +201,7 @@ export default function DetailClient({ meta }: { meta: Meta }) {
             <div className="tnld-panel tnld-scroll min-h-0 flex-1 divide-y divide-white/5 overflow-y-auto max-h-[70vh] lg:max-h-none">
               {chLoading ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="p-3.5"><div className="tnld-skel h-4 w-2/3 rounded" /></div>)
                 : chSlice.map(c => (
-                  <Link key={c.chapter_number} href={`/testnewlibrary/${meta.slug}/read/${c.chapter_number}`}
+                  <Link key={c.chapter_number} href={`/novel/${meta.slug}/read/${c.chapter_number}`}
                     className="flex items-center gap-3 px-4 py-3 transition hover:bg-white/[0.04]">
                     <span className="w-12 shrink-0 text-xs font-bold" style={{ color: 'rgb(var(--v))' }}>#{c.chapter_number}</span>
                     <span className="min-w-0 flex-1 truncate text-sm text-white/85">{c.chapter_title || `Chapter ${c.chapter_number}`}</span>
@@ -241,7 +241,7 @@ export default function DetailClient({ meta }: { meta: Meta }) {
             <div className="tnld-panel space-y-1 p-3">
               {similar.length === 0 ? <p className="p-4 text-center text-sm text-white/40">Finding matches…</p>
                 : similar.map(n => (
-                  <Link key={n.slug} href={`/testnewlibrary/${n.slug}`} onClick={() => trackNovelClick(n.slug, 'similar')} className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-white/5">
+                  <Link key={n.slug} href={`/novel/${n.slug}`} onClick={() => trackNovelClick(n.slug, 'similar')} className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-white/5">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={coverSrc(n.cover_url)} alt={n.title} loading="lazy" className="h-16 w-12 shrink-0 rounded-lg object-cover ring-1 ring-white/10" />
                     <div className="min-w-0 flex-1">
