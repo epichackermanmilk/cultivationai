@@ -54,6 +54,7 @@ function LoginInner() {
       })
       const d = await r.json()
       if (!r.ok) { setError(d.error || 'Incorrect email or password'); return }
+      track('login', { method: 'email' })
       await refresh()
       router.replace(returnTo)
     } catch {
@@ -83,6 +84,7 @@ function LoginInner() {
   }
 
   const googleSignIn = () => {
+    track('google_click', { source: 'testlogin' })
     try { sessionStorage.setItem('nc_return_to', returnTo) } catch { /* ignore */ }
     const base = process.env.NEXT_PUBLIC_SUPABASE_URL
     if (!base) { setError('Google sign-in is unavailable right now'); return }

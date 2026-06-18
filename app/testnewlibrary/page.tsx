@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation'
 import { coverSrc } from '@/lib/cover'
 import TestHeader from '@/components/TestHeader'
 import { TestStyles, Cover, Skeleton, useDominantColor, rgba, type Novel } from '@/components/TestUI'
+import { trackNovelClick } from '@/lib/analytics'
 
 // ── Announcements feed — edit this array to post site updates ─────────────────────
 const ANNOUNCEMENTS: { title: string; date: string; body: string }[] = [
@@ -75,7 +76,7 @@ function TopRow({ items, onSelect, accent }: {
 
   const onClick = (j: number, n: Novel) => {
     const idx = ((j % N) + N) % N
-    if (idx === centerIdx) { router.push(`/testnewlibrary/${n.slug}`); return }  // already centered → open
+    if (idx === centerIdx) { trackNovelClick(n.slug, 'carousel'); router.push(`/testnewlibrary/${n.slug}`); return }  // already centered → open
     onSelect(n); setAnimate(true); setCenter(j)                                  // otherwise slide it to center
   }
 
@@ -193,7 +194,7 @@ export default function TestNewLibrary() {
               </div>
               <div ref={trendRef} className="tnl-rail flex gap-3 overflow-x-auto pb-1">
                 {(loading ? Array.from({ length: 8 }) : trending).map((n, i) => n ? (
-                  <Link key={(n as Novel).slug} href={`/testnewlibrary/${(n as Novel).slug}`} onMouseEnter={() => setSelected(n as Novel)} className="group w-[140px] shrink-0">
+                  <Link key={(n as Novel).slug} href={`/testnewlibrary/${(n as Novel).slug}`} onClick={() => trackNovelClick((n as Novel).slug, 'trending')} onMouseEnter={() => setSelected(n as Novel)} className="group w-[140px] shrink-0">
                     <div className="tnl-sheen relative aspect-[3/4] overflow-hidden rounded-xl ring-1 ring-white/10 transition group-hover:ring-[rgba(var(--v),0.6)]">
                       <Cover novel={n as Novel} className="h-full w-full" />
                     </div>
@@ -215,7 +216,7 @@ export default function TestNewLibrary() {
                         <Cover novel={n as Novel} className="h-[68px] w-[50px] rounded-lg ring-1 ring-white/10" />
                       </Link>
                       <div className="min-w-0 flex-1">
-                        <Link href={`/testnewlibrary/${(n as Novel).slug}`} className="block truncate text-[13px] font-bold transition hover:text-[rgb(var(--v))]">{(n as Novel).title}</Link>
+                        <Link href={`/testnewlibrary/${(n as Novel).slug}`} onClick={() => trackNovelClick((n as Novel).slug, 'latest')} className="block truncate text-[13px] font-bold transition hover:text-[rgb(var(--v))]">{(n as Novel).title}</Link>
                         <div className="mt-1 space-y-0.5">
                           {latestChapters(n as Novel, (luPage - 1) * LU_PER_PAGE + i).map(c => (
                             <Link key={c.num} href={`/testnewlibrary/${(n as Novel).slug}`} className="flex items-center justify-between gap-2 text-[12px]">
@@ -261,7 +262,7 @@ export default function TestNewLibrary() {
               </div>
               <div className="space-y-0.5">
                 {(loading ? Array.from({ length: 6 }) : popular).map((n, i) => n ? (
-                  <Link key={(n as Novel).slug} href={`/testnewlibrary/${(n as Novel).slug}`} onMouseEnter={() => setSelected(n as Novel)}
+                  <Link key={(n as Novel).slug} href={`/testnewlibrary/${(n as Novel).slug}`} onClick={() => trackNovelClick((n as Novel).slug, 'popular')} onMouseEnter={() => setSelected(n as Novel)}
                     className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-white/5">
                     <span className="w-5 text-center text-base font-black" style={{ color: i < 3 ? 'rgb(var(--v))' : 'rgba(255,255,255,0.3)' }}>{i + 1}</span>
                     <Cover novel={n as Novel} className="h-12 w-9 shrink-0 rounded-md ring-1 ring-white/10" />

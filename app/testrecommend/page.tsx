@@ -11,6 +11,7 @@ import TestHeader from '@/components/TestHeader'
 import { TestStyles, Cover, Skeleton, type Novel } from '@/components/TestUI'
 import { useAuth } from '@/lib/auth-context'
 import { matchesSearch } from '@/lib/search'
+import { track } from '@/lib/analytics'
 
 interface Rec extends Novel { blurb: string }
 
@@ -140,6 +141,7 @@ export default function TestRecommendPage() {
       if (!res.ok) { setError(data.error ?? 'Something went wrong — please try again'); return }
       const remaining = res.headers.get('X-Tokens-Remaining')
       if (remaining !== null) { const n = parseInt(remaining, 10); if (!isNaN(n)) updateTokens(n) }
+      track('recommend_run', { mode, spoiler_safe: spoilerSafe, results: (data.recommendations ?? []).length })
       setResults(data.recommendations ?? [])
     } catch { setError('Could not reach the recommendation service — please try again') } finally { setLoading(false) }
   }

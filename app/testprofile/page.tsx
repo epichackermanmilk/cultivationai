@@ -54,6 +54,7 @@ export default function TestProfilePage() {
       const r = await fetch('/api/profile/avatar', { method: 'POST', body: fd })
       const d = await r.json()
       if (!r.ok) { setAvatarErr(d.error || 'Upload failed'); return }
+      track('avatar_upload', {})
       await refresh()
     } catch { setAvatarErr('Upload failed — try again') } finally { setAvatarBusy(false) }
   }

@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { coverSrc } from '@/lib/cover'
+import NovelSocial from '@/components/NovelSocial'
+import { track, trackNovelClick } from '@/lib/analytics'
 
 interface Meta {
   slug: string; title: string; author: string; total_chapters: number
@@ -53,6 +55,12 @@ export default function DetailClient({ meta }: { meta: Meta }) {
   const [descOpen, setDescOpen] = useState(false)
   const simRef = useRef<HTMLElement>(null)
   const [colH, setColH] = useState<number | undefined>(undefined)
+  const [resume, setResume] = useState<number | null>(null)
+
+  // Resume reading: the reader stores the last chapter opened per novel.
+  useEffect(() => {
+    try { const raw = localStorage.getItem(`nc_read_${meta.slug}`); if (raw) { const d = JSON.parse(raw); if (d?.n) setResume(d.n) } } catch { /* ignore */ }
+  }, [meta.slug])
 
   useEffect(() => {
     fetch(`/api/testnewlibrary/chapters/${meta.slug}`).then(r => r.json())
@@ -174,10 +182,13 @@ export default function DetailClient({ meta }: { meta: Meta }) {
               </div>
             )}
             <div className="mt-5 flex flex-wrap gap-2.5">
-              <Link href={`/testnewlibrary/${meta.slug}/read/1`} className="rounded-xl px-5 py-2.5 text-sm font-bold transition hover:brightness-110"
-                style={{ background: 'rgb(var(--v))', boxShadow: `0 0 24px ${rgba(accent, 0.55)}` }}>Read first chapter</Link>
-              <button className="rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-white/10">＋ Bookmark</button>
-              <Link href={`/testrecommend`} className="rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-white/10">Recommend Similar</Link>
+              <Link href={`/testnewlibrary/${meta.slug}/read/${resume ?? 1}`} onClick={() => track('read_start', { slug: meta.slug, chapter: resume ?? 1, resumed: !!resume })}
+                className="rounded-xl px-5 py-2.5 text-sm font-bold transition hover:brightness-110"
+                style={{ background: 'rgb(var(--v))', boxShadow: `0 0 24px ${rgba(accent, 0.55)}` }}>
+                {resume ? `Continue · Ch ${resume}` : 'Read first chapter'}
+              </Link>
+              {resume && <Link href={`/testnewlibrary/${meta.slug}/read/1`} className="rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-white/10">Start over</Link>}
+              <Link href={`/testrecommend`} onClick={() => track('recommend_click', { slug: meta.slug })} className="rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-white/10">Recommend Similar</Link>
             </div>
 
             {/* ── Codex Insight (unique feature) ─────────────────────────────── */}
@@ -198,7 +209,7 @@ export default function DetailClient({ meta }: { meta: Meta }) {
         </section>
 
         {/* Chapters + Similar */}
-        <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px]">
+        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
           {/* Chapter list — height matched to the Similar box; scrolls internally */}
           <section className="flex min-w-0 flex-col" style={{ height: colH }}>
             <div className="mb-3 flex shrink-0 items-center justify-between">
@@ -253,7 +264,7 @@ export default function DetailClient({ meta }: { meta: Meta }) {
             <div className="tnld-panel space-y-1 p-3">
               {similar.length === 0 ? <p className="p-4 text-center text-sm text-white/40">Finding matches…</p>
                 : similar.map(n => (
-                  <Link key={n.slug} href={`/testnewlibrary/${n.slug}`} className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-white/5">
+                  <Link key={n.slug} href={`/testnewlibrary/${n.slug}`} onClick={() => trackNovelClick(n.slug, 'similar')} className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-white/5">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={coverSrc(n.cover_url)} alt={n.title} loading="lazy" className="h-16 w-12 shrink-0 rounded-lg object-cover ring-1 ring-white/10" />
                     <div className="min-w-0 flex-1">
@@ -266,6 +277,9 @@ export default function DetailClient({ meta }: { meta: Meta }) {
             </div>
           </section>
         </div>
+
+        {/* Ratings + comments */}
+        <NovelSocial slug={meta.slug} />
       </main>
 
       <style jsx global>{`

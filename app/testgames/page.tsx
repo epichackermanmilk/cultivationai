@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import TestHeader from '@/components/TestHeader'
 import { TestStyles } from '@/components/TestUI'
+import { track } from '@/lib/analytics'
 
 interface Game {
   id: string; title: string; tagline: string; description: string
@@ -37,7 +38,7 @@ const GAMES: Game[] = [
 
 function GameCard({ g }: { g: Game }) {
   return (
-    <Link href={g.href} className="group block h-full">
+    <Link href={g.href} onClick={() => track('game_open', { id: g.id, source: 'grid' })} className="group block h-full">
       <div className="tnl-panel flex h-full flex-col overflow-hidden transition duration-300 group-hover:-translate-y-1">
         <div className="relative flex items-center gap-3 p-5 pb-4" style={{ background: `linear-gradient(135deg, rgba(${g.tint},0.20) 0%, rgba(${g.tint},0.04) 100%)` }}>
           <span className="text-3xl">{g.icon}</span>
@@ -85,7 +86,7 @@ export default function TestGamesPage() {
         </div>
 
         {/* Featured banner */}
-        <Link href={feat.href} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+        <Link href={feat.href} onClick={() => track('game_open', { id: feat.id, source: 'featured' })} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
           className="group relative mb-6 block overflow-hidden rounded-3xl border border-white/10"
           style={{ boxShadow: '0 30px 70px rgba(0,0,0,0.45)' }}>
           <div className="absolute inset-0" style={{ background: `radial-gradient(80% 120% at 12% 0%, rgba(${feat.tint},0.40) 0%, transparent 60%), linear-gradient(120deg, #0c0a16 0%, #0a0912 100%)` }} />

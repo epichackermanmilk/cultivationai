@@ -12,6 +12,7 @@ import { useSearchParams } from 'next/navigation'
 import { matchesSearch } from '@/lib/search'
 import TestHeader from '@/components/TestHeader'
 import { TestStyles, Cover, Skeleton, type Novel } from '@/components/TestUI'
+import { trackNovelClick } from '@/lib/analytics'
 
 type Sort = 'latest' | 'popular' | 'rating' | 'az' | 'newest'
 const SORTS: [Sort, string][] = [
@@ -180,7 +181,7 @@ function NovelCard({ n }: { n: Novel }) {
     </div>
   )
   if (blocked) return <div className="cursor-default select-none">{inner}</div>
-  return <Link href={`/testnewlibrary/${n.slug}`}>{inner}</Link>
+  return <Link href={`/testnewlibrary/${n.slug}`} onClick={() => trackNovelClick(n.slug, 'browse')}>{inner}</Link>
 }
 
 function BrowseInner() {

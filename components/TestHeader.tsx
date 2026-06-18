@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
+import { track, trackNav, trackSearch } from '@/lib/analytics'
 
 interface NavItem { label: string; href: string; auth?: boolean }
 
@@ -39,6 +40,7 @@ export default function TestHeader() {
   function submitSearch(e: React.FormEvent) {
     e.preventDefault()
     const v = q.trim()
+    trackSearch(v, 'header')
     router.push(v ? `/testbrowse?q=${encodeURIComponent(v)}` : '/testbrowse')
   }
 
@@ -55,7 +57,7 @@ export default function TestHeader() {
 
         <nav className="hidden items-center gap-1 md:flex">
           {NAV.map(item => (
-            <Link key={item.label} href={gatedHref(item.href, isAuthed, item.auth)}
+            <Link key={item.label} href={gatedHref(item.href, isAuthed, item.auth)} onClick={() => trackNav(item.label)}
               className={`rounded-lg px-3 py-2 text-sm font-medium transition hover:bg-white/5 hover:text-white ${
                 active(item.href) ? 'text-white' : 'text-white/70'
               }`}>
@@ -80,7 +82,7 @@ export default function TestHeader() {
               : (user!.username || user!.email || '?')[0]?.toUpperCase()}
           </Link>
         ) : (
-          <Link href={`/testlogin?return=${encodeURIComponent(pathname || '/testnewlibrary')}`}
+          <Link href={`/testlogin?return=${encodeURIComponent(pathname || '/testnewlibrary')}`} onClick={() => track('signin_click', { source: 'header' })}
             className="shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition hover:brightness-110"
             style={{ background: 'rgba(var(--v),0.9)', boxShadow: '0 0 18px rgba(var(--v),0.4)' }}>Sign in</Link>
         )}
