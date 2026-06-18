@@ -7,7 +7,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { track } from '@/lib/analytics'
-import EzoicAd from '@/components/EzoicAd'
+import AdSenseAd from '@/components/AdSenseAd'
+import { ADSENSE_SLOTS } from '@/lib/ads'
 
 interface Props {
   slug: string; novelTitle: string; chapterNumber: number
@@ -107,15 +108,15 @@ export default function ReaderClient({ slug, novelTitle, chapterNumber, heading,
         <h1 className="text-2xl font-black tracking-tight">{heading || `Chapter ${chapterNumber}`}</h1>
         <p className="mt-1 text-xs" style={{ color: th.sub }}>{novelTitle}</p>
 
-        {/* Top ad (Ezoic placeholder 101) */}
-        <EzoicAd id={101} refreshKey={chapterNumber} className="my-6 min-h-[90px]" />
+        {/* Top ad */}
+        <AdSenseAd slot={ADSENSE_SLOTS.readerTop} refreshKey={chapterNumber} className="my-6 min-h-[90px]" />
 
         <article className="space-y-5" style={{ fontSize: FONT_PX[font], lineHeight: 1.85 }}>
           {body.map((p, i) => <p key={i}>{p}</p>)}
         </article>
 
-        {/* Bottom ad (Ezoic placeholder 102) */}
-        <EzoicAd id={102} refreshKey={chapterNumber} className="my-6 min-h-[90px]" />
+        {/* Bottom ad */}
+        <AdSenseAd slot={ADSENSE_SLOTS.readerBottom} refreshKey={chapterNumber} className="my-6 min-h-[90px]" />
 
         <div className="mt-6 flex items-center justify-between gap-3">
           {prev ? <Link href={chapterHref(prev)} className="flex-1 rounded-xl border py-3 text-center text-sm font-semibold transition" style={{ borderColor: th.border }}>‹ Previous</Link> : <div className="flex-1" />}

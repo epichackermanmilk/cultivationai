@@ -1,0 +1,12 @@
+// AdSense configuration.
+// The publisher client is already loaded globally in app/layout.tsx.
+// To turn on the reader ads: in your AdSense dashboard create two *display* ad
+// units (Ads → By ad unit → Display ads), then paste each unit's "data-ad-slot"
+// number below. Until then the reader shows labelled placeholders (no errors).
+
+export const ADSENSE_CLIENT = 'ca-pub-1350938260860067'
+
+export const ADSENSE_SLOTS = {
+  readerTop:    '', // ← paste the AdSense ad-unit slot ID for the top-of-chapter ad
+  readerBottom: '', // ← paste the AdSense ad-unit slot ID for the bottom-of-chapter ad
+}

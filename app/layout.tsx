@@ -108,14 +108,6 @@ export default function RootLayout({
           gtag('config', 'G-RN9SR0DZ6R');
         `}
       </Script>
-      {/* Ezoic (JavaScript / "standalone" integration). The cmd queue must exist
-          before the library loads; placeholders are shown per-page via <EzoicAd>.
-          Ads only render once the domain is added in the Ezoic dashboard and the
-          placeholder IDs below are created there. */}
-      <Script id="ezoic-init" strategy="beforeInteractive">
-        {`window.ezstandalone = window.ezstandalone || {}; ezstandalone.cmd = ezstandalone.cmd || [];`}
-      </Script>
-      <Script src="//www.ezojs.com/ezoic/sa.min.js" strategy="afterInteractive" />
       <body className="min-h-full">
         {/* Brand + sitelinks-search-box structured data (helps Google show a
             search box + sitelinks under the NovelCodex result). */}
