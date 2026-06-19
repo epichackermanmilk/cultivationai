@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { coverSrc } from '@/lib/cover'
 import NovelSocial from '@/components/NovelSocial'
+import EpubDownload from '@/components/EpubDownload'
 import { track, trackNovelClick } from '@/lib/analytics'
 import { useAuth } from '@/lib/auth-context'
 import { ensureServerSync, serverToggleBookmark, getBookmarkedSlugs, toggleBookmark, type NovelMeta } from '@/lib/bookmarks'
@@ -212,6 +213,7 @@ export default function DetailClient({ meta }: { meta: Meta }) {
                 {bookmarked ? '✓ Bookmarked' : '＋ Add to Bookmarks'}
               </button>
               <Link href={`/recommend`} onClick={() => track('recommend_click', { slug: meta.slug })} className="rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-white/10">Recommend Similar</Link>
+              <EpubDownload slug={meta.slug} novelTitle={meta.title} />
             </div>
           </div>
         </section>

@@ -59,6 +59,17 @@ export async function getChapterList(slug: string): Promise<{ count: number; cha
   }
 }
 
+// Fetch a generated EPUB (built server-side on the VPS from scraped chapter text).
+export async function fetchEpub(slug: string, from: number, to: number): Promise<{ buf: ArrayBuffer; filename: string } | null> {
+  try {
+    const res = await fetch(`${BASE}/novels/${slug}/epub?from=${from}&to=${to}`, { headers })
+    if (!res.ok) return null
+    const cd = res.headers.get('content-disposition') || ''
+    const m = cd.match(/filename="([^"]+)"/)
+    return { buf: await res.arrayBuffer(), filename: m ? m[1] : `${slug}.epub` }
+  } catch { return null }
+}
+
 export async function getChapter(slug: string, n: number): Promise<ChapterContent | null> {
   try {
     const res = await fetch(`${BASE}/novels/${slug}/chapter/${n}`, { headers, next: { revalidate: 3600 } })
