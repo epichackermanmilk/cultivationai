@@ -30,6 +30,7 @@ const ADD_ONS = [
 
 const WELCOME_WINDOW_MS = 7 * 24 * 60 * 60 * 1000   // 7 days
 const SUBS = [
+  { label: 'Lite',    tokens: 150,  priceNum: 2.99 },
   { label: 'Reader',  tokens: 700,  priceNum: 4.99 },
   { label: 'Scholar', tokens: 1600, priceNum: 9.99 },
 ]

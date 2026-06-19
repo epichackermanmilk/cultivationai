@@ -20,16 +20,21 @@ const ONE_TIME = [
   { label: 'Titan',   base: 9999, bonus: 10001, total: 20000, price: '$99.99', highlight: false, badge: 'Best deal' },
 ]
 const SUBS = [
+  { label: 'Lite',    price: '$2.99/mo', tokens: 150,  vsBundle: 0,    savingPct: 0,  highlight: false, badge: null,
+    perks: ['Ad-free everywhere', 'Read every locked chapter', '150 tokens / month', 'Free EPUB downloads', 'Cancel anytime'] },
   { label: 'Reader',  price: '$4.99/mo', tokens: 700,  vsBundle: 550,  savingPct: 27, highlight: false, badge: null,
-    perks: ['700 tokens / month', 'Multi-novel chat included', 'Ad-free everywhere', 'Discord: custom color role + private channel', 'Cancel anytime'] },
+    perks: ['Ad-free everywhere', 'Read every locked chapter', '700 tokens / month', 'Free EPUB downloads', 'Multi-novel chat included', 'Discord: custom color role + private channel', 'Cancel anytime'] },
   { label: 'Scholar', price: '$9.99/mo', tokens: 1600, vsBundle: 1200, savingPct: 33, highlight: true,  badge: 'Best sub',
-    perks: ['1,600 tokens / month', 'Multi-novel chat included', 'Ad-free everywhere', 'Discord: custom color role + private channel', 'Early access to new features', 'Priority support', 'Cancel anytime'] },
+    perks: ['Ad-free everywhere', 'Read every locked chapter', '1,600 tokens / month', 'Free EPUB downloads', 'Multi-novel chat included', 'Discord: custom color role + private channel', 'Early access to new features', 'Priority support', 'Cancel anytime'] },
 ]
 const FAQ = [
-  { q: 'What are tokens?', a: 'Tokens are the in-app currency for AI features. Asking a question in chat costs 10 tokens; the Recommender costs 10. Reading chapters is free — you only spend tokens on AI features.' },
+  { q: 'What are tokens?', a: 'Tokens are the in-app currency. Most of the site is free: reading is free (ad-supported), and so is browsing. You spend tokens on extras — AI chat (10/message), the Recommender (10/search), unlocking a locked chapter (2 each), or an EPUB download (50).' },
+  { q: 'Why are some chapters locked?', a: 'The latest ~20% of every novel is reserved for supporters. Read them with any active subscription, or unlock individual chapters for 2 tokens each. Everything before that is free to read.' },
+  { q: 'Do I keep locked chapters if I cancel?', a: 'Subscription access to locked chapters is active only while your subscription is. Chapters you unlocked with tokens are yours to keep forever.' },
+  { q: 'Can I download a novel?', a: 'Yes — download any novel as an EPUB of the chapters you can read. Free for subscribers; otherwise 50 tokens. Limited to one download per hour.' },
   { q: 'Do tokens expire?', a: 'No. Purchased tokens never expire and carry over indefinitely.' },
   { q: 'Can I get a refund?', a: 'Within 7 days of purchase if you have not used any tokens from that purchase. Contact hello@novelcodex.org.' },
-  { q: 'How do subscriptions work?', a: 'They bill monthly and deposit tokens each renewal. Cancel anytime from the Stripe billing portal.' },
+  { q: 'How do subscriptions work?', a: 'They bill monthly: ad-free everywhere, all locked chapters, free EPUBs, plus monthly tokens. Cancel anytime from the Stripe billing portal.' },
 ]
 const WELCOME_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 
@@ -135,7 +140,7 @@ export default function TestShopPage() {
 
         {/* Subs */}
         {tab === 'sub' && (
-          <div className="mx-auto mb-12 grid max-w-2xl grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className="mx-auto mb-12 grid max-w-4xl grid-cols-1 gap-5 sm:grid-cols-3">
             {SUBS.map(s => {
               const isLoading = loading === `sub-${s.label}`
               return (
@@ -143,7 +148,7 @@ export default function TestShopPage() {
                   {s.badge && <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-bold text-white" style={{ background: 'rgb(var(--v))' }}>{s.badge}</span>}
                   <p className="mb-1 text-base font-bold">{s.label}</p>
                   <p className="mb-1 text-2xl font-bold" style={{ color: 'rgb(var(--v))' }}>{s.price}</p>
-                  <p className="mb-4 text-xs font-semibold text-emerald-400">{s.tokens.toLocaleString()} tokens/mo <span className="font-normal text-white/45">(vs {s.vsBundle.toLocaleString()} one-time — {s.savingPct}% more)</span></p>
+                  <p className="mb-4 text-xs font-semibold text-emerald-400">{s.tokens.toLocaleString()} tokens/mo{s.vsBundle > 0 && <span className="font-normal text-white/45"> · {s.savingPct}% more vs one-time</span>}</p>
                   <ul className="mb-6 space-y-2">
                     {s.perks.map(p => <li key={p} className="flex items-start gap-2 text-xs text-white/65"><span className="mt-0.5 shrink-0 text-emerald-400">✓</span>{p}</li>)}
                   </ul>
