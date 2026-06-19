@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { coverSrc } from '@/lib/cover'
 import NovelSocial from '@/components/NovelSocial'
 import { track, trackNovelClick } from '@/lib/analytics'
+import { useAuth } from '@/lib/auth-context'
+import { ensureServerSync, serverToggleBookmark, getBookmarkedSlugs, toggleBookmark, type NovelMeta } from '@/lib/bookmarks'
 
 interface Meta {
   slug: string; title: string; author: string; total_chapters: number
@@ -43,7 +45,10 @@ function useDominantColor(src: string): RGB {
 const rgba = (c: RGB, a: number) => `rgba(${c[0]},${c[1]},${c[2]},${a})`
 
 export default function DetailClient({ meta }: { meta: Meta }) {
+  const { user } = useAuth()
   const accent = useDominantColor(coverSrc(meta.cover_url))
+  const [bookmarked, setBookmarked] = useState(false)
+  const [bmBusy, setBmBusy] = useState(false)
   const [chapters, setChapters] = useState<Chapter[]>([])
   const [chLoading, setChLoading] = useState(true)
   const [chQuery, setChQuery] = useState('')
@@ -61,6 +66,28 @@ export default function DetailClient({ meta }: { meta: Meta }) {
   useEffect(() => {
     try { const raw = localStorage.getItem(`nc_read_${meta.slug}`); if (raw) { const d = JSON.parse(raw); if (d?.n) setResume(d.n) } } catch { /* ignore */ }
   }, [meta.slug])
+
+  // Bookmark state (server-synced when signed in, localStorage for guests)
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      if (user) { const s = await ensureServerSync(); if (!cancelled) setBookmarked(s.has(meta.slug)) }
+      else setBookmarked(getBookmarkedSlugs().has(meta.slug))
+    })()
+    return () => { cancelled = true }
+  }, [user, meta.slug])
+
+  const bmMeta: NovelMeta = { slug: meta.slug, title: meta.title, author: meta.author, cover_url: meta.cover_url, genres: meta.genres, total_chapters: meta.total_chapters }
+  async function toggleBm() {
+    if (bmBusy) return
+    setBmBusy(true)
+    const next = !bookmarked
+    setBookmarked(next)
+    try {
+      if (user) await serverToggleBookmark(bmMeta); else toggleBookmark(bmMeta)
+      track(next ? 'bookmark_add' : 'bookmark_remove', { slug: meta.slug })
+    } catch { setBookmarked(!next) } finally { setBmBusy(false) }
+  }
 
   useEffect(() => {
     fetch(`/api/chapters/${meta.slug}`).then(r => r.json())
@@ -180,6 +207,10 @@ export default function DetailClient({ meta }: { meta: Meta }) {
                 {resume ? `Continue · Ch ${resume}` : 'Read first chapter'}
               </Link>
               {resume && <Link href={`/novel/${meta.slug}/read/1`} className="rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-white/10">Start over</Link>}
+              <button onClick={toggleBm} disabled={bmBusy}
+                className={`rounded-xl border px-4 py-2.5 text-sm font-semibold backdrop-blur transition disabled:opacity-60 ${bookmarked ? 'border-[rgba(var(--v),0.6)] bg-[rgba(var(--v),0.15)] text-white' : 'border-white/15 bg-white/5 hover:bg-white/10'}`}>
+                {bookmarked ? '✓ Bookmarked' : '＋ Add to Bookmarks'}
+              </button>
               <Link href={`/recommend`} onClick={() => track('recommend_click', { slug: meta.slug })} className="rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-white/10">Recommend Similar</Link>
             </div>
           </div>

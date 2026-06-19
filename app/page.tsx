@@ -80,9 +80,10 @@ function TopRow({ items, onSelect, accent }: {
     onSelect(n); setAnimate(true); setCenter(j)                                  // otherwise slide it to center
   }
 
+  // overflow-x-clip (not hidden) so the selected card's glow bleeds vertically
+  // instead of being cut by the forced overflow-y:auto that 'hidden' triggers.
   return (
-    <div ref={wrapRef} className="relative overflow-x-hidden py-6"
-      style={{ maskImage: 'linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent)', WebkitMaskImage: 'linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent)' }}>
+    <div ref={wrapRef} className="relative overflow-x-clip py-10">
       <div className="flex will-change-transform"
         onTransitionEnd={normalize}
         style={{ gap: CARD_GAP, transform: `translateX(${translateX}px)`, transition: animate ? 'transform .45s cubic-bezier(0.22,1,0.36,1)' : 'none' }}>
@@ -93,7 +94,7 @@ function TopRow({ items, onSelect, accent }: {
               className={`tnl-sheen relative aspect-[3/4] shrink-0 overflow-hidden rounded-xl text-left transition-[transform,box-shadow,opacity] duration-300 ${
                 isSel ? 'z-10 scale-[1.14] ring-2' : 'ring-1 ring-white/10 opacity-70 hover:opacity-100'
               }`}
-              style={{ width: CARD_W, ...(isSel ? { boxShadow: `0 22px 55px ${rgba(accent, 0.55)}`, ['--tw-ring-color' as string]: rgba(accent, 0.9) } : {}) }}>
+              style={{ width: CARD_W, ...(isSel ? { boxShadow: `0 0 55px 4px ${rgba(accent, 0.5)}`, ['--tw-ring-color' as string]: rgba(accent, 0.9) } : {}) }}>
               <Cover novel={n} className="h-full w-full" eager={i >= N && i < N + 6} />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent p-2.5">
                 <p className="line-clamp-2 text-[13px] font-bold leading-tight drop-shadow">{n.title}</p>
@@ -211,7 +212,7 @@ export default function TestNewLibrary() {
               <div className="tnl-panel p-2 sm:p-3">
                 <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
                   {(loading ? Array.from({ length: LU_PER_PAGE }) : luSlice).map((n, i) => n ? (
-                    <div key={(n as Novel).slug} className="flex gap-3 border-b border-white/[0.06] py-2.5 last:border-0">
+                    <div key={(n as Novel).slug} className="flex gap-3 border-b border-white/[0.06] py-2.5">
                       <Link href={`/novel/${(n as Novel).slug}`} className="shrink-0">
                         <Cover novel={n as Novel} className="h-[68px] w-[50px] rounded-lg ring-1 ring-white/10" />
                       </Link>

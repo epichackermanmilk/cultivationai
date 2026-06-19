@@ -162,26 +162,18 @@ function ChaptersFilter({ min, max, onApply }: { min: number; max: number; onApp
 }
 
 function NovelCard({ n }: { n: Novel }) {
-  const blocked = n.locked || n.coming_soon
-  const inner = (
-    <div className={`group ${blocked ? '' : 'tnl-sheen'}`}>
-      <div className={`relative aspect-[3/4] overflow-hidden rounded-xl ring-1 ring-white/10 transition ${blocked ? '' : 'group-hover:ring-[rgba(var(--v),0.6)]'}`}>
+  // Every scraped novel is readable now (reading is free; only the latest chapters
+  // lock behind a sub/tokens), so the whole catalogue is clickable.
+  return (
+    <Link href={`/novel/${n.slug}`} onClick={() => trackNovelClick(n.slug, 'browse')} className="group tnl-sheen block">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-xl ring-1 ring-white/10 transition group-hover:ring-[rgba(var(--v),0.6)]">
         <Cover novel={n} className="h-full w-full" />
-        {blocked ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-black/45 backdrop-blur-[1px]">
-            <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 text-white/85" stroke="currentColor" strokeWidth="1.8"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 018 0v3" strokeLinecap="round" /></svg>
-            <span className="rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-bold text-white/90">{n.coming_soon ? 'Coming Soon' : 'Locked'}</span>
-          </div>
-        ) : (
-          <span className="absolute bottom-1.5 right-2 rounded bg-black/55 px-1.5 py-0.5 text-[10px] font-medium text-white/85">{(n.total_chapters || 0).toLocaleString()} ch</span>
-        )}
+        <span className="absolute bottom-1.5 right-2 rounded bg-black/55 px-1.5 py-0.5 text-[10px] font-medium text-white/85">{(n.total_chapters || 0).toLocaleString()} ch</span>
       </div>
       <p className="mt-1.5 line-clamp-2 text-[13px] font-semibold leading-tight">{n.title}</p>
       {n.genres?.[0] && <p className="mt-0.5 truncate text-[11px]" style={{ color: 'rgb(var(--v))' }}>{n.genres[0]}</p>}
-    </div>
+    </Link>
   )
-  if (blocked) return <div className="cursor-default select-none">{inner}</div>
-  return <Link href={`/novel/${n.slug}`} onClick={() => trackNovelClick(n.slug, 'browse')}>{inner}</Link>
 }
 
 function BrowseInner() {
