@@ -161,7 +161,11 @@ export async function POST(req: Request) {
     }
   } catch (err) {
     console.error('[stripe-webhook] handler error:', err)
-    // Return 200 so Stripe doesn't retry infinitely
+    // Return 500 so Stripe RETRIES this event. Crediting is idempotent (keyed on
+    // stripe_reference), so a retry can never double-credit — but it WILL recover
+    // a purchase that failed to apply due to a transient DB error. Never silently
+    // 200 a failed credit: that loses a paying customer's tokens with no retry.
+    return NextResponse.json({ error: 'handler error, will retry' }, { status: 500 })
   }
 
   return NextResponse.json({ received: true })

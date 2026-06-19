@@ -19,10 +19,13 @@ import TestHeader from '@/components/TestHeader'
 import { TestStyles, Cover, Skeleton, useDominantColor, rgba, type Novel } from '@/components/TestUI'
 import { trackNovelClick } from '@/lib/analytics'
 
-// ── Announcements feed — edit this array to post site updates ─────────────────────
-const ANNOUNCEMENTS: { title: string; date: string; body: string }[] = [
+// ── Announcements feed ────────────────────────────────────────────────────────────
+// Live announcements load from /api/announcements (push one by inserting a row in the
+// Supabase `announcements` table). These are the fallback shown if none are published.
+interface Announcement { title: string; date: string; body: string }
+const DEFAULT_ANNOUNCEMENTS: Announcement[] = [
   { title: 'Welcome to the new NovelCodex', date: 'Jun 16, 2026', body: 'A faster, cleaner library with a cinematic reading hub. Tell us what you think.' },
-  { title: 'Codex Insight is live', date: 'Jun 10, 2026', body: 'Every featured novel now has an AI-built breakdown: power system, MC archetype, and who it is for.' },
+  { title: 'Read any novel free', date: 'Jun 17, 2026', body: 'Every scraped novel is now readable on-site. The latest chapters unlock with a subscription or tokens.' },
   { title: 'More novels indexing weekly', date: 'Jun 2, 2026', body: 'We are hand-indexing chapters for new titles continuously. New worlds unlock every week.' },
 ]
 
@@ -116,7 +119,18 @@ export default function TestNewLibrary() {
   const [selected, setSelected] = useState<Novel | null>(null)
   const [popTab, setPopTab] = useState<'Weekly' | 'Monthly' | 'All Time'>('Weekly')
   const [luPage, setLuPage] = useState(1)
+  const [announcements, setAnnouncements] = useState<Announcement[]>(DEFAULT_ANNOUNCEMENTS)
   const trendRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    fetch('/api/announcements').then(r => r.json()).then((d: { announcements?: { title: string; body: string; created_at: string }[] }) => {
+      const list = d.announcements ?? []
+      if (list.length) setAnnouncements(list.map(a => ({
+        title: a.title, body: a.body,
+        date: new Date(a.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }),
+      })))
+    }).catch(() => {})
+  }, [])
 
   useEffect(() => {
     fetch('/api/novels/all').then(r => r.json()).then((d: Novel[]) => {
@@ -286,7 +300,7 @@ export default function TestNewLibrary() {
               <button className="rounded-lg px-3 py-1.5 text-xs font-semibold transition hover:brightness-110" style={{ background: 'rgba(var(--v),0.9)' }}>View All</button>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {ANNOUNCEMENTS.map(a => (
+              {announcements.map(a => (
                 <div key={a.title} className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
                   <div className="flex items-center gap-2.5">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-black" style={{ background: 'rgba(var(--v),0.85)' }}>NC</span>

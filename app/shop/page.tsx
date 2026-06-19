@@ -12,6 +12,7 @@ import { useAuth } from '@/lib/auth-context'
 import { track } from '@/lib/analytics'
 
 const ONE_TIME = [
+  { label: 'Spark',   base: 100,  bonus: 0,     total: 100,   price: '$0.99',  highlight: false, badge: null },
   { label: 'Story',   base: 499,  bonus: 51,    total: 550,   price: '$4.99',  highlight: false, badge: null },
   { label: 'Novel',   base: 999,  bonus: 201,   total: 1200,  price: '$9.99',  highlight: true,  badge: 'Best value' },
   { label: 'Library', base: 2499, bonus: 1001,  total: 3500,  price: '$24.99', highlight: false, badge: null },
@@ -113,17 +114,16 @@ export default function TestShopPage() {
             {ONE_TIME.map(t => {
               const isLoading = loading === `once-${t.label}`
               return (
-                <div key={t.label} className={`tnl-panel relative flex flex-col p-4 ${t.highlight ? 'ring-1 ring-[rgba(var(--v),0.7)]' : ''}`}>
-                  {t.badge && <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-bold text-white" style={{ background: t.highlight ? 'rgb(var(--v))' : 'rgba(255,255,255,0.15)' }}>{t.badge}</span>}
-                  <p className="mb-1 text-sm font-bold">{t.label}</p>
-                  <p className="mb-0.5 text-xs text-white/55">{t.base.toLocaleString()} tokens</p>
-                  <p className={`mb-3 text-xs font-semibold ${t.bonus > 0 ? 'text-emerald-400' : 'text-white/40'}`}>{t.bonus > 0 ? `+${t.bonus.toLocaleString()} bonus` : 'Base rate'}</p>
-                  <div className="mb-3 mt-auto">
-                    <p className="text-base font-bold leading-none" style={{ color: 'rgb(var(--v))' }}>{t.total.toLocaleString()}<span className="ml-1 text-xs font-normal text-white/45">total</span></p>
-                    <p className="mt-1 text-xl font-bold">{t.price}</p>
+                <div key={t.label} className={`tnl-panel relative flex flex-col gap-1 p-3.5 ${t.highlight ? 'ring-1 ring-[rgba(var(--v),0.7)]' : ''}`}>
+                  {t.badge && <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-bold text-white" style={{ background: t.highlight ? 'rgb(var(--v))' : 'rgba(255,255,255,0.15)' }}>{t.badge}</span>}
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="text-sm font-bold">{t.label}</p>
+                    <p className="text-base font-bold">{t.price}</p>
                   </div>
+                  <p className="text-2xl font-black leading-none" style={{ color: 'rgb(var(--v))' }}>{t.total.toLocaleString()}<span className="ml-1 text-[11px] font-normal text-white/45">tokens</span></p>
+                  <p className={`text-[11px] font-semibold ${t.bonus > 0 ? 'text-emerald-400' : 'text-white/35'}`}>{t.bonus > 0 ? `incl. +${t.bonus.toLocaleString()} bonus` : 'base rate'}</p>
                   <button onClick={() => handleBuy(t.label, 'once')} disabled={!!loading}
-                    className="w-full rounded-lg py-2 text-xs font-bold text-white transition hover:brightness-110 disabled:opacity-50"
+                    className="mt-1.5 w-full rounded-lg py-2 text-xs font-bold text-white transition hover:brightness-110 disabled:opacity-50"
                     style={{ background: t.highlight ? 'rgb(var(--v))' : 'rgba(255,255,255,0.1)' }}>
                     {isLoading ? 'Redirecting…' : 'Buy Now'}
                   </button>

@@ -15,6 +15,7 @@ const BASE = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://novelcodex.org'
 
 const ONE_TIME = [
   { label: 'Welcome', total: 500,   priceNum: 1     }, // new-member deal, 7-day window
+  { label: 'Spark',   total: 100,   priceNum: 0.99  }, // smallest top-up; worse value than Welcome
   { label: 'Story',   total: 550,   priceNum: 4.99  },
   { label: 'Novel',   total: 1200,  priceNum: 9.99  },
   { label: 'Library', total: 3500,  priceNum: 24.99 },

@@ -81,7 +81,7 @@ export default function TestHeader() {
               <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="rgb(var(--v))"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
               {(user!.tokens ?? 0).toLocaleString()}
             </Link>
-            <Link href="/profile" className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full text-sm font-bold ring-1 ring-white/15" style={{ background: 'rgba(var(--v),0.85)' }}>
+            <Link href="/profile" className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/12 text-sm font-bold" style={{ background: 'rgba(var(--v),0.85)' }}>
               {user!.avatar_url
                 // eslint-disable-next-line @next/next/no-img-element
                 ? <img src={user!.avatar_url} alt="" className="h-full w-full object-cover" />
