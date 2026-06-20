@@ -27,14 +27,30 @@ export async function GET() {
 
   const sb = admin()
   // Capture `error` too: this GET fires on every tab-focus, so we must distinguish
-  // "row genuinely missing" from a transient read error before deciding to seed.
+  // "row genuinely missing" from a read error before deciding to seed.
   const read = await sb
     .from('profiles')
     .select('tokens, username, age, onboarding_bonus_claimed, email_marketing_consent')
     .eq('id', user.id)
     .maybeSingle()
-  let profile = read.data
-  const readErr = read.error
+  let profile: { tokens: number; username: string | null; age: number | null; onboarding_bonus_claimed: boolean; email_marketing_consent: boolean } | null = read.data
+  let readErr = read.error
+
+  // Resilience: if a column is missing on this DB (schema drift — e.g.
+  // email_marketing_consent not yet migrated) the whole select errors and would
+  // otherwise report 0 tokens. Fall back to the columns guaranteed to exist so a
+  // schema gap can NEVER zero the displayed balance.
+  if (readErr) {
+    const fb = await sb
+      .from('profiles')
+      .select('tokens, username, onboarding_bonus_claimed')
+      .eq('id', user.id)
+      .maybeSingle()
+    if (!fb.error) {
+      profile = fb.data ? { ...fb.data, age: null, email_marketing_consent: false } : null
+      readErr = null
+    }
+  }
 
   // Self-heal: legacy accounts created before the profiles table have no row, so
   // their tokens (in user_metadata) show as 0 here and can't be spent. Seed a row —
