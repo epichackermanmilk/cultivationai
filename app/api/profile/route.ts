@@ -113,10 +113,12 @@ export async function PATCH(req: NextRequest) {
     }
   }
 
-  // Check if we should award the onboarding bonus (first time both are set)
+  // Check if we should award the onboarding bonus (first time both are set).
+  // Require the current row to have actually loaded — never derive a token value
+  // from a missing/failed read.
   const bonusAlreadyClaimed = current?.onboarding_bonus_claimed ?? false
   const bothNowSet          = !!newUsername && !!newAge
-  const awardBonus          = bothNowSet && !bonusAlreadyClaimed
+  const awardBonus          = bothNowSet && !bonusAlreadyClaimed && !!current
 
   const currentTokens = current?.tokens ?? 0
   const newTokens     = awardBonus ? currentTokens + ONBOARDING_BONUS : currentTokens
@@ -124,9 +126,14 @@ export async function PATCH(req: NextRequest) {
   const updatePayload: Record<string, unknown> = {
     username: newUsername ?? null,
     age:      newAge      ?? null,
-    tokens:   newTokens,
   }
-  if (awardBonus) updatePayload.onboarding_bonus_claimed = true
+  // IMPORTANT: never write an absolute `tokens` value from a profile edit. Only
+  // *increment* when awarding the one-time bonus, so a username/age/consent change
+  // (or a transient read failure) can never reset a balance, including purchases.
+  if (awardBonus) {
+    updatePayload.tokens = newTokens
+    updatePayload.onboarding_bonus_claimed = true
+  }
   if (email_marketing_consent !== undefined) updatePayload.email_marketing_consent = email_marketing_consent
 
   const { error: updateErr } = await sb

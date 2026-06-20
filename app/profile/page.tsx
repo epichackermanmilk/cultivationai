@@ -113,7 +113,7 @@ export default function TestProfilePage() {
   const memberSince = user.created_at ? new Date(user.created_at).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : null
 
   return (
-    <div className="tnl-root relative min-h-screen text-white" style={{ ['--v' as string]: '124,58,237' }}>
+    <div className="tnl-root relative flex min-h-screen flex-col text-white" style={{ ['--v' as string]: '124,58,237' }}>
       <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: '#07060d' }}>
         <div className="absolute inset-0" style={{ background: 'radial-gradient(85% 50% at 50% -10%, rgba(var(--v),0.24) 0%, transparent 55%)' }} />
       </div>
@@ -135,7 +135,7 @@ export default function TestProfilePage() {
         </div>
       )}
 
-      <main className="relative z-10 mx-auto max-w-2xl px-4 pb-24 pt-8 sm:px-6">
+      <main className="relative z-10 mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-8 sm:px-6">
         {/* Header card */}
         <div className="tnl-panel mb-5 flex items-center gap-4 p-5">
           <div className="shrink-0">
