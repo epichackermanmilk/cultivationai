@@ -9,4 +9,5 @@ export const ADSENSE_CLIENT = 'ca-pub-1350938260860067'
 export const ADSENSE_SLOTS = {
   readerTop:    '9124440881', // top-of-chapter ad
   readerBottom: '8980970659', // bottom-of-chapter ad
+  gameBanner:   '',           // ← paste the AdSense slot ID for the in-game banner
 }
