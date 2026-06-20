@@ -143,6 +143,22 @@ export default function TestNewLibrary() {
   }, [])
 
   const byChapters = useMemo(() => [...novels].sort((a, b) => (b.total_chapters || 0) - (a.total_chapters || 0)), [novels])
+  // Newest scraped/updated first — drives "Latest Updates" (and the trending fallback).
+  const byRecent = useMemo(() => [...novels].sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || '')), [novels])
+  const bySlug = useMemo(() => new Map(novels.map(n => [n.slug, n])), [novels])
+  const mapSlugs = useCallback((slugs: string[], fallback: Novel[]) => {
+    const hit = slugs.map(s => bySlug.get(s)).filter(Boolean) as Novel[]
+    return hit.length ? hit : fallback
+  }, [bySlug])
+
+  // Most-read rankings from /api/novels/popular (per window). Falls back to the
+  // chapter-count / recency heuristics until reads accumulate.
+  const [popSlugs, setPopSlugs] = useState<{ day: string[]; week: string[]; month: string[]; all: string[] }>({ day: [], week: [], month: [], all: [] })
+  useEffect(() => {
+    const wins = ['day', 'week', 'month', 'all'] as const
+    Promise.all(wins.map(w => fetch(`/api/novels/popular?window=${w}`).then(r => r.json()).then(d => [w, (d.slugs ?? []) as string[]] as const).catch(() => [w, [] as string[]] as const)))
+      .then(entries => { const o = { day: [], week: [], month: [], all: [] } as Record<string, string[]>; for (const [w, s] of entries) o[w] = s; setPopSlugs(o as typeof popSlugs) })
+  }, [])
 
   // Curated top row: live titles first (guaranteed detail pages), then the most
   // recognizable big titles, up to 20. (Final build will use a hand-picked list.)
@@ -151,16 +167,17 @@ export default function TestNewLibrary() {
     return [...byChapters].sort((a, b) => rank(a) - rank(b)).slice(0, 20)
   }, [byChapters])
 
-  const trending = useMemo(() => byChapters.slice(0, 18), [byChapters])
+  const trending = useMemo(() => mapSlugs(popSlugs.day, byRecent).slice(0, 18), [popSlugs.day, byRecent, mapSlugs])
   const LU_PER_PAGE = 10                     // 5 rows × 2 cols
-  const latestPool = useMemo(() => byChapters.slice(0, LU_PER_PAGE * 5), [byChapters]) // 5 pages
+  const latestPool = useMemo(() => byRecent.slice(0, LU_PER_PAGE * 5), [byRecent]) // 5 pages
   const luPages = Math.max(1, Math.ceil(latestPool.length / LU_PER_PAGE))
   const luSlice = latestPool.slice((luPage - 1) * LU_PER_PAGE, luPage * LU_PER_PAGE)
 
   const popular = useMemo(() => {
+    const win = popTab === 'Weekly' ? popSlugs.week : popTab === 'Monthly' ? popSlugs.month : popSlugs.all
     const off = popTab === 'Weekly' ? 0 : popTab === 'Monthly' ? 3 : 6
-    return byChapters.slice(off, off + 6)
-  }, [byChapters, popTab])
+    return mapSlugs(win, byChapters.slice(off, off + 6)).slice(0, 6)
+  }, [popTab, popSlugs, byChapters, mapSlugs])
 
   const accent = useDominantColor(selected ? coverSrc(selected.cover_url) : null)
   const scrollTrend = useCallback((dir: number) => trendRef.current?.scrollBy({ left: dir * 520, behavior: 'smooth' }), [])

@@ -11,7 +11,7 @@ import { coverSrc } from '@/lib/cover'
 export interface Novel {
   slug: string; title: string; author: string; total_chapters: number
   genres: string[]; cover_url: string; locked?: boolean; coming_soon?: boolean
-  description?: string
+  description?: string; updated_at?: string
 }
 
 export type RGB = [number, number, number]

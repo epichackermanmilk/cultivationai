@@ -7,8 +7,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { track } from '@/lib/analytics'
-import AdSenseAd from '@/components/AdSenseAd'
-import { ADSENSE_SLOTS } from '@/lib/ads'
+import AdUnit from '@/components/AdUnit'
 
 interface Props {
   slug: string; novelTitle: string; chapterNumber: number
@@ -51,6 +50,10 @@ export default function ReaderClient({ slug, novelTitle, chapterNumber, heading,
       localStorage.setItem(`nc_read_${slug}`, JSON.stringify({ n: chapterNumber, title: novelTitle, at: Date.now() }))
     } catch { /* ignore */ }
     track('chapter_read', { slug, chapter: chapterNumber })
+    // Log the read for popularity rankings (best-effort, never blocks reading).
+    try {
+      fetch('/api/reads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slug, chapter: chapterNumber }), keepalive: true }).catch(() => {})
+    } catch { /* ignore */ }
   }, [slug, chapterNumber, novelTitle])
 
   const th = THEMES[theme]
@@ -109,14 +112,14 @@ export default function ReaderClient({ slug, novelTitle, chapterNumber, heading,
         <p className="mt-1 text-xs" style={{ color: th.sub }}>{novelTitle}</p>
 
         {/* Top ad */}
-        <AdSenseAd slot={ADSENSE_SLOTS.readerTop} refreshKey={chapterNumber} className="my-6 min-h-[90px]" />
+        <AdUnit placement="readerTop" refreshKey={chapterNumber} className="my-6 min-h-[90px]" />
 
         <article className="space-y-5" style={{ fontSize: FONT_PX[font], lineHeight: 1.85 }}>
           {body.map((p, i) => <p key={i}>{p}</p>)}
         </article>
 
         {/* Bottom ad */}
-        <AdSenseAd slot={ADSENSE_SLOTS.readerBottom} refreshKey={chapterNumber} className="my-6 min-h-[90px]" />
+        <AdUnit placement="readerBottom" refreshKey={chapterNumber} className="my-6 min-h-[90px]" />
 
         <div className="mt-6 flex items-center justify-between gap-3">
           {prev ? <Link href={chapterHref(prev)} className="flex-1 rounded-xl border py-3 text-center text-sm font-semibold transition" style={{ borderColor: th.border }}>‹ Previous</Link> : <div className="flex-1" />}

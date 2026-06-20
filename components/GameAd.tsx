@@ -5,8 +5,7 @@
 
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import AdSenseAd from '@/components/AdSenseAd'
-import { ADSENSE_SLOTS } from '@/lib/ads'
+import AdUnit from '@/components/AdUnit'
 
 export default function GameAd() {
   const { user } = useAuth()
@@ -15,7 +14,7 @@ export default function GameAd() {
   if (path === '/games') return null // the listing has its own footer/layout
   return (
     <div className="mx-auto w-full max-w-3xl px-4 pt-3">
-      <AdSenseAd slot={ADSENSE_SLOTS.gameBanner} className="min-h-[90px]" />
+      <AdUnit placement="gameBanner" className="min-h-[90px]" />
     </div>
   )
 }

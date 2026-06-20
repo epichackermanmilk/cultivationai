@@ -34,7 +34,7 @@ export async function GET() {
     const data = await res.json()
     const raw: unknown[] = Array.isArray(data) ? data : (data.novels ?? [])
     const all = raw.map(n => {
-      const nn = n as { slug?: string; title?: string; author?: string; total_chapters?: number; genres?: string[]; cover_url?: string }
+      const nn = n as { slug?: string; title?: string; author?: string; total_chapters?: number; genres?: string[]; cover_url?: string; updated_at?: string }
       const featured = !!nn.slug && FEATURED_SLUG_SET.has(nn.slug)
       return {
         slug:           nn.slug,
@@ -43,6 +43,7 @@ export async function GET() {
         total_chapters: nn.total_chapters,
         genres:         cleanGenres(nn.genres),
         cover_url:      nn.cover_url,
+        updated_at:     nn.updated_at,
         // Featured = live & clickable; everything else = locked behind the preview wall
         ...(featured ? {} : { locked: true }),
       }
@@ -51,7 +52,7 @@ export async function GET() {
     // Any featured novel not yet present in the index → show as coming-soon (live target)
     const present = new Set(all.map(n => n.slug))
     for (const cs of COMING_SOON_NOVELS) {
-      if (!present.has(cs.slug)) all.push({ ...cs })
+      if (!present.has(cs.slug)) all.push({ ...cs, updated_at: undefined })
     }
 
     cache = { data: all, ts: Date.now() }
