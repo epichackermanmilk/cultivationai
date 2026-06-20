@@ -1,73 +1,75 @@
-import SiteHeader from '@/components/SiteHeader'
-import Footer     from '@/components/Footer'
+import Link from 'next/link'
+import DocShell from '@/components/DocShell'
 
 export const metadata = {
   title: 'About — NovelCodex',
-  description: 'Learn about NovelCodex — an AI-powered reader for cultivation and xianxia novels.',
+  description: 'NovelCodex — a free online reader for cultivation, xianxia and web novels, with AI chat, character roleplay, and games.',
 }
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen flex flex-col pb-16 sm:pb-0" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
-
-      <SiteHeader />
-
-      <main className="flex-1 mx-auto w-full max-w-3xl px-6 py-12">
-        <h1 className="mb-2 text-3xl font-bold text-amber-400">About NovelCodex</h1>
-        <p className="mb-8 text-sm" style={{ color: 'var(--nc-text2)' }}>Last updated: May 2026</p>
-
-        <section className="mb-8 space-y-4 leading-relaxed" style={{ color: 'var(--nc-text)' }}>
+    <DocShell title="About NovelCodex" updated="Updated June 2026">
+      <div className="space-y-10 text-[15px] leading-relaxed text-white/75">
+        <section className="space-y-4">
           <p>
-            <strong>NovelCodex</strong> is an AI-powered reading companion for cultivation, xianxia,
-            wuxia, and web-novel fiction. We index publicly available novel chapters and let readers
-            explore stories through natural-language conversation — ask about characters, cultivation
-            systems, plot arcs, or anything else hidden in thousands of chapters.
+            <strong className="text-white">NovelCodex</strong> is a free online home for cultivation,
+            xianxia, wuxia and web-novel fiction. Read thousands of novels on-site in a clean,
+            distraction-light reader — then go deeper with AI that actually understands the story.
           </p>
           <p>
-            Our platform uses retrieval-augmented generation (RAG) to search across indexed chapter
-            text and synthesise accurate, source-grounded answers — so you always get real information
-            from the novels you care about, not hallucination.
+            Reading is free and ad-supported. Tokens and subscriptions unlock the extras: chatting with
+            a novel, roleplaying with its characters, smart recommendations, the latest locked chapters,
+            and EPUB downloads.
           </p>
         </section>
 
-        <section className="mb-8">
-          <h2 className="mb-4 text-xl font-semibold text-amber-400">What we offer</h2>
-          <ul className="space-y-2 text-sm leading-relaxed" style={{ color: 'var(--nc-text)' }}>
-            <li>✦ A searchable library of cultivation and xianxia web novels</li>
-            <li>✦ Chapter-level AI chat — ask anything about any novel</li>
-            <li>✦ Character roleplay — chat directly with your favourite characters</li>
-            <li>✦ Multi-novel chat — compare characters, systems, and worlds across titles</li>
-            <li>✦ Bookmark and track your favourite novels</li>
-            <li>✦ Recently visited history so you never lose your place</li>
+        <section>
+          <h2 className="mb-4 text-xl font-bold text-white">What you can do</h2>
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {[
+              ['📖', 'Read thousands of novels free on-site'],
+              ['💬', 'Chat with any novel — ask about plot, characters, systems'],
+              ['🎭', 'Roleplay directly with your favourite characters'],
+              ['🧭', 'Get AI recommendations tuned to your taste'],
+              ['🎮', 'Play cultivation-themed mini-games'],
+              ['🔖', 'Bookmark novels and pick up where you left off'],
+            ].map(([icon, text]) => (
+              <li key={text} className="tnl-panel flex items-center gap-3 rounded-xl p-3 text-sm text-white/80">
+                <span className="text-lg">{icon}</span>{text}
+              </li>
+            ))}
           </ul>
         </section>
 
-        <section className="mb-8">
-          <h2 className="mb-4 text-xl font-semibold text-amber-400">Content &amp; Copyright</h2>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--nc-text)' }}>
-            NovelCodex indexes chapter text from publicly accessible web-novel hosting platforms for
-            the purpose of enabling AI-powered search and conversation. We do not redistribute raw
-            chapter text to end users. All original content remains the property of its respective
-            authors and publishers. If you are a rights holder and wish to request removal of your
-            content from our index, please contact us at{' '}
-            <a href="mailto:dmca@novelcodex.org" className="text-amber-400 hover:underline">
-              dmca@novelcodex.org
-            </a>.
+        <section className="space-y-3">
+          <h2 className="text-xl font-bold text-white">Free reading &amp; supporters</h2>
+          <p>
+            Every novel is free to read up to its latest chapters. The most recent ~20% of each novel is
+            reserved for supporters — read them with any active <Link href="/shop" className="font-semibold underline decoration-[rgba(var(--v),0.6)]" style={{ color: 'rgb(var(--v))' }}>subscription</Link>,
+            or unlock individual chapters with tokens. Subscriptions also remove ads and include free EPUB downloads.
           </p>
         </section>
 
-        <section className="mb-8">
-          <h2 className="mb-4 text-xl font-semibold text-amber-400">Contact</h2>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--nc-text)' }}>
-            Questions, partnerships, or content removal requests:{' '}
-            <a href="mailto:hello@novelcodex.org" className="text-amber-400 hover:underline">
-              hello@novelcodex.org
-            </a>
+        <section className="space-y-3">
+          <h2 className="text-xl font-bold text-white">Content &amp; copyright</h2>
+          <p>
+            NovelCodex aggregates chapter text from publicly accessible web-novel platforms. All original
+            content remains the property of its respective authors and publishers. If you are a rights
+            holder and want your work removed, email{' '}
+            <a href="mailto:dmca@novelcodex.org" className="font-semibold underline" style={{ color: 'rgb(var(--v))' }}>dmca@novelcodex.org</a>{' '}
+            and we will take it down promptly.
           </p>
         </section>
-      </main>
 
-      <Footer />
-    </div>
+        <section className="space-y-3">
+          <h2 className="text-xl font-bold text-white">Contact</h2>
+          <p>
+            Questions, partnerships, or anything else:{' '}
+            <a href="mailto:hello@novelcodex.org" className="font-semibold underline" style={{ color: 'rgb(var(--v))' }}>hello@novelcodex.org</a>.
+            Need help? Visit <Link href="/support" className="font-semibold underline" style={{ color: 'rgb(var(--v))' }}>Support</Link>.
+          </p>
+        </section>
+      </div>
+    </DocShell>
   )
 }

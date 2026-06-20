@@ -1,6 +1,4 @@
-import Link       from 'next/link'
-import SiteHeader from '@/components/SiteHeader'
-import Footer     from '@/components/Footer'
+import DocShell from '@/components/DocShell'
 
 export const metadata = {
   title: 'Terms of Service — NovelCodex',
@@ -10,8 +8,8 @@ export const metadata = {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mb-8">
-      <h2 className="mb-3 text-lg font-semibold text-amber-400">{title}</h2>
-      <div className="space-y-3 text-sm leading-relaxed" style={{ color: 'var(--nc-text)' }}>
+      <h2 className="mb-3 text-lg font-bold" style={{ color: 'rgb(var(--v))' }}>{title}</h2>
+      <div className="space-y-3 text-sm leading-relaxed text-white/75">
         {children}
       </div>
     </section>
@@ -20,17 +18,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen flex flex-col pb-16 sm:pb-0" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
+    <DocShell title="Terms of Service" updated="Effective May 1, 2026 · Updated June 2026">
+      <div className="text-white/75">
 
-      <SiteHeader />
-
-      <main className="flex-1 mx-auto w-full max-w-3xl px-6 py-12">
-        <h1 className="mb-2 text-3xl font-bold text-amber-400">Terms of Service</h1>
-        <p className="mb-8 text-sm" style={{ color: 'var(--nc-text2)' }}>
-          Effective date: May 1, 2026 · Last updated: May 2026
-        </p>
-
-        <p className="mb-8 text-sm leading-relaxed" style={{ color: 'var(--nc-text)' }}>
+        <p className="mb-8 text-sm leading-relaxed text-white/75">
           By accessing or using NovelCodex (&quot;Site,&quot; &quot;Service&quot;), you agree to be bound by these
           Terms of Service (&quot;Terms&quot;). If you do not agree, do not use the Site.
         </p>
@@ -50,7 +41,7 @@ export default function TermsPage() {
         <Section title="2. User Accounts">
           <p>You are responsible for maintaining the confidentiality of your account credentials. You are
           responsible for all activities that occur under your account. Notify us immediately at{' '}
-            <a href="mailto:hello@novelcodex.org" className="text-amber-400 hover:underline">
+            <a href="mailto:hello@novelcodex.org" className="underline hover:opacity-80">
               hello@novelcodex.org
             </a>{' '}
             if you suspect unauthorised access.
@@ -59,16 +50,16 @@ export default function TermsPage() {
         </Section>
 
         <Section title="3. Tokens and Subscriptions">
-          <p>NovelCodex may offer token-based access to AI features. Tokens are consumed when you use
-          AI chat functionality. All token purchases are final and non-refundable unless required by
-          applicable law. We reserve the right to modify token pricing or features with reasonable notice.
-          Free tokens provided upon account creation have no monetary value and cannot be redeemed for cash.</p>
-          <p>If we offer subscription plans in the future, subscriptions will auto-renew unless cancelled
-          before the renewal date. You will receive notice of any subscription charges before they occur.
-          To cancel, use the account settings or contact us at{' '}
-            <a href="mailto:hello@novelcodex.org" className="text-amber-400 hover:underline">
-              hello@novelcodex.org
-            </a>.
+          <p>Reading is free and ad-supported. Tokens are an in-app currency spent on extras — AI chat,
+          recommendations, unlocking locked chapters, and EPUB downloads. Token purchases are
+          non-refundable once tokens from that purchase have been used; otherwise we honour refund requests
+          made within 7 days. Free tokens granted on sign-up have no monetary value and cannot be redeemed
+          for cash. We may modify token pricing or features with reasonable notice.</p>
+          <p>Subscriptions bill monthly through Stripe and auto-renew until cancelled. They include ad-free
+          reading, access to all locked chapters, free EPUB downloads, and monthly tokens. <strong>Access to
+          locked chapters via subscription lasts only while the subscription is active</strong> — chapters you
+          unlocked with tokens remain yours. Cancel anytime from the Stripe billing portal or by contacting{' '}
+            <a href="mailto:hello@novelcodex.org" className="underline hover:opacity-80">hello@novelcodex.org</a>.
           </p>
         </Section>
 
@@ -94,7 +85,7 @@ export default function TermsPage() {
 
         <Section title="6. DMCA / Content Removal">
           <p>If you believe content on our Site infringes your copyright, please send a DMCA notice to{' '}
-            <a href="mailto:dmca@novelcodex.org" className="text-amber-400 hover:underline">
+            <a href="mailto:dmca@novelcodex.org" className="underline hover:opacity-80">
               dmca@novelcodex.org
             </a>{' '}
             including: (a) identification of the copyrighted work; (b) identification of the infringing
@@ -130,14 +121,12 @@ export default function TermsPage() {
 
         <Section title="11. Contact">
           <p>
-            <a href="mailto:hello@novelcodex.org" className="text-amber-400 hover:underline">
+            <a href="mailto:hello@novelcodex.org" className="underline hover:opacity-80">
               hello@novelcodex.org
             </a>
           </p>
         </Section>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </DocShell>
   )
 }

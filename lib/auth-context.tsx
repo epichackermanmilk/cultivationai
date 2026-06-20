@@ -12,8 +12,6 @@ export interface AuthUser {
   created_at:              string   // ISO timestamp — used for welcome deal countdown
   ads_disabled:            boolean  // true = one-time ad-free purchase or manually granted
   subscription_active:     boolean  // true = active subscriber (auto-cleared on cancel)
-  discord_user_id:         string | null
-  discord_verified:        boolean
   tokens_ever_purchased:   number
   has_password:            boolean  // false = Google-only account (no password to change)
 }
@@ -64,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => window.clearInterval(id)
   }, [user?.id])
 
-  // Re-sync user data (token balance, perks, Discord status) whenever the tab
+  // Re-sync user data (token balance, perks) whenever the tab
   // regains focus. Without this, a balance change made in Supabase, by the Stripe
   // webhook, or in another tab stays stale on screen until a full reload.
   useEffect(() => {

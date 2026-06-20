@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 import Link        from 'next/link'
-import SiteHeader from '@/components/SiteHeader'
-import Footer      from '@/components/Footer'
+import DocShell    from '@/components/DocShell'
 
 const CATEGORIES = [
   { id: 'Bug report',       icon: '🐛', desc: 'Something is broken or behaving unexpectedly' },
@@ -15,20 +14,24 @@ const CATEGORIES = [
 
 const QUICK_ANSWERS = [
   {
-    q: 'How do I start chatting with a novel?',
-    a: 'Pick any featured novel and start asking — all eight are fully indexed and ready instantly. Browsing and picking are free; you only spend tokens (10 per message) when you actually chat.',
+    q: 'Is reading free?',
+    a: 'Yes. Every novel is free to read on-site (ad-supported). The latest ~20% of each novel is reserved for supporters — read those with an active subscription, or unlock individual chapters for 2 tokens each.',
   },
   {
     q: 'How many free tokens do I get?',
-    a: 'New accounts start with 40 free tokens, plus 10 more when you add your name and age — 50 total, no credit card required. Each chat message costs 10 tokens.',
+    a: 'New accounts start with 40 free tokens, plus 10 more when you add your name and age — 50 total, no credit card required. Tokens are spent on AI chat (10/message), recommendations, unlocking chapters, and EPUB downloads.',
   },
   {
-    q: 'Where can I get more tokens?',
-    a: 'Open the Shop from the token widget in the top-right corner. New members get a one-time Welcome pack — 500 tokens for $1 — and regular packs start at $4.99. Tokens never expire.',
+    q: 'Where can I get more tokens or subscribe?',
+    a: 'Open the Shop from the token widget in the top-right corner. New members get a 7-day Welcome deal, one-time packs start at $0.99, and subscriptions start at $2.99/mo (ad-free, all locked chapters, free EPUBs, monthly tokens). Tokens never expire.',
+  },
+  {
+    q: 'Why is a chapter locked?',
+    a: 'The newest ~20% of every novel is for supporters. Read them with any active subscription, or unlock individual chapters for 2 tokens each. Chapters you unlock with tokens are yours to keep.',
   },
   {
     q: 'Can you add a specific novel?',
-    a: 'We\'re in curated preview with eight hand-picked, fully-indexed cultivation epics while we expand. Join the waitlist or use the Novel Request category below to tell us what to add next — highly requested titles are prioritised.',
+    a: 'We index new novels continuously. Use the Novel Request category below to tell us what to add — highly requested titles are prioritised.',
   },
   {
     q: 'I found a factual error in a chat response.',
@@ -71,54 +74,40 @@ export default function SupportPage() {
     }
   }
 
-  const inputCls   = 'w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 placeholder-zinc-500'
-  const inputStyle = { background: 'var(--nc-bg)', borderColor: 'var(--nc-border)', color: 'var(--nc-text)' }
+  const inputCls   = 'w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus:border-[rgba(var(--v),0.6)] focus:ring-1 focus:ring-[rgba(var(--v),0.3)] placeholder-white/35'
+  const inputStyle = { background: 'rgba(0,0,0,0.4)', borderColor: 'rgba(255,255,255,0.1)', color: '#fff' }
 
   return (
-    <div className="min-h-screen flex flex-col pb-16 sm:pb-0" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
-
-      <SiteHeader />
-
-      <main className="flex-1 mx-auto w-full max-w-5xl px-4 py-10">
-
-        {/* Hero */}
-        <div className="mb-10">
-          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-amber-500/70">Help &amp; Support</p>
-          <h2 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--nc-text)' }}>How can we help?</h2>
-          <p className="mt-2 text-sm" style={{ color: 'var(--nc-text2)' }}>
-            We typically respond within 24–48 hours. For urgent account issues, include your email in the message.
-          </p>
-        </div>
-
-        <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
+    <DocShell title="How can we help?" subtitle="We typically respond within 24–48 hours. For urgent account issues, include your email in the message." maxW="max-w-5xl">
+      <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
 
           {/* Left — FAQ + success state */}
           <div>
             {/* Quick answers */}
-            <div className="mb-8 rounded-2xl border border-[var(--nc-border)] overflow-hidden"
-              style={{ background: 'var(--nc-bg2)' }}>
-              <div className="border-b border-[var(--nc-border)] px-5 py-4">
-                <h3 className="text-sm font-semibold" style={{ color: 'var(--nc-text)' }}>Quick answers</h3>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--nc-text2)' }}>Check these before submitting — you might find your answer instantly.</p>
+            <div className="mb-8 rounded-2xl border border-white/10 overflow-hidden"
+              style={{ background: 'rgba(255,255,255,0.03)' }}>
+              <div className="border-b border-white/10 px-5 py-4">
+                <h3 className="text-sm font-semibold" style={{ color: '#fff' }}>Quick answers</h3>
+                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>Check these before submitting — you might find your answer instantly.</p>
               </div>
               {QUICK_ANSWERS.map((item, i) => (
-                <div key={i} className="border-b border-[var(--nc-border)] last:border-0">
+                <div key={i} className="border-b border-white/10 last:border-0">
                   <button
                     type="button"
                     onClick={() => setFaqOpen(faqOpen === i ? null : i)}
-                    className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-sm font-medium transition hover:bg-zinc-800/30"
-                    style={{ color: 'var(--nc-text)' }}
+                    className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-sm font-medium transition hover:bg-white/5"
+                    style={{ color: '#fff' }}
                   >
                     {item.q}
                     <svg viewBox="0 0 10 6" fill="none" className="h-3 w-3 shrink-0 transition-transform duration-200"
-                      style={{ transform: faqOpen === i ? 'rotate(180deg)' : 'none', color: 'var(--nc-text2)' }}>
+                      style={{ transform: faqOpen === i ? 'rotate(180deg)' : 'none', color: 'rgba(255,255,255,0.5)' }}>
                       <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </button>
                   <div className="grid transition-all duration-200"
                     style={{ gridTemplateRows: faqOpen === i ? '1fr' : '0fr' }}>
                     <div className="overflow-hidden">
-                      <p className="px-5 pb-4 text-sm leading-relaxed" style={{ color: 'var(--nc-text2)' }}>{item.a}</p>
+                      <p className="px-5 pb-4 text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>{item.a}</p>
                     </div>
                   </div>
                 </div>
@@ -126,30 +115,30 @@ export default function SupportPage() {
             </div>
 
             {/* Contact info */}
-            <div className="rounded-2xl border border-[var(--nc-border)] p-5"
-              style={{ background: 'var(--nc-bg2)' }}>
-              <h3 className="mb-3 text-sm font-semibold" style={{ color: 'var(--nc-text)' }}>Direct contact</h3>
+            <div className="rounded-2xl border border-white/10 p-5"
+              style={{ background: 'rgba(255,255,255,0.03)' }}>
+              <h3 className="mb-3 text-sm font-semibold" style={{ color: '#fff' }}>Direct contact</h3>
               <div className="space-y-2.5 text-sm">
                 <div className="flex items-center gap-2.5">
                   <span className="text-base">📧</span>
-                  <a href="mailto:hello@novelcodex.org" className="text-amber-400 hover:text-amber-300 transition">
+                  <a href="mailto:hello@novelcodex.org" className="text-[rgb(var(--v))] hover:opacity-80 transition">
                     hello@novelcodex.org
                   </a>
-                  <span className="text-xs" style={{ color: 'var(--nc-text2)' }}>— General</span>
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>— General</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <span className="text-base">⚖️</span>
-                  <a href="mailto:dmca@novelcodex.org" className="text-amber-400 hover:text-amber-300 transition">
+                  <a href="mailto:dmca@novelcodex.org" className="text-[rgb(var(--v))] hover:opacity-80 transition">
                     dmca@novelcodex.org
                   </a>
-                  <span className="text-xs" style={{ color: 'var(--nc-text2)' }}>— DMCA / Content removal</span>
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>— DMCA / Content removal</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <span className="text-base">🔒</span>
-                  <a href="mailto:privacy@novelcodex.org" className="text-amber-400 hover:text-amber-300 transition">
+                  <a href="mailto:privacy@novelcodex.org" className="text-[rgb(var(--v))] hover:opacity-80 transition">
                     privacy@novelcodex.org
                   </a>
-                  <span className="text-xs" style={{ color: 'var(--nc-text2)' }}>— Privacy / CCPA requests</span>
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>— Privacy / CCPA requests</span>
                 </div>
               </div>
             </div>
@@ -163,27 +152,28 @@ export default function SupportPage() {
                   <span className="text-2xl">✅</span>
                 </div>
                 <h2 className="mb-2 text-lg font-bold text-emerald-400">Message sent!</h2>
-                <p className="text-sm mb-6" style={{ color: 'var(--nc-text2)' }}>
-                  We'll get back to you at <strong className="text-emerald-300">{email}</strong> within 24–48 hours.
+                <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  We&apos;ll get back to you at <strong className="text-emerald-300">{email}</strong> within 24–48 hours.
                 </p>
                 <Link
-                  href="/library"
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-semibold text-black hover:bg-amber-400 transition"
+                  href="/browse"
+                  className="inline-flex items-center gap-1.5 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"
+                  style={{ background: 'rgb(var(--v))' }}
                 >
-                  ← Back to library
+                  ← Back to browse
                 </Link>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="rounded-2xl border border-[var(--nc-border)] overflow-hidden"
-                style={{ background: 'var(--nc-bg2)' }}>
-                <div className="border-b border-[var(--nc-border)] px-5 py-4">
-                  <h3 className="text-sm font-semibold" style={{ color: 'var(--nc-text)' }}>Send a message</h3>
+              <form onSubmit={handleSubmit} className="rounded-2xl border border-white/10 overflow-hidden"
+                style={{ background: 'rgba(255,255,255,0.03)' }}>
+                <div className="border-b border-white/10 px-5 py-4">
+                  <h3 className="text-sm font-semibold" style={{ color: '#fff' }}>Send a message</h3>
                 </div>
                 <div className="p-5 space-y-4">
 
                   {/* Category buttons */}
                   <div>
-                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--nc-text2)' }}>
+                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>
                       Category
                     </label>
                     <div className="grid grid-cols-1 gap-1.5">
@@ -194,10 +184,10 @@ export default function SupportPage() {
                           onClick={() => setCategory(cat.id)}
                           className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-xs transition ${
                             category === cat.id
-                              ? 'border-amber-500/60 bg-amber-500/10 text-amber-300'
-                              : 'border-[var(--nc-border)] hover:border-amber-500/30'
+                              ? 'border-[rgba(var(--v),0.6)] bg-[rgba(var(--v),0.12)] text-white'
+                              : 'border-white/10 hover:border-white/25'
                           }`}
-                          style={category !== cat.id ? { color: 'var(--nc-text2)' } : {}}
+                          style={category !== cat.id ? { color: 'rgba(255,255,255,0.5)' } : {}}
                         >
                           <span className="text-base shrink-0">{cat.icon}</span>
                           <div>
@@ -211,7 +201,7 @@ export default function SupportPage() {
 
                   {/* Email */}
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--nc-text2)' }}>
+                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>
                       Your email
                     </label>
                     <input
@@ -226,7 +216,7 @@ export default function SupportPage() {
 
                   {/* Subject */}
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--nc-text2)' }}>
+                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>
                       Subject
                     </label>
                     <input
@@ -238,12 +228,12 @@ export default function SupportPage() {
                       className={inputCls}
                       style={inputStyle}
                     />
-                    <p className="mt-1 text-right text-xs text-zinc-600">{subject.length}/120</p>
+                    <p className="mt-1 text-right text-xs text-white/30">{subject.length}/120</p>
                   </div>
 
                   {/* Message */}
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--nc-text2)' }}>
+                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>
                       Message
                     </label>
                     <textarea
@@ -255,7 +245,7 @@ export default function SupportPage() {
                       className={`${inputCls} resize-none`}
                       style={inputStyle}
                     />
-                    <p className="mt-1 text-right text-xs text-zinc-600">{message.length}/2000</p>
+                    <p className="mt-1 text-right text-xs text-white/30">{message.length}/2000</p>
                   </div>
 
                   {error && (
@@ -267,12 +257,12 @@ export default function SupportPage() {
                   <button
                     type="submit"
                     disabled={sending}
-                    className="w-full rounded-xl py-3 text-sm font-bold text-black transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0"
-                    style={{ background: 'linear-gradient(135deg,#fbbf24 0%,#f59e0b 50%,#d97706 100%)', boxShadow: '0 6px 20px rgba(245,158,11,0.25)' }}
+                    className="w-full rounded-xl py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0"
+                    style={{ background: 'rgb(var(--v))', boxShadow: '0 6px 20px rgba(124,58,237,0.35)' }}
                   >
                     {sending ? (
                       <span className="flex items-center justify-center gap-2">
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent" />
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                         Sending…
                       </span>
                     ) : 'Send Message →'}
@@ -283,9 +273,6 @@ export default function SupportPage() {
             )}
           </div>
         </div>
-      </main>
-
-      <Footer />
-    </div>
+    </DocShell>
   )
 }

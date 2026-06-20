@@ -1,6 +1,4 @@
-import Link       from 'next/link'
-import SiteHeader from '@/components/SiteHeader'
-import Footer     from '@/components/Footer'
+import DocShell from '@/components/DocShell'
 
 export const metadata = {
   title: 'Privacy Policy — NovelCodex',
@@ -10,8 +8,8 @@ export const metadata = {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mb-8">
-      <h2 className="mb-3 text-lg font-semibold text-amber-400">{title}</h2>
-      <div className="space-y-3 text-sm leading-relaxed" style={{ color: 'var(--nc-text)' }}>
+      <h2 className="mb-3 text-lg font-bold" style={{ color: 'rgb(var(--v))' }}>{title}</h2>
+      <div className="space-y-3 text-sm leading-relaxed text-white/75">
         {children}
       </div>
     </section>
@@ -20,17 +18,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen flex flex-col pb-16 sm:pb-0" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
+    <DocShell title="Privacy Policy" updated="Effective May 1, 2026 · Updated June 2026">
+      <div className="text-white/75">
 
-      <SiteHeader />
-
-      <main className="flex-1 mx-auto w-full max-w-3xl px-6 py-12">
-        <h1 className="mb-2 text-3xl font-bold text-amber-400">Privacy Policy</h1>
-        <p className="mb-8 text-sm" style={{ color: 'var(--nc-text2)' }}>
-          Effective date: May 1, 2026 · Last updated: May 2026
-        </p>
-
-        <p className="mb-8 text-sm leading-relaxed" style={{ color: 'var(--nc-text)' }}>
+        <p className="mb-8 text-sm leading-relaxed text-white/75">
           NovelCodex (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) is committed to protecting your privacy.
           This Privacy Policy explains how we collect, use, disclose, and safeguard your information
           when you visit <strong>novelcodex.org</strong> (the &quot;Site&quot;). Please read this policy
@@ -61,7 +52,7 @@ export default function PrivacyPage() {
           <p>If you provide your email address, we may send you transactional messages (account creation,
           password reset). We will only send marketing emails if you explicitly opt in. You may unsubscribe
           from marketing emails at any time by clicking the unsubscribe link in any email or contacting us
-          at <a href="mailto:privacy@novelcodex.org" className="text-amber-400 hover:underline">privacy@novelcodex.org</a>.
+          at <a href="mailto:privacy@novelcodex.org" className="underline hover:opacity-80">privacy@novelcodex.org</a>.
           We comply with the CAN-SPAM Act and GDPR email consent requirements.</p>
         </Section>
 
@@ -79,7 +70,7 @@ export default function PrivacyPage() {
             exercising your CCPA rights.</li>
           </ul>
           <p>To exercise these rights, contact us at{' '}
-            <a href="mailto:privacy@novelcodex.org" className="text-amber-400 hover:underline">
+            <a href="mailto:privacy@novelcodex.org" className="underline hover:opacity-80">
               privacy@novelcodex.org
             </a>{' '}
             or use the feedback widget on the Site. We will respond within 45 days.
@@ -95,16 +86,16 @@ export default function PrivacyPage() {
           <p>We use the following third-party services that may process your data:</p>
           <ul className="ml-4 list-disc space-y-1">
             <li><strong>Supabase</strong> — database and authentication (EU/US data centers). See{' '}
-              <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:underline">Supabase Privacy Policy</a>.</li>
+              <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80">Supabase Privacy Policy</a>.</li>
             <li><strong>OpenAI</strong> — AI text generation for chat responses. Queries are sent to
               OpenAI&apos;s API. See{' '}
-              <a href="https://openai.com/privacy" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:underline">OpenAI Privacy Policy</a>.</li>
+              <a href="https://openai.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80">OpenAI Privacy Policy</a>.</li>
             <li><strong>Stripe</strong> — payment processing for token purchases and subscriptions. We never
               store your full card details. See{' '}
-              <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:underline">Stripe Privacy Policy</a>.</li>
+              <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80">Stripe Privacy Policy</a>.</li>
             <li><strong>Google Analytics</strong> — anonymized traffic and usage analytics. See{' '}
-              <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:underline">Google Privacy Policy</a>.</li>
-            <li><strong>Google AdSense</strong> — third-party advertising. See the cookies section below.</li>
+              <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80">Google Privacy Policy</a>.</li>
+            <li><strong>Third-party ad networks</strong> (currently Adsterra; Google AdSense if enabled) — advertising. See the cookies section below.</li>
           </ul>
         </Section>
 
@@ -117,7 +108,7 @@ export default function PrivacyPage() {
               traffic and improve the Site. Only set after you accept cookies.</li>
             <li><strong>Advertising</strong> — Google AdSense and its partners (including Google&apos;s
               DoubleClick) use cookies to serve and measure ads. Google may use the{' '}
-              <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:underline">advertising cookie</a>{' '}
+              <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80">advertising cookie</a>{' '}
               to serve ads based on your visits to this and other sites.</li>
           </ul>
           <p className="mt-3">
@@ -126,9 +117,9 @@ export default function PrivacyPage() {
             cookies are not set, and ads (if shown) are non-personalized. You can change your choice any time
             by clearing your browser&apos;s site data. You may also opt out of personalized Google advertising
             at{' '}
-            <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:underline">Google Ads Settings</a>{' '}
+            <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80">Google Ads Settings</a>{' '}
             or{' '}
-            <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:underline">aboutads.info</a>.
+            <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80">aboutads.info</a>.
           </p>
           <p className="mt-3">
             Subscribers and users who purchase the ad-free upgrade do not see ads, and no advertising cookies
@@ -157,19 +148,17 @@ export default function PrivacyPage() {
         <Section title="11. Contact Us">
           <p>
             Privacy inquiries:{' '}
-            <a href="mailto:privacy@novelcodex.org" className="text-amber-400 hover:underline">
+            <a href="mailto:privacy@novelcodex.org" className="underline hover:opacity-80">
               privacy@novelcodex.org
             </a>
             <br />
             DMCA / content removal:{' '}
-            <a href="mailto:dmca@novelcodex.org" className="text-amber-400 hover:underline">
+            <a href="mailto:dmca@novelcodex.org" className="underline hover:opacity-80">
               dmca@novelcodex.org
             </a>
           </p>
         </Section>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </DocShell>
   )
 }

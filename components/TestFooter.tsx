@@ -17,7 +17,6 @@ export default function TestFooter() {
           <Link href="/privacy" className="transition hover:text-white">Privacy</Link>
           <Link href="/terms" className="transition hover:text-white">Terms</Link>
           <a href="mailto:hello@novelcodex.org" className="transition hover:text-white">Contact</a>
-          <a href="https://discord.gg/xjQvnrvW3M" target="_blank" rel="noopener noreferrer" className="text-indigo-400 transition hover:text-indigo-300">Discord</a>
         </nav>
       </div>
     </footer>

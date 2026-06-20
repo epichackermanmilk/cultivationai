@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
-import { syncDiscordRoles } from '@/lib/discord'
 import { trackPurchase }    from '@/lib/ga4'
 
 // Lazily initialised so the build doesn't fail when STRIPE_SECRET_KEY is absent
@@ -107,7 +106,6 @@ export async function POST(req: Request) {
 
       if (user_id && mode === 'once' && tokens) {
         await creditTokens(user_id, parseInt(tokens, 10), session.id)
-        syncDiscordRoles(user_id).catch(() => {})
       }
 
       // Subscription initial payment — also credit tokens + mark sub active
@@ -116,7 +114,6 @@ export async function POST(req: Request) {
         const sb = admin()
         const subTier = (session.metadata?.tier as string | undefined)?.toLowerCase() ?? null
         await sb.from('profiles').update({ subscription_active: true, ads_disabled: true, subscription_tier: subTier }).eq('id', user_id)
-        syncDiscordRoles(user_id).catch(() => {})
       }
 
       // Ad-free add-on purchase
@@ -138,7 +135,6 @@ export async function POST(req: Request) {
           // Ensure sub active flag is set (may have been cleared if sub lapsed)
           const sb = admin()
           await sb.from('profiles').update({ subscription_active: true, ads_disabled: true }).eq('id', user_id)
-          syncDiscordRoles(user_id).catch(() => {})
         }
       }
     }
@@ -151,7 +147,6 @@ export async function POST(req: Request) {
         const sb = admin()
         // Only clear subscription_active — ads_disabled stays true if they bought it separately
         await sb.from('profiles').update({ subscription_active: false, subscription_tier: null }).eq('id', user_id)
-        syncDiscordRoles(user_id).catch(() => {})
         // If they didn't buy ad-free separately, re-enable ads
         const { data: profile } = await sb.from('profiles').select('ads_disabled').eq('id', user_id).maybeSingle()
         // ads_disabled stays if they specifically purchased it (we can't tell here easily).

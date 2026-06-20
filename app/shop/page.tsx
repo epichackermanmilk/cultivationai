@@ -24,9 +24,9 @@ const SUBS = [
   { label: 'Lite',    price: '$2.99/mo', tokens: 150,  vsBundle: 0,    savingPct: 0,  highlight: false, badge: null,
     perks: ['Ad-free everywhere', 'Read every locked chapter', '150 tokens / month', 'Free EPUB downloads', 'Cancel anytime'] },
   { label: 'Reader',  price: '$4.99/mo', tokens: 700,  vsBundle: 550,  savingPct: 27, highlight: false, badge: null,
-    perks: ['Ad-free everywhere', 'Read every locked chapter', '700 tokens / month', 'Free EPUB downloads', 'Multi-novel chat included', 'Discord: custom color role + private channel', 'Cancel anytime'] },
+    perks: ['Ad-free everywhere', 'Read every locked chapter', '700 tokens / month', 'Free EPUB downloads', 'Multi-novel chat included', 'Cancel anytime'] },
   { label: 'Scholar', price: '$9.99/mo', tokens: 1600, vsBundle: 1200, savingPct: 33, highlight: true,  badge: 'Best sub',
-    perks: ['Ad-free everywhere', 'Read every locked chapter', '1,600 tokens / month', 'Free EPUB downloads', 'Multi-novel chat included', 'Discord: custom color role + private channel', 'Early access to new features', 'Priority support', 'Cancel anytime'] },
+    perks: ['Ad-free everywhere', 'Read every locked chapter', '1,600 tokens / month', 'Free EPUB downloads', 'Multi-novel chat included', 'Early access to new features', 'Priority support', 'Cancel anytime'] },
 ]
 const FAQ = [
   { q: 'What are tokens?', a: 'Tokens are the in-app currency. Most of the site is free: reading is free (ad-supported), and so is browsing. You spend tokens on extras — AI chat (10/message), the Recommender (10/search), unlocking a locked chapter (2 each), or an EPUB download (50).' },
