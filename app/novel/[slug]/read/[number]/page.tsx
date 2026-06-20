@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 import { getChapter } from '@/lib/vps'
-import { isLocked } from '@/lib/locks'
+import { isLocked, lockThreshold } from '@/lib/locks'
 import ReaderClient from '@/components/ReaderClient'
 import ChapterPaywall from '@/components/ChapterPaywall'
 
@@ -67,7 +67,7 @@ export default async function ReaderPage({ params }: Props) {
 
   // Gate the latest 20% of chapters behind a subscription or token unlock.
   if (isLocked(ch.chapter_number, ch.total) && !(await hasChapterAccess(slug, ch.chapter_number))) {
-    return <ChapterPaywall slug={slug} novelTitle={ch.novel_title} chapterNumber={ch.chapter_number} prev={ch.prev} />
+    return <ChapterPaywall slug={slug} novelTitle={ch.novel_title} chapterNumber={ch.chapter_number} latestFree={lockThreshold(ch.total)} />
   }
 
   const { heading, body } = cleanChapter(ch.text, ch.novel_title)

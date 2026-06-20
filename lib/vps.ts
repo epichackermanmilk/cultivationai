@@ -60,9 +60,12 @@ export async function getChapterList(slug: string): Promise<{ count: number; cha
 }
 
 // Fetch a generated EPUB (built server-side on the VPS from scraped chapter text).
-export async function fetchEpub(slug: string, from: number, to: number): Promise<{ buf: ArrayBuffer; filename: string } | null> {
+export async function fetchEpub(slug: string, from: number, to: number, nums?: number[]): Promise<{ buf: ArrayBuffer; filename: string } | null> {
   try {
-    const res = await fetch(`${BASE}/novels/${slug}/epub?from=${from}&to=${to}`, { headers })
+    // When `nums` is given, the EPUB is built from exactly those chapters (free +
+    // token-unlocked, never locked-unowned). Otherwise the whole from..to range.
+    const q = nums && nums.length ? `from=${from}&to=${to}&nums=${nums.join(',')}` : `from=${from}&to=${to}`
+    const res = await fetch(`${BASE}/novels/${slug}/epub?${q}`, { headers })
     if (!res.ok) return null
     const cd = res.headers.get('content-disposition') || ''
     const m = cd.match(/filename="([^"]+)"/)

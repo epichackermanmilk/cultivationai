@@ -8,8 +8,8 @@ import { useAuth } from '@/lib/auth-context'
 import { UNLOCK_COST } from '@/lib/locks'
 import { track } from '@/lib/analytics'
 
-export default function ChapterPaywall({ slug, novelTitle, chapterNumber, prev }: {
-  slug: string; novelTitle: string; chapterNumber: number; prev: number | null
+export default function ChapterPaywall({ slug, novelTitle, chapterNumber, latestFree }: {
+  slug: string; novelTitle: string; chapterNumber: number; latestFree: number
 }) {
   const { user, updateTokens } = useAuth()
   const [busy, setBusy] = useState(false)
@@ -56,8 +56,9 @@ export default function ChapterPaywall({ slug, novelTitle, chapterNumber, prev }
           </div>
         )}
 
-        <div className="mt-5 flex items-center justify-center gap-4 text-xs text-white/45">
-          {prev && <Link href={`/novel/${slug}/read/${prev}`} className="transition hover:text-white">‹ Previous (free)</Link>}
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-white/45">
+          <button onClick={() => window.history.back()} className="transition hover:text-white">‹ Back</button>
+          {latestFree > 0 && <Link href={`/novel/${slug}/read/${latestFree}`} className="transition hover:text-white">Latest free chapter (#{latestFree.toLocaleString()})</Link>}
           <Link href={`/novel/${slug}`} className="transition hover:text-white">Chapter list</Link>
         </div>
       </div>

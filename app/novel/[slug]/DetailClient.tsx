@@ -63,6 +63,14 @@ export default function DetailClient({ meta }: { meta: Meta }) {
   const simRef = useRef<HTMLElement>(null)
   const [colH, setColH] = useState<number | undefined>(undefined)
   const [resume, setResume] = useState<number | null>(null)
+  const [access, setAccess] = useState<{ lockThreshold: number; subscribed: boolean; unlocked: Set<number> }>({ lockThreshold: 0, subscribed: false, unlocked: new Set() })
+
+  // Lock state for the chapter list (which chapters are locked / unlocked).
+  useEffect(() => {
+    fetch(`/api/novels/${meta.slug}/access`).then(r => r.json()).then(d => {
+      setAccess({ lockThreshold: d.lockThreshold ?? 0, subscribed: !!d.subscribed, unlocked: new Set<number>(d.unlocked ?? []) })
+    }).catch(() => {})
+  }, [meta.slug, user])
 
   // Resume reading: the reader stores the last chapter opened per novel.
   useEffect(() => {
@@ -234,14 +242,22 @@ export default function DetailClient({ meta }: { meta: Meta }) {
               className="mb-3 h-10 w-full shrink-0 rounded-xl border border-white/10 bg-black/30 px-4 text-sm text-white placeholder-white/40 outline-none backdrop-blur transition focus:border-[rgba(var(--v),0.6)]" />
             <div className="tnld-panel tnld-scroll min-h-0 flex-1 divide-y divide-white/5 overflow-y-auto max-h-[70vh] lg:max-h-none">
               {chLoading ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="p-3.5"><div className="tnld-skel h-4 w-2/3 rounded" /></div>)
-                : chSlice.map(c => (
+                : chSlice.map(c => {
+                  const locked = access.lockThreshold > 0 && c.chapter_number > access.lockThreshold
+                  const owned = access.subscribed || access.unlocked.has(c.chapter_number)
+                  return (
                   <Link key={c.chapter_number} href={`/novel/${meta.slug}/read/${c.chapter_number}`}
                     className="flex items-center gap-3 px-4 py-3 transition hover:bg-white/[0.04]">
                     <span className="w-12 shrink-0 text-xs font-bold" style={{ color: 'rgb(var(--v))' }}>#{c.chapter_number}</span>
-                    <span className="min-w-0 flex-1 truncate text-sm text-white/85">{c.chapter_title || `Chapter ${c.chapter_number}`}</span>
+                    <span className={`min-w-0 flex-1 truncate text-sm ${locked && !owned ? 'text-white/55' : 'text-white/85'}`}>{c.chapter_title || `Chapter ${c.chapter_number}`}</span>
+                    {locked && (
+                      owned
+                        ? <svg aria-label="Unlocked" className="h-3.5 w-3.5 shrink-0" style={{ color: 'rgb(var(--v))' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><title>Unlocked</title><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V7a4 4 0 014-4 4 4 0 013.5 2" strokeLinecap="round" /></svg>
+                        : <svg aria-label="Locked" className="h-3.5 w-3.5 shrink-0 text-white/35" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><title>Locked — subscribe or unlock with tokens</title><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 018 0v3" strokeLinecap="round" /></svg>
+                    )}
                     <span className="shrink-0 text-white/25">›</span>
                   </Link>
-                ))}
+                )})}
               {!chLoading && chFiltered.length === 0 && <p className="p-6 text-center text-sm text-white/40">No chapters match.</p>}
             </div>
 

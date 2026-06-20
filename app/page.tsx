@@ -298,7 +298,7 @@ export default function TestNewLibrary() {
           <div className="tnl-panel p-5">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-extrabold tracking-tight">Announcements</h2>
-              <button className="rounded-lg px-3 py-1.5 text-xs font-semibold transition hover:brightness-110" style={{ background: 'rgba(var(--v),0.9)' }}>View All</button>
+              <Link href="/announcements" className="rounded-lg px-3 py-1.5 text-xs font-semibold transition hover:brightness-110" style={{ background: 'rgba(var(--v),0.9)' }}>View All</Link>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {announcements.map(a => (

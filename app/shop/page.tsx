@@ -32,7 +32,7 @@ const FAQ = [
   { q: 'What are tokens?', a: 'Tokens are the in-app currency. Most of the site is free: reading is free (ad-supported), and so is browsing. You spend tokens on extras — AI chat (10/message), the Recommender (10/search), unlocking a locked chapter (2 each), or an EPUB download (50).' },
   { q: 'Why are some chapters locked?', a: 'The latest ~20% of every novel is reserved for supporters. Read them with any active subscription, or unlock individual chapters for 2 tokens each. Everything before that is free to read.' },
   { q: 'Do I keep locked chapters if I cancel?', a: 'Subscription access to locked chapters is active only while your subscription is. Chapters you unlocked with tokens are yours to keep forever.' },
-  { q: 'Can I download a novel?', a: 'Yes — download any novel as an EPUB of the chapters you can read. Free for subscribers; otherwise 50 tokens. Limited to one download per hour.' },
+  { q: 'Can I download a novel?', a: 'Yes — download any novel as an EPUB, choosing the exact chapter range. It includes the chapters you can read (free chapters plus any you have unlocked); locked chapters you have not unlocked are skipped. Free for subscribers, otherwise 50 tokens. Subscribers can download up to 20 EPUBs per hour, everyone else up to 5.' },
   { q: 'Do tokens expire?', a: 'No. Purchased tokens never expire and carry over indefinitely.' },
   { q: 'Can I get a refund?', a: 'Within 7 days of purchase if you have not used any tokens from that purchase. Contact hello@novelcodex.org.' },
   { q: 'How do subscriptions work?', a: 'They bill monthly: ad-free everywhere, all locked chapters, free EPUBs, plus monthly tokens. Cancel anytime from the Stripe billing portal.' },
@@ -93,8 +93,8 @@ export default function TestShopPage() {
             <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="rgb(var(--v))"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
             <span className="text-xs font-semibold" style={{ color: 'rgb(var(--v))' }}>Token Shop</span>
           </div>
-          <h1 className="text-3xl font-black tracking-tight sm:text-5xl">Get more conversations</h1>
-          <p className="mx-auto mt-3 max-w-md text-sm text-white/55">Tokens never expire. 1 message ≈ 10 tokens. Reading is always free.{user ? '' : ' New accounts get 50 free tokens.'}</p>
+          <h1 className="text-3xl font-black tracking-tight sm:text-5xl">Unlock more of NovelCodex</h1>
+          <p className="mx-auto mt-3 max-w-lg text-sm text-white/55">Reading is free. Subscribe for ad-free reading, every locked chapter, and free EPUB downloads — or use tokens to unlock chapters, chat with characters, and get recommendations. Tokens never expire.{user ? '' : ' New accounts start with 50 free tokens.'}</p>
           {user && <p className="mt-2 text-sm text-white/70">Balance: <span className="font-bold" style={{ color: 'rgb(var(--v))' }}>{(user.tokens ?? 0).toLocaleString()}</span> tokens</p>}
         </div>
 

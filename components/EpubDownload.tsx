@@ -9,7 +9,7 @@ import { useAuth } from '@/lib/auth-context'
 import { EPUB_COST } from '@/lib/locks'
 import { track } from '@/lib/analytics'
 
-interface Access { total: number; lockThreshold: number; subscribed: boolean }
+interface Access { total: number; lockThreshold: number; subscribed: boolean; unlocked: number[] }
 
 export default function EpubDownload({ slug, novelTitle }: { slug: string; novelTitle: string }) {
   const { user, refresh } = useAuth()
@@ -21,18 +21,26 @@ export default function EpubDownload({ slug, novelTitle }: { slug: string; novel
   const [err, setErr] = useState<string | null>(null)
   const [loadingAcc, setLoadingAcc] = useState(false)
 
+  // Highest selectable chapter: everything for subs; otherwise the free block plus
+  // the furthest chapter the reader has unlocked with tokens.
+  const maxReadable = acc ? (acc.subscribed ? acc.total : Math.max(acc.lockThreshold, ...(acc.unlocked.length ? acc.unlocked : [0]))) : 1
+  // Readable chapters within [from, to] (free + unlocked, never locked-unowned).
+  const unlockedSet = acc ? new Set(acc.unlocked) : new Set<number>()
+  let count = 0
+  if (acc) for (let n = Math.max(1, from); n <= Math.min(to, maxReadable); n++) {
+    if (acc.subscribed || n <= acc.lockThreshold || unlockedSet.has(n)) count++
+  }
+
   async function openPopup() {
     setOpen(true); setErr(null); setLoadingAcc(true)
     try {
       const r = await fetch(`/api/novels/${slug}/access`)
       const d = await r.json() as Access
-      const maxReadable = d.subscribed ? d.total : d.lockThreshold
-      setAcc(d); setFrom(1); setTo(Math.max(1, maxReadable))
+      d.unlocked = d.unlocked ?? []
+      const mr = d.subscribed ? d.total : Math.max(d.lockThreshold, ...(d.unlocked.length ? d.unlocked : [0]))
+      setAcc(d); setFrom(1); setTo(Math.max(1, mr))
     } catch { setErr('Could not load chapter info') } finally { setLoadingAcc(false) }
   }
-
-  const maxReadable = acc ? (acc.subscribed ? acc.total : acc.lockThreshold) : 1
-  const count = Math.max(0, Math.min(to, maxReadable) - Math.max(1, from) + 1)
 
   async function download() {
     if (busy) return
@@ -77,7 +85,7 @@ export default function EpubDownload({ slug, novelTitle }: { slug: string; novel
               </div>
             ) : (
               <>
-                <p className="mt-4 text-sm text-white/65">Choose the chapter range to include. You can download chapters <b>1–{maxReadable.toLocaleString()}</b>{acc && !acc.subscribed && acc.total > acc.lockThreshold ? ' (subscribe to include the locked chapters)' : ''}.</p>
+                <p className="mt-4 text-sm text-white/65">Choose the chapter range to include — only chapters you can read are added (locked chapters you haven&apos;t unlocked are skipped){acc && !acc.subscribed && acc.total > acc.lockThreshold ? '; subscribe to include them all' : ''}.</p>
                 <div className="mt-3 flex items-center gap-2">
                   <label className="text-xs text-white/50">From</label>
                   <input type="number" min={1} max={maxReadable} value={from} onChange={e => setFrom(Math.max(1, Math.min(maxReadable, Number(e.target.value) || 1)))} className={input} />
@@ -85,7 +93,7 @@ export default function EpubDownload({ slug, novelTitle }: { slug: string; novel
                   <input type="number" min={1} max={maxReadable} value={to} onChange={e => setTo(Math.max(1, Math.min(maxReadable, Number(e.target.value) || 1)))} className={input} />
                 </div>
                 <p className="mt-2 text-xs text-white/50">{count.toLocaleString()} chapter{count !== 1 ? 's' : ''} · {acc?.subscribed ? <span className="font-semibold text-emerald-400">Free (subscriber)</span> : <span className="font-semibold" style={{ color: 'rgb(var(--v))' }}>{EPUB_COST} tokens</span>}</p>
-                {!acc?.subscribed && <p className="mt-1 text-[11px] text-white/35">One download per hour. To add more chapters later, unlock them and download again ({EPUB_COST} tokens).</p>}
+                <p className="mt-1 text-[11px] text-white/35">{acc?.subscribed ? 'Up to 20 downloads per hour.' : `Up to 5 downloads per hour. Unlock more chapters anytime, then download again (${EPUB_COST} tokens).`}</p>
                 {err && <p className="mt-2 text-xs text-red-400">{err}{err.includes('tokens') && <Link href="/shop" className="ml-1 underline">Shop →</Link>}</p>}
                 <div className="mt-5 flex gap-2">
                   <button onClick={() => setOpen(false)} disabled={busy} className="flex-1 rounded-xl border border-white/10 py-2.5 text-sm font-semibold text-white/70 transition hover:text-white">Cancel</button>
