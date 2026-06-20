@@ -32,8 +32,13 @@ export const ADSENSE_SLOTS: Record<Placement, string> = {
 // ── Adsterra ─────────────────────────────────────────────────────────────────────
 // In the Adsterra dashboard: Websites → add site → create a "Banner" ad unit for each
 // size, then paste the unit "key" here. 728×90 suits desktop; it scales down on mobile.
+// Adsterra lets you reuse one zone's key in multiple placements (each renders in its
+// own isolated iframe), so the single 728×90 zone serves both reader slots and the
+// 300×250 zone serves the game banner.
+const BANNER_728x90 = 'ac25af299db16df74e0ecf1f2b762104'
+const BANNER_300x250 = 'e9645b206b98282ea8e4a1db702ac883'
 export const ADSTERRA: Record<Placement, { key: string; width: number; height: number }> = {
-  readerTop:    { key: '', width: 728, height: 90 },
-  readerBottom: { key: '', width: 728, height: 90 },
-  gameBanner:   { key: '', width: 728, height: 90 },
+  readerTop:    { key: BANNER_728x90,  width: 728, height: 90 },
+  readerBottom: { key: BANNER_728x90,  width: 728, height: 90 },
+  gameBanner:   { key: BANNER_300x250, width: 300, height: 250 },
 }

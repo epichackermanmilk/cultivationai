@@ -38,14 +38,14 @@ export default function TestBookmarksPage() {
   }
 
   return (
-    <div className="tnl-root relative min-h-screen text-white" style={{ ['--v' as string]: '124,58,237' }}>
+    <div className="tnl-root relative flex min-h-screen flex-col text-white" style={{ ['--v' as string]: '124,58,237' }}>
       <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: '#07060d' }}>
         <div className="absolute inset-0" style={{ background: 'radial-gradient(85% 50% at 50% -10%, rgba(var(--v),0.20) 0%, transparent 55%)' }} />
       </div>
 
       <TestHeader />
 
-      <main className="relative z-10 mx-auto max-w-[1400px] px-4 pb-24 pt-8 sm:px-6">
+      <main className="relative z-10 mx-auto w-full flex-1 max-w-[1400px] px-4 pb-24 pt-8 sm:px-6">
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>
             <h1 className="text-2xl font-black tracking-tight sm:text-3xl">Your Library</h1>

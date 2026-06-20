@@ -231,14 +231,14 @@ function BrowseInner() {
   const anyActive = genres.length > 0 || minCh > 0 || maxCh > 0 || sort !== 'latest' || !!query
 
   return (
-    <div className="tnl-root relative min-h-screen text-white" style={{ ['--v' as string]: '124,58,237' }}>
+    <div className="tnl-root relative flex min-h-screen flex-col text-white" style={{ ['--v' as string]: '124,58,237' }}>
       <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: '#07060d' }}>
         <div className="absolute inset-0" style={{ background: 'radial-gradient(90% 50% at 50% -10%, rgba(var(--v),0.18) 0%, transparent 55%)' }} />
       </div>
 
       <TestHeader />
 
-      <main className="relative z-10 mx-auto max-w-[1400px] px-4 pb-24 pt-6 sm:px-6">
+      <main className="relative z-10 mx-auto w-full flex-1 max-w-[1400px] px-4 pb-24 pt-6 sm:px-6">
         {/* Toolbar — elevated above the grid so dropdowns are never hidden by covers. */}
         <div className="tnl-panel relative z-30 mb-6 p-4">
           <div className="mb-3 flex items-center gap-2">

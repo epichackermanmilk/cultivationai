@@ -80,14 +80,14 @@ export default function TestShopPage() {
   }, [user])
 
   return (
-    <div className="tnl-root relative min-h-screen text-white" style={{ ['--v' as string]: '124,58,237' }}>
+    <div className="tnl-root relative flex min-h-screen flex-col text-white" style={{ ['--v' as string]: '124,58,237' }}>
       <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: '#07060d' }}>
         <div className="absolute inset-0" style={{ background: 'radial-gradient(85% 55% at 50% -10%, rgba(var(--v),0.26) 0%, transparent 55%)' }} />
       </div>
 
       <TestHeader />
 
-      <main className="relative z-10 mx-auto max-w-5xl px-4 pb-24 pt-12 sm:px-6">
+      <main className="relative z-10 mx-auto w-full flex-1 max-w-5xl px-4 pb-24 pt-12 sm:px-6">
         <div className="mb-9 text-center">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[rgba(var(--v),0.4)] bg-[rgba(var(--v),0.12)] px-4 py-1.5">
             <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="rgb(var(--v))"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
