@@ -12,6 +12,7 @@ import { useSearchParams } from 'next/navigation'
 import { matchesSearch } from '@/lib/search'
 import TestHeader from '@/components/TestHeader'
 import { TestStyles, Cover, Skeleton, type Novel } from '@/components/TestUI'
+import TestFooter from '@/components/TestFooter'
 import { trackNovelClick } from '@/lib/analytics'
 
 type Sort = 'latest' | 'popular' | 'rating' | 'az' | 'newest'
@@ -284,6 +285,7 @@ function BrowseInner() {
         </div>
       </main>
 
+      <TestFooter />
       <TestStyles />
     </div>
   )

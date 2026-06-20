@@ -11,6 +11,7 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import TestHeader from '@/components/TestHeader'
 import { TestStyles } from '@/components/TestUI'
+import TestFooter from '@/components/TestFooter'
 import { track } from '@/lib/analytics'
 
 const DISCORD_INVITE = 'https://discord.gg/xjQvnrvW3M'
@@ -311,6 +312,7 @@ export default function TestProfilePage() {
         </div>
       </main>
 
+      <TestFooter />
       <TestStyles />
     </div>
   )

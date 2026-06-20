@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import TestHeader from '@/components/TestHeader'
 import { TestStyles } from '@/components/TestUI'
+import TestFooter from '@/components/TestFooter'
 import { track } from '@/lib/analytics'
 
 interface Game {
@@ -136,6 +137,7 @@ export default function TestGamesPage() {
         </div>
       </main>
 
+      <TestFooter />
       <TestStyles />
     </div>
   )

@@ -9,6 +9,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import TestHeader from '@/components/TestHeader'
 import { TestStyles, Cover, Skeleton, type Novel } from '@/components/TestUI'
+import TestFooter from '@/components/TestFooter'
 import { useAuth } from '@/lib/auth-context'
 import { matchesSearch } from '@/lib/search'
 import { track } from '@/lib/analytics'
@@ -247,6 +248,7 @@ export default function TestRecommendPage() {
         )}
       </main>
 
+      <TestFooter />
       <TestStyles />
     </div>
   )

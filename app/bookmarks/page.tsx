@@ -10,6 +10,7 @@ import { getBookmarks, serverToggleBookmark, toggleBookmark, type NovelMeta } fr
 import { useAuth } from '@/lib/auth-context'
 import TestHeader from '@/components/TestHeader'
 import { TestStyles, Cover, Skeleton, type Novel } from '@/components/TestUI'
+import TestFooter from '@/components/TestFooter'
 
 const toNovel = (b: NovelMeta): Novel => ({
   slug: b.slug, title: b.title, author: b.author, total_chapters: b.total_chapters, genres: b.genres ?? [], cover_url: b.cover_url,
@@ -92,6 +93,7 @@ export default function TestBookmarksPage() {
         )}
       </main>
 
+      <TestFooter />
       <TestStyles />
     </div>
   )

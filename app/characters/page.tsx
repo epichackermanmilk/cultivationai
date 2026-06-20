@@ -8,6 +8,7 @@ import { FEATURED_CHARACTERS } from '@/lib/featured-characters'
 import { coverSrc } from '@/lib/cover'
 import TestHeader from '@/components/TestHeader'
 import { TestStyles } from '@/components/TestUI'
+import TestFooter from '@/components/TestFooter'
 
 const NOVEL_NAMES: Record<string, string> = {
   'reverend-insanity': 'Reverend Insanity', 'renegade-immortal': 'Renegade Immortal',
@@ -106,6 +107,7 @@ export default async function TestCharactersPage() {
         </div>
       </main>
 
+      <TestFooter />
       <TestStyles />
     </div>
   )

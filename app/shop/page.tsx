@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import TestHeader from '@/components/TestHeader'
 import { TestStyles } from '@/components/TestUI'
+import TestFooter from '@/components/TestFooter'
 import { useAuth } from '@/lib/auth-context'
 import { track } from '@/lib/analytics'
 
@@ -215,6 +216,7 @@ export default function TestShopPage() {
         )}
       </main>
 
+      <TestFooter />
       <TestStyles />
     </div>
   )

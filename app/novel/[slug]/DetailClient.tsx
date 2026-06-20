@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { coverSrc } from '@/lib/cover'
 import NovelSocial from '@/components/NovelSocial'
 import EpubDownload from '@/components/EpubDownload'
+import TestFooter from '@/components/TestFooter'
 import { track, trackNovelClick } from '@/lib/analytics'
 import { useAuth } from '@/lib/auth-context'
 import { ensureServerSync, serverToggleBookmark, getBookmarkedSlugs, toggleBookmark, type NovelMeta } from '@/lib/bookmarks'
@@ -291,6 +292,8 @@ export default function DetailClient({ meta }: { meta: Meta }) {
         {/* Ratings + comments */}
         <NovelSocial slug={meta.slug} />
       </main>
+
+      <TestFooter />
 
       <style jsx global>{`
         .tnld-glass { background: rgba(10,8,18,0.6); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255,255,255,0.07); }

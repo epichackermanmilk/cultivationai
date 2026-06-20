@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation'
 import { coverSrc } from '@/lib/cover'
 import TestHeader from '@/components/TestHeader'
 import { TestStyles, Cover, Skeleton, useDominantColor, rgba, type Novel } from '@/components/TestUI'
+import TestFooter from '@/components/TestFooter'
 import { trackNovelClick } from '@/lib/analytics'
 
 // ── Announcements feed ────────────────────────────────────────────────────────────
@@ -317,6 +318,7 @@ export default function TestNewLibrary() {
         </section>
       </main>
 
+      <TestFooter />
       <TestStyles />
     </div>
   )
