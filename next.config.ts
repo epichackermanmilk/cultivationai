@@ -50,34 +50,53 @@ const nextConfig: NextConfig = {
     ]
   },
 
-  // Security headers applied to all routes
+  // Security headers
   async headers() {
+    // The ad sandbox (/api/ad-frame) gets its OWN loose CSP: it's an isolated iframe
+    // containing only the third-party ad, and ad networks load creatives/trackers from
+    // many rotating domains that can't be enumerated. It must be framable same-origin.
+    const adFrameCsp = [
+      "default-src 'self' https: data: blob:",
+      "script-src 'unsafe-inline' 'unsafe-eval' https:",
+      "style-src 'unsafe-inline' https:",
+      "img-src https: data: blob:",
+      "frame-src https:",
+      "connect-src https:",
+    ].join('; ')
+
+    const strictCsp = [
+      "default-src 'self'",
+      // Next.js requires unsafe-eval in dev; Google Analytics/AdSense + Cloudflare RUM
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://pagead2.googlesyndication.com https://adservice.google.com https://www.google-analytics.com https://js.stripe.com https://static.cloudflareinsights.com",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https:",
+      // Analytics, AdSense, Supabase, Stripe, Cloudflare RUM
+      "connect-src 'self' https://*.supabase.co https://api.openai.com https://region1.google-analytics.com https://www.google-analytics.com https://stats.g.doubleclick.net https://pagead2.googlesyndication.com https://api.stripe.com https://cloudflareinsights.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      // AdSense iframes + our own same-origin ad-frame sandbox
+      "frame-src 'self' https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://js.stripe.com",
+      "frame-ancestors 'none'",
+      "worker-src blob:",
+    ].join('; ')
+
     return [
       {
-        source: '/(.*)',
+        source: '/api/ad-frame',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options',        value: 'SAMEORIGIN' },
+          { key: 'Content-Security-Policy', value: adFrameCsp },
+        ],
+      },
+      {
+        // Everything except the ad sandbox gets the strict policy.
+        source: '/((?!api/ad-frame).*)',
         headers: [
           { key: 'X-Content-Type-Options',  value: 'nosniff' },
           { key: 'X-Frame-Options',         value: 'DENY' },
           { key: 'Referrer-Policy',         value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy',      value: 'camera=(), microphone=(), geolocation=()' },
-          {
-            key:   'Content-Security-Policy',
-            value: [
-              "default-src 'self'",
-              // Next.js requires unsafe-eval in dev; Google Analytics/AdSense require external scripts
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://pagead2.googlesyndication.com https://adservice.google.com https://www.google-analytics.com https://js.stripe.com",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https:",
-              // Analytics, AdSense, Supabase, Stripe
-              "connect-src 'self' https://*.supabase.co https://api.openai.com https://region1.google-analytics.com https://www.google-analytics.com https://stats.g.doubleclick.net https://pagead2.googlesyndication.com https://api.stripe.com",
-              "font-src 'self' https://fonts.gstatic.com",
-              // AdSense serves ads in iframes
-              "frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://js.stripe.com",
-              "frame-ancestors 'none'",
-              // AdSense requires sandbox workers
-              "worker-src blob:",
-            ].join('; '),
-          },
+          { key: 'Content-Security-Policy',  value: strictCsp },
         ],
       },
     ]
