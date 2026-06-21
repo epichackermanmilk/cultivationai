@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/theme-context";
@@ -43,9 +43,24 @@ export const metadata: Metadata = {
     title: "NovelCodex — AI companion for web novels",
     description: SITE_DESC,
   },
+  icons: {
+    icon: "/MobileAppIcon.png",
+    shortcut: "/MobileAppIcon.png",
+    apple: "/MobileAppIcon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "NovelCodex",
+    statusBarStyle: "black-translucent",
+  },
   other: {
     "google-adsense-account": "ca-pub-1350938260860067",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#07060d",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({
@@ -131,7 +146,7 @@ export default function RootLayout({
                     "@type": "SearchAction",
                     target: {
                       "@type": "EntryPoint",
-                      urlTemplate: `${SITE_URL}/library?q={search_term_string}`,
+                      urlTemplate: `${SITE_URL}/browse?q={search_term_string}`,
                     },
                     "query-input": "required name=search_term_string",
                   },

@@ -1,23 +1,14 @@
 'use client'
 
-// A single Adsterra "Banner" ad unit. Adsterra's snippet relies on a GLOBAL
-// `atOptions`, so multiple banners on one page would clobber each other — we isolate
-// each in its own sandboxed <iframe> via srcDoc. Empty key → labelled placeholder.
-
-import { useMemo } from 'react'
+// A single Adsterra "Banner" unit. We load it via a real same-origin iframe
+// (/api/ad-frame) rather than srcDoc: Adsterra's invoke.js needs a normally-navigated
+// document (with an origin + referrer) for its script load and document.write to work.
+// Each banner gets its own frame, so the global `atOptions` never clashes between units.
+// Empty key → labelled placeholder.
 
 export default function AdsterraBanner({ adKey, width, height, className }: {
   adKey: string; width: number; height: number; className?: string
 }) {
-  const srcDoc = useMemo(() => (
-    `<!doctype html><html><head><meta charset="utf-8">` +
-    `<style>html,body{margin:0;padding:0;overflow:hidden;background:transparent}</style></head>` +
-    `<body><script type="text/javascript">atOptions=` +
-    `{'key':'${adKey}','format':'iframe','height':${height},'width':${width},'params':{}};` +
-    `</script><script type="text/javascript" src="//www.highperformanceformat.com/${adKey}/invoke.js"></script>` +
-    `</body></html>`
-  ), [adKey, width, height])
-
   if (!adKey) {
     return (
       <div className={className}>
@@ -26,10 +17,10 @@ export default function AdsterraBanner({ adKey, width, height, className }: {
       </div>
     )
   }
+  const src = `/api/ad-frame?key=${adKey}&w=${width}&h=${height}`
   return (
     <div className={className}>
-      <iframe srcDoc={srcDoc} width={width} height={height} scrolling="no" title="advertisement"
-        sandbox="allow-scripts allow-same-origin allow-popups"
+      <iframe src={src} width={width} height={height} scrolling="no" title="advertisement"
         style={{ border: 0, display: 'block', margin: '0 auto', maxWidth: '100%' }} />
     </div>
   )

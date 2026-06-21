@@ -91,3 +91,9 @@ body {
   from { transform: translateY(-50%); }
   to   { transform: translateY(0); }
 }
+
+/* Mobile bottom-nav clearance: keep page footers/content above the fixed tab bar
+   (rendered <md). The bar itself is position:fixed, so this padding reserves space. */
+@media (max-width: 767px) {
+  body { padding-bottom: calc(3.5rem + env(safe-area-inset-bottom)); }
+}
