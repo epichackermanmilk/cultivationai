@@ -83,6 +83,16 @@ export function middleware(req: NextRequest) {
     return res
   }
 
+  // Ad sandbox iframe — embedded by our own pages, so it must be framable
+  // same-origin (the blanket X-Frame-Options: DENY below would block it). Not
+  // rate-limited: ad frames load on every chapter/game view.
+  if (path.startsWith('/api/ad-frame')) {
+    const res = NextResponse.next()
+    res.headers.set('X-Content-Type-Options', 'nosniff')
+    res.headers.set('X-Frame-Options', 'SAMEORIGIN')
+    return res
+  }
+
   // Rate limit
   for (const route of ROUTES) {
     if (route.test(path)) {
