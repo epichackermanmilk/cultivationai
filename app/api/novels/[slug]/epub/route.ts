@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 import { getNovelMeta, fetchEpub } from '@/lib/vps'
-import { lockThreshold, EPUB_COST, EPUB_WINDOW_MS, EPUB_HOURLY_FREE, EPUB_HOURLY_SUB } from '@/lib/locks'
+import { lockThreshold, EPUB_COST, EPUB_WINDOW_MS, EPUB_HOURLY_FREE, EPUB_HOURLY_SUB, EPUB_MAX_CHAPTERS } from '@/lib/locks'
 
 function admin() {
   return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!, {
@@ -46,9 +46,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
   const reqBody = await req.json().catch(() => ({})) as { from?: number; to?: number }
   const from = clamp(Math.floor(reqBody.from ?? 1), 1, maxReadable)
   const to = clamp(Math.floor(reqBody.to ?? maxReadable), from, maxReadable)
-  const nums: number[] = []
+  let nums: number[] = []
   for (let n = from; n <= to; n++) if (isReadable(n)) nums.push(n)
   if (!nums.length) return NextResponse.json({ error: 'No readable chapters in that range' }, { status: 400 })
+  // Hard cap: at most EPUB_MAX_CHAPTERS per download (keeps big novels worth multiple
+  // downloads instead of one free dump). Keep the earliest chapters in the range.
+  if (nums.length > EPUB_MAX_CHAPTERS) nums = nums.slice(0, EPUB_MAX_CHAPTERS)
+  const toActual = nums[nums.length - 1]
 
   // ── Rate limit: per-hour download count (graceful if the table isn't created yet) ──
   const hourlyCap = subscribed ? EPUB_HOURLY_SUB : EPUB_HOURLY_FREE
@@ -61,7 +65,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
   } catch { /* table missing — skip limit until SQL is run */ }
 
   // Build the EPUB first so we never charge for a failed export.
-  const epub = await fetchEpub(slug, from, to, nums)
+  const epub = await fetchEpub(slug, from, toActual, nums)
   if (!epub) return NextResponse.json({ error: 'Could not build EPUB' }, { status: 502 })
 
   // Charge non-subscribers.
@@ -73,7 +77,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
     spent = EPUB_COST
   }
 
-  try { await sb.from('epub_downloads').insert({ user_id: user.id, slug, from_chapter: from, to_chapter: to, tokens_spent: spent }) } catch { /* non-fatal */ }
+  try { await sb.from('epub_downloads').insert({ user_id: user.id, slug, from_chapter: from, to_chapter: toActual, tokens_spent: spent }) } catch { /* non-fatal */ }
 
   return new NextResponse(epub.buf, {
     status: 200,

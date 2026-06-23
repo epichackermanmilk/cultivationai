@@ -6,7 +6,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
-import { EPUB_COST } from '@/lib/locks'
+import { EPUB_COST, EPUB_MAX_CHAPTERS } from '@/lib/locks'
 import { track } from '@/lib/analytics'
 
 interface Access { total: number; lockThreshold: number; subscribed: boolean; unlocked: number[] }
@@ -30,6 +30,9 @@ export default function EpubDownload({ slug, novelTitle }: { slug: string; novel
   if (acc) for (let n = Math.max(1, from); n <= Math.min(to, maxReadable); n++) {
     if (acc.subscribed || n <= acc.lockThreshold || unlockedSet.has(n)) count++
   }
+  // Hard cap: at most EPUB_MAX_CHAPTERS go into a single EPUB.
+  const included = Math.min(count, EPUB_MAX_CHAPTERS)
+  const capped = count > EPUB_MAX_CHAPTERS
 
   async function openPopup() {
     setOpen(true); setErr(null); setLoadingAcc(true)
@@ -92,7 +95,8 @@ export default function EpubDownload({ slug, novelTitle }: { slug: string; novel
                   <label className="text-xs text-white/50">to</label>
                   <input type="number" min={1} max={maxReadable} value={to} onChange={e => setTo(Math.max(1, Math.min(maxReadable, Number(e.target.value) || 1)))} className={input} />
                 </div>
-                <p className="mt-2 text-xs text-white/50">{count.toLocaleString()} chapter{count !== 1 ? 's' : ''} · {acc?.subscribed ? <span className="font-semibold text-emerald-400">Free (subscriber)</span> : <span className="font-semibold" style={{ color: 'rgb(var(--v))' }}>{EPUB_COST} tokens</span>}</p>
+                <p className="mt-2 text-xs text-white/50">{included.toLocaleString()} chapter{included !== 1 ? 's' : ''} · {acc?.subscribed ? <span className="font-semibold text-emerald-400">Free (subscriber)</span> : <span className="font-semibold" style={{ color: 'rgb(var(--v))' }}>{EPUB_COST} tokens</span>}</p>
+                {capped && <p className="mt-1 text-[11px] text-amber-400/90">Max {EPUB_MAX_CHAPTERS} chapters per download — the first {EPUB_MAX_CHAPTERS} in your range will be included. Download again for more.</p>}
                 <p className="mt-1 text-[11px] text-white/35">{acc?.subscribed ? 'Up to 20 downloads per hour.' : `Up to 5 downloads per hour. Unlock more chapters anytime, then download again (${EPUB_COST} tokens).`}</p>
                 {err && <p className="mt-2 text-xs text-red-400">{err}{err.includes('tokens') && <Link href="/shop" className="ml-1 underline">Shop →</Link>}</p>}
                 <div className="mt-5 flex gap-2">
