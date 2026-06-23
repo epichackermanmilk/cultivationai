@@ -6,7 +6,8 @@
 import { EXTENSION } from '@/lib/extension'
 import { track } from '@/lib/analytics'
 
-export default function ExtensionCard() {
+export default function ExtensionCard({ preview = false }: { preview?: boolean }) {
+  if (!preview && !EXTENSION.live) return null
   return (
     <section className="mt-6">
       <h2 className="mb-3 text-lg font-extrabold tracking-tight">Tools</h2>

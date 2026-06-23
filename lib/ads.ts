@@ -19,6 +19,12 @@ export const AD_NETWORK: AdNetwork = 'adsterra'
 
 export type Placement = 'readerTop' | 'readerBottom' | 'gameBanner'
 
+// While third-party fill is ~0 (brand-new zones), fill every ad slot with our own
+// house ad (the Chrome extension promo) instead of a blank box. Switch to 'network'
+// once the ad network is reliably serving paid ads.
+export type AdMode = 'house' | 'network'
+export const AD_MODE: AdMode = 'house'
+
 // ── AdSense ──────────────────────────────────────────────────────────────────────
 // The publisher client is loaded globally in app/layout.tsx. Create *display* ad
 // units (Ads → By ad unit → Display ads) and paste each unit's "data-ad-slot".

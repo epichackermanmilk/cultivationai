@@ -18,6 +18,7 @@ import { coverSrc } from '@/lib/cover'
 import TestHeader from '@/components/TestHeader'
 import { TestStyles, Cover, Skeleton, useDominantColor, rgba, type Novel } from '@/components/TestUI'
 import TestFooter from '@/components/TestFooter'
+import ExtensionCard from '@/components/ExtensionCard'
 import { trackNovelClick } from '@/lib/analytics'
 
 // ── Announcements feed ────────────────────────────────────────────────────────────
@@ -309,6 +310,9 @@ export default function TestNewLibrary() {
             </div>
           </div>
         </div>
+
+        {/* ── Tools (Chrome extension cross-promo) ──────────────────────────── */}
+        <ExtensionCard />
 
         {/* ── Announcements ─────────────────────────────────────────────────── */}
         <section className="mt-6">

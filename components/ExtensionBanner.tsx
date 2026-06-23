@@ -14,9 +14,11 @@ export default function ExtensionBanner({ variant = 'site', preview = false }: {
 
   useEffect(() => {
     if (preview) return
+    if (!EXTENSION.live) return
     try { if (localStorage.getItem(key) !== '1') setShow(true) } catch { setShow(true) }
   }, [preview])
 
+  if (!preview && !EXTENSION.live) return null
   if (!show) return null
 
   const dismiss = () => {
