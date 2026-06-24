@@ -87,7 +87,10 @@ export async function getChapter(slug: string, n: number): Promise<ChapterConten
 // novel hasn't propagated into the cached /novels index yet.
 export async function getNovelMeta(slug: string): Promise<NovelMeta | null> {
   try {
-    const res = await fetch(`${BASE}/novels/${slug}/meta`, { headers, next: { revalidate: 60 } })
+    // no-store: a deleted/blacklisted novel must 404 immediately. ISR caching here
+    // served stale 200s for removed novels (duplicate-content/soft-404 risk). The
+    // VPS /meta is a cheap single-file read, so per-request is fine.
+    const res = await fetch(`${BASE}/novels/${slug}/meta`, { headers, cache: 'no-store' })
     if (!res.ok) return null
     const n = await res.json() as NovelMeta
     return { ...n, genres: cleanGenres(n.genres) }
