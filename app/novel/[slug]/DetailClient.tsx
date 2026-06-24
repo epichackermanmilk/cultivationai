@@ -106,8 +106,16 @@ export default function DetailClient({ meta }: { meta: Meta }) {
     fetch('/api/novels/all').then(r => r.json()).then((all: (SimNovel & { locked?: boolean })[]) => {
       const mine = new Set((meta.genres ?? []).map(g => g.toLowerCase()))
       if (!mine.size) return
-      const scored = all.filter(n => n.slug !== meta.slug && !n.locked)
-        .map(n => ({ ...n, sim: (n.genres ?? []).filter(g => mine.has(g.toLowerCase())).length / mine.size }))
+      // Every novel is readable now, so match across the WHOLE catalogue (not just the
+      // featured few). Jaccard over genre sets favours novels with a *similar* genre
+      // mix (academy↔academy) rather than just novels that carry many genres.
+      const scored = all.filter(n => n.slug !== meta.slug)
+        .map(n => {
+          const theirs = (n.genres ?? []).map(g => g.toLowerCase())
+          const inter = theirs.filter(g => mine.has(g)).length
+          const union = new Set([...mine, ...theirs]).size
+          return { ...n, sim: union ? inter / union : 0 }
+        })
         .filter(n => n.sim > 0).sort((a, b) => b.sim - a.sim).slice(0, 6)
       setSimilar(scored as SimNovel[])
     }).catch(() => {})

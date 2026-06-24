@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/lib/theme-context";
 import { AuthProvider }  from "@/lib/auth-context";
 import MobileNav        from "@/components/MobileNav";
 import ExtensionBanner  from "@/components/ExtensionBanner";
+import FeedbackWidget   from "@/components/FeedbackWidget";
 import CookieConsent    from "@/components/CookieConsent";
 import MobileAuthGate   from "@/components/MobileAuthGate";
 import NativeAuthBridge from "@/components/NativeAuthBridge";
@@ -21,27 +22,29 @@ const geistMono = Geist_Mono({
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://novelcodex.org";
-const SITE_DESC = "Your AI reading companion for xianxia, cultivation, and wuxia web novels. Ask anything about any story — characters, plot, lore, cultivation systems — and get instant, accurate answers.";
+const SITE_TITLE = "NovelCodex — Read Web Novels Online Free";
+const SITE_DESC = "Read thousands of cultivation, xianxia, wuxia and fantasy web novels online — free. Track your library, get smart recommendations, download EPUBs, and dive deeper with optional AI chat and character roleplay.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "NovelCodex — AI companion for web novels",
+    default: SITE_TITLE,
     template: "%s — NovelCodex",
   },
   description: SITE_DESC,
   applicationName: "NovelCodex",
+  keywords: ["web novels", "read web novels", "light novels", "xianxia", "cultivation novels", "wuxia", "novel reader", "free web novels", "manhua", "translated novels"],
   openGraph: {
     type: "website",
     siteName: "NovelCodex",
-    title: "NovelCodex — AI companion for web novels",
+    title: SITE_TITLE,
     description: SITE_DESC,
     url: SITE_URL,
     // og image is supplied automatically by app/opengraph-image.tsx
   },
   twitter: {
     card: "summary_large_image",
-    title: "NovelCodex — AI companion for web novels",
+    title: SITE_TITLE,
     description: SITE_DESC,
   },
   icons: {
@@ -160,6 +163,7 @@ export default function RootLayout({
           <AuthProvider>
             <ExtensionBanner variant="site" />
             {children}
+            <FeedbackWidget />
             <MobileNav />
             <CookieConsent />
             <MobileAuthGate />

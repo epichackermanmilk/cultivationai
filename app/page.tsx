@@ -168,7 +168,16 @@ export default function TestNewLibrary() {
     return [...byChapters].sort((a, b) => rank(a) - rank(b)).slice(0, 20)
   }, [byChapters])
 
-  const trending = useMemo(() => mapSlugs(popSlugs.day, byRecent).slice(0, 18), [popSlugs.day, byRecent, mapSlugs])
+  // "Fake it til you make it": on slow days (no real day-reads yet) fill Trending with
+  // a stable random sample of legit-looking novels (has cover, 50+ chapters) so the
+  // shelf never looks empty. Shuffled once per load; replaced by real data when it exists.
+  const randomPool = useMemo(() => {
+    const pool = byChapters.filter(n => n.cover_url && (n.total_chapters || 0) >= 50 && !n.coming_soon)
+    const arr = [...pool]
+    for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[arr[i], arr[j]] = [arr[j], arr[i]] }
+    return arr.slice(0, 18)
+  }, [byChapters])
+  const trending = useMemo(() => mapSlugs(popSlugs.day, randomPool).slice(0, 18), [popSlugs.day, randomPool, mapSlugs])
   const LU_PER_PAGE = 10                     // 5 rows × 2 cols
   const latestPool = useMemo(() => byRecent.slice(0, LU_PER_PAGE * 5), [byRecent]) // 5 pages
   const luPages = Math.max(1, Math.ceil(latestPool.length / LU_PER_PAGE))

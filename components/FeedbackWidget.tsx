@@ -1,16 +1,24 @@
 'use client'
 
+// Floating, draggable feedback bubble (global). Sends real submissions to /api/support
+// (email via Resend) — bug reports, suggestions, novel/character requests. Themed to
+// the dark/purple redesign. Hidden inside the full-screen reader to avoid covering text.
+
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { usePathname } from 'next/navigation'
+import { track } from '@/lib/analytics'
 
 type FeedbackType = 'bug' | 'suggestion' | 'novel_request' | 'character_request'
 
 const LABELS: Record<FeedbackType, string> = {
-  bug:               '🐛 Bug Report',
-  suggestion:        '💡 Suggestion',
-  novel_request:     '📚 Request a Novel',
-  character_request: '🎭 Request a Character',
+  bug:               '🐛 Bug',
+  suggestion:        '💡 Idea',
+  novel_request:     '📚 Novel',
+  character_request: '🎭 Character',
 }
-
+const CATEGORY: Record<FeedbackType, string> = {
+  bug: 'Bug report', suggestion: 'Feature request', novel_request: 'Novel request', character_request: 'Character request',
+}
 const PLACEHOLDERS: Record<FeedbackType, string> = {
   bug:               'Describe what happened and how to reproduce it…',
   suggestion:        'What feature or improvement would you like to see?',
@@ -19,67 +27,48 @@ const PLACEHOLDERS: Record<FeedbackType, string> = {
 }
 
 export default function FeedbackWidget() {
+  const pathname = usePathname()
   const [open,    setOpen]    = useState(false)
   const [type,    setType]    = useState<FeedbackType>('suggestion')
   const [text,    setText]    = useState('')
   const [email,   setEmail]   = useState('')
   const [loading, setLoading] = useState(false)
   const [sent,    setSent]    = useState(false)
+  const [err,     setErr]     = useState<string | null>(null)
 
-  // ── Draggable bubble ──────────────────────────────────────────────────────
   const [pos,     setPos]     = useState<{ x: number; y: number } | null>(null)
   const dragging  = useRef(false)
   const dragStart = useRef({ mx: 0, my: 0, bx: 0, by: 0 })
   const btnRef    = useRef<HTMLButtonElement>(null)
 
-  // Shared drag logic for both mouse and touch (touch = mobile, the case that
-  // was missing — so the bubble can be dragged off the multi-chat send button).
   const beginDrag = useCallback((startX: number, startY: number, isTouch: boolean) => {
     const rect = btnRef.current!.getBoundingClientRect()
     dragging.current  = true
     dragStart.current = { mx: startX, my: startY, bx: rect.left, by: rect.top }
-
     const move = (cx: number, cy: number) => {
       const dx = cx - dragStart.current.mx
       const dy = cy - dragStart.current.my
-      const TOP_LIMIT = 100   // keep below the sticky header
-      const nx = Math.max(0, Math.min(window.innerWidth  - 44, dragStart.current.bx + dx))
-      const ny = Math.max(TOP_LIMIT, Math.min(window.innerHeight - 44, dragStart.current.by + dy))
+      const nx = Math.max(0, Math.min(window.innerWidth  - 48, dragStart.current.bx + dx))
+      const ny = Math.max(80, Math.min(window.innerHeight - 48, dragStart.current.by + dy))
       setPos({ x: nx, y: ny })
     }
     const finish = (cx: number, cy: number) => {
       const totalMove = Math.abs(cx - dragStart.current.mx) + Math.abs(cy - dragStart.current.my)
       dragging.current = false
-      document.removeEventListener('mousemove', mMove)
-      document.removeEventListener('mouseup',   mUp)
-      document.removeEventListener('touchmove', tMove)
-      document.removeEventListener('touchend',  tEnd)
-      if (totalMove < 8) setOpen(true)   // treat as a tap, not a drag
+      document.removeEventListener('mousemove', mMove); document.removeEventListener('mouseup', mUp)
+      document.removeEventListener('touchmove', tMove); document.removeEventListener('touchend', tEnd)
+      if (totalMove < 8) setOpen(true)
     }
     const mMove = (ev: MouseEvent) => { if (dragging.current) move(ev.clientX, ev.clientY) }
     const mUp   = (ev: MouseEvent) => finish(ev.clientX, ev.clientY)
     const tMove = (ev: TouchEvent) => { const t = ev.touches[0]; if (dragging.current && t) { ev.preventDefault(); move(t.clientX, t.clientY) } }
     const tEnd  = (ev: TouchEvent) => { const t = ev.changedTouches[0]; finish(t?.clientX ?? dragStart.current.mx, t?.clientY ?? dragStart.current.my) }
-
-    if (isTouch) {
-      document.addEventListener('touchmove', tMove, { passive: false })
-      document.addEventListener('touchend',  tEnd)
-    } else {
-      document.addEventListener('mousemove', mMove)
-      document.addEventListener('mouseup',   mUp)
-    }
+    if (isTouch) { document.addEventListener('touchmove', tMove, { passive: false }); document.addEventListener('touchend', tEnd) }
+    else { document.addEventListener('mousemove', mMove); document.addEventListener('mouseup', mUp) }
   }, [])
 
-  const onMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button !== 0) return
-    e.preventDefault()
-    beginDrag(e.clientX, e.clientY, false)
-  }, [beginDrag])
-
-  const onTouchStart = useCallback((e: React.TouchEvent) => {
-    const t = e.touches[0]
-    if (t) beginDrag(t.clientX, t.clientY, true)
-  }, [beginDrag])
+  const onMouseDown = useCallback((e: React.MouseEvent) => { if (e.button !== 0) return; e.preventDefault(); beginDrag(e.clientX, e.clientY, false) }, [beginDrag])
+  const onTouchStart = useCallback((e: React.TouchEvent) => { const t = e.touches[0]; if (t) beginDrag(t.clientX, t.clientY, true) }, [beginDrag])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
@@ -87,116 +76,78 @@ export default function FeedbackWidget() {
     return () => window.removeEventListener('keydown', handler)
   }, [])
 
-  const reset = () => { setText(''); setEmail(''); setSent(false) }
+  // Don't cover the reading surface.
+  if (pathname?.startsWith('/novel/') && pathname.includes('/read/')) return null
 
+  const reset = () => { setText(''); setEmail(''); setSent(false); setErr(null) }
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
 
   const submit = async () => {
-    if (!text.trim() || !emailValid) return
-    setLoading(true)
-    // Store submission locally and show success
+    if (!text.trim() || !emailValid || loading) return
+    setLoading(true); setErr(null)
     try {
-      const submissions = JSON.parse(localStorage.getItem('nc_feedback') ?? '[]')
-      submissions.push({ type, text: text.trim(), email: email.trim(), at: new Date().toISOString() })
-      localStorage.setItem('nc_feedback', JSON.stringify(submissions.slice(-50)))
-    } catch { /* ignore */ }
-    await new Promise(r => setTimeout(r, 500))
-    setLoading(false)
-    setSent(true)
-    setTimeout(() => { setOpen(false); reset() }, 2500)
+      const r = await fetch('/api/support', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), category: CATEGORY[type], subject: `Feedback — ${CATEGORY[type]}`, message: text.trim() }),
+      })
+      if (!r.ok) { const d = await r.json().catch(() => ({})); setErr((d as { error?: string }).error ?? 'Could not send — try again.'); return }
+      setSent(true); track('feedback_sent', { type })
+      setTimeout(() => { setOpen(false); reset() }, 2200)
+    } catch { setErr('Network error — try again.') } finally { setLoading(false) }
   }
 
-  // Build positional style: default bottom-right, override if dragged
   const bubbleStyle: React.CSSProperties = pos
-    ? { position: 'fixed', left: pos.x, top: pos.y, bottom: 'auto', right: 'auto', background: 'var(--nc-amber)', color: '#000', cursor: 'grab' }
-    : { background: 'var(--nc-amber)', color: '#000', cursor: 'grab' }
+    ? { position: 'fixed', left: pos.x, top: pos.y, bottom: 'auto', right: 'auto' }
+    : {}
+
+  const field = 'w-full rounded-xl border border-white/10 bg-black/40 p-3 text-sm text-white placeholder-white/35 outline-none transition focus:border-[rgba(var(--v),0.6)]'
 
   return (
-    <>
-      {/* Floating button */}
+    <div style={{ ['--v' as string]: '124,58,237' }}>
       <button
-        ref={btnRef}
-        onMouseDown={onMouseDown}
-        onTouchStart={onTouchStart}
-        className={`z-40 flex h-11 w-11 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-110 active:scale-95 select-none ${pos ? '' : 'fixed right-4 sm:right-5 bottom-24 sm:bottom-5'}`}
-        style={{ ...bubbleStyle, touchAction: 'none' }}
-        title="Feedback / Report / Request (drag to move)"
-        aria-label="Open feedback"
+        ref={btnRef} onMouseDown={onMouseDown} onTouchStart={onTouchStart}
+        className={`z-[60] flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:scale-110 active:scale-95 select-none ${pos ? '' : 'fixed bottom-20 right-4 sm:bottom-5 sm:right-5'}`}
+        style={{ ...bubbleStyle, background: 'rgb(var(--v))', boxShadow: '0 6px 24px rgba(124,58,237,0.45)', cursor: 'grab', touchAction: 'none' }}
+        title="Feedback · report a bug · request a novel (drag to move)" aria-label="Open feedback"
       >
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
         </svg>
       </button>
 
-      {/* Modal */}
       {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-end p-5 sm:items-center sm:justify-center"
-          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-          onClick={e => { if (e.target === e.currentTarget) { setOpen(false); reset() } }}
-        >
-          <div
-            className="w-full max-w-lg rounded-2xl border border-[var(--nc-border)] p-7 shadow-2xl"
-            style={{ background: 'var(--nc-bg2)' }}
-          >
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-lg font-bold" style={{ color: 'var(--nc-text)' }}>Send Feedback</h2>
-              <button
-                onClick={() => { setOpen(false); reset() }}
-                className="text-zinc-500 hover:text-zinc-300 transition text-xl leading-none"
-              >×</button>
+        <div className="fixed inset-0 z-[70] flex items-end justify-end p-4 sm:items-center sm:justify-center"
+          style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }}
+          onClick={e => { if (e.target === e.currentTarget) { setOpen(false); reset() } }}>
+          <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#120f1e] p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-black tracking-tight text-white">Send feedback</h2>
+              <button onClick={() => { setOpen(false); reset() }} className="text-xl leading-none text-white/40 transition hover:text-white">×</button>
             </div>
 
             {sent ? (
-              <div className="py-6 text-center">
-                <div className="text-3xl mb-2">✦</div>
-                <p className="text-sm font-medium text-amber-400">Thank you!</p>
-                <p className="mt-1 text-xs text-zinc-500">Your feedback has been recorded.</p>
+              <div className="py-8 text-center">
+                <div className="mb-2 text-3xl">✦</div>
+                <p className="text-sm font-semibold" style={{ color: 'rgb(var(--v))' }}>Thank you!</p>
+                <p className="mt-1 text-xs text-white/45">Your message was sent — we&apos;ll follow up by email.</p>
               </div>
             ) : (
               <>
-                {/* Type selector */}
-                <div className="mb-4 flex gap-1">
+                <div className="mb-3 grid grid-cols-4 gap-1.5">
                   {(Object.keys(LABELS) as FeedbackType[]).map(t => (
-                    <button
-                      key={t}
-                      onClick={() => setType(t)}
-                      className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition ${
-                        type === t ? 'bg-amber-500 text-black' : 'text-zinc-400 hover:text-zinc-200'
-                      }`}
-                      style={type !== t ? { background: 'var(--nc-bg3)' } : {}}
-                    >
-                      {LABELS[t].split(' ')[0]}
-                      <span className="block text-xs font-normal">{LABELS[t].split(' ').slice(1).join(' ')}</span>
+                    <button key={t} onClick={() => setType(t)}
+                      className={`rounded-lg py-2 text-xs font-semibold transition ${type === t ? 'text-white' : 'text-white/55 hover:text-white'}`}
+                      style={{ background: type === t ? 'rgb(var(--v))' : 'rgba(255,255,255,0.05)' }}>
+                      {LABELS[t]}
                     </button>
                   ))}
                 </div>
-
-                <textarea
-                  value={text}
-                  onChange={e => setText(e.target.value)}
-                  placeholder={PLACEHOLDERS[type]}
-                  rows={6}
-                  className="mb-3 w-full resize-none rounded-xl border border-[var(--nc-border)] p-3.5 text-base placeholder-zinc-500 outline-none focus:border-amber-500 transition"
-                  style={{ background: 'var(--nc-bg3)', color: 'var(--nc-text)' }}
-                />
-
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="Your email (required — so we can follow up)"
-                  required
-                  className="mb-1 w-full rounded-xl border border-[var(--nc-border)] px-3 py-2 text-sm placeholder-zinc-500 outline-none focus:border-amber-500 transition"
-                  style={{ background: 'var(--nc-bg3)', color: 'var(--nc-text)' }}
-                />
-                <p className="mb-3 px-1 text-[11px] text-zinc-500">We&apos;ll only use this to follow up on your message.</p>
-
-                <button
-                  onClick={submit}
-                  disabled={loading || !text.trim() || !emailValid}
-                  className="w-full rounded-xl bg-amber-500 py-2.5 text-sm font-semibold text-black hover:bg-amber-400 transition disabled:opacity-50"
-                >
+                <textarea value={text} onChange={e => setText(e.target.value)} placeholder={PLACEHOLDERS[type]} rows={5} className={`${field} resize-none`} />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Your email (so we can follow up)" className={`${field} mt-2`} />
+                {err && <p className="mt-2 text-xs text-red-400">{err}</p>}
+                <button onClick={submit} disabled={loading || !text.trim() || !emailValid}
+                  className="mt-3 w-full rounded-xl py-2.5 text-sm font-bold text-white transition hover:brightness-110 disabled:opacity-50"
+                  style={{ background: 'rgb(var(--v))' }}>
                   {loading ? 'Sending…' : 'Send'}
                 </button>
               </>
@@ -204,6 +155,6 @@ export default function FeedbackWidget() {
           </div>
         </div>
       )}
-    </>
+    </div>
   )
 }

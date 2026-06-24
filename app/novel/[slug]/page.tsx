@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { getNovelMeta } from '@/lib/vps'
 import DetailClient from './DetailClient'
-import Link from 'next/link'
 
 interface Props { params: Promise<{ slug: string }> }
 
@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   try {
     const novel = await getNovelMeta(slug)
-    if (!novel) return { title: 'NovelCodex' }
+    if (!novel) return { title: 'Novel not found', robots: { index: false } }
     const desc = novel.description
       ? novel.description.slice(0, 155) + (novel.description.length > 155 ? '…' : '')
       : `Read ${novel.title} on NovelCodex. ${(novel.total_chapters ?? 0).toLocaleString()} chapters.`
@@ -29,14 +29,8 @@ export default async function NovelDetailPage({ params }: Props) {
   let meta = null
   try { meta = await getNovelMeta(slug) } catch { /* VPS unreachable */ }
 
-  if (!meta) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#07060d] text-white">
-        <p className="text-lg text-white/70">Novel not found.</p>
-        <Link href="/" className="rounded-xl px-4 py-2 text-sm font-semibold" style={{ background: 'rgb(124,58,237)' }}>← Back to library</Link>
-      </div>
-    )
-  }
+  // Real 404 for missing/removed novels (avoids Google "soft 404").
+  if (!meta) notFound()
 
   return <DetailClient meta={{
     slug:           meta.slug,

@@ -4,7 +4,7 @@ import { join } from 'node:path'
 
 // Branded social-share card used whenever a NovelCodex link is shared
 // (landing page, library, and any route that doesn't define its own).
-export const alt = 'NovelCodex — AI companion for web novels'
+export const alt = 'NovelCodex — Read Web Novels Online Free'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -38,7 +38,7 @@ export default async function OpengraphImage() {
             width: 1100,
             height: 1100,
             borderRadius: 9999,
-            background: 'radial-gradient(circle, rgba(245,158,11,0.20), rgba(245,158,11,0) 60%)',
+            background: 'radial-gradient(circle, rgba(124,58,237,0.28), rgba(124,58,237,0) 60%)',
             display: 'flex',
           }}
         />
@@ -51,7 +51,7 @@ export default async function OpengraphImage() {
               fontSize: 116,
               fontWeight: 800,
               letterSpacing: -3,
-              backgroundImage: 'linear-gradient(135deg,#fbbf24,#f59e0b,#d97706)',
+              backgroundImage: 'linear-gradient(135deg,#a78bfa,#7c3aed,#6d28d9)',
               backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
               color: 'transparent',
@@ -72,10 +72,10 @@ export default async function OpengraphImage() {
             zIndex: 1,
           }}
         >
-          Every secret, every character, every world — ask anything.
+          Thousands of cultivation &amp; fantasy web novels — read free.
         </div>
         <div style={{ display: 'flex', marginTop: 38, fontSize: 26, color: '#a1a1aa', zIndex: 1 }}>
-          AI reading companion · xianxia · cultivation · wuxia
+          Free web novel reader · xianxia · cultivation · wuxia · fantasy
         </div>
       </div>
     ),

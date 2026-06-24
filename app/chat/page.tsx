@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react'
 import SiteHeader     from '@/components/SiteHeader'
-import FeedbackWidget from '@/components/FeedbackWidget'
 import { useAuth }    from '@/lib/auth-context'
 import { matchesSearch } from '@/lib/search'
 import { coverSrc } from '@/lib/cover'
@@ -588,7 +587,6 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
-      <FeedbackWidget />
     </div>
   )
 }
