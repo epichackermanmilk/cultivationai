@@ -103,22 +103,30 @@ export default function DetailClient({ meta }: { meta: Meta }) {
     fetch(`/api/chapters/${meta.slug}`).then(r => r.json())
       .then(d => { setChapters(d.chapters ?? []); setChLoading(false) }).catch(() => setChLoading(false))
     fetch(`/api/knowledge/${meta.slug}`).then(r => r.json()).then(setCodex).catch(() => {})
-    fetch('/api/novels/all').then(r => r.json()).then((all: (SimNovel & { locked?: boolean })[]) => {
-      const mine = new Set((meta.genres ?? []).map(g => g.toLowerCase()))
-      if (!mine.size) return
-      // Every novel is readable now, so match across the WHOLE catalogue (not just the
-      // featured few). Jaccard over genre sets favours novels with a *similar* genre
-      // mix (academy↔academy) rather than just novels that carry many genres.
-      const scored = all.filter(n => n.slug !== meta.slug)
-        .map(n => {
-          const theirs = (n.genres ?? []).map(g => g.toLowerCase())
-          const inter = theirs.filter(g => mine.has(g)).length
-          const union = new Set([...mine, ...theirs]).size
-          return { ...n, sim: union ? inter / union : 0 }
-        })
-        .filter(n => n.sim > 0).sort((a, b) => b.sim - a.sim).slice(0, 6)
-      setSimilar(scored as SimNovel[])
-    }).catch(() => {})
+    ;(async () => {
+      // 1) Semantic "more like this" from the novel_meta embeddings (best quality).
+      try {
+        const r = await fetch(`/api/novels/${meta.slug}/similar`)
+        const d = await r.json() as { similar?: SimNovel[] }
+        const emb = d.similar ?? []
+        if (emb.length >= 3) { setSimilar(emb.map(n => ({ ...n, sim: 1 }))); return }
+      } catch { /* fall through to genre matching */ }
+      // 2) Fallback: Jaccard over genre sets across the whole catalogue.
+      try {
+        const all = await fetch('/api/novels/all').then(r => r.json()) as SimNovel[]
+        const mine = new Set((meta.genres ?? []).map(g => g.toLowerCase()))
+        if (!mine.size) return
+        const scored = all.filter(n => n.slug !== meta.slug)
+          .map(n => {
+            const theirs = (n.genres ?? []).map(g => g.toLowerCase())
+            const inter = theirs.filter(g => mine.has(g)).length
+            const union = new Set([...mine, ...theirs]).size
+            return { ...n, sim: union ? inter / union : 0 }
+          })
+          .filter(n => n.sim > 0).sort((a, b) => b.sim - a.sim).slice(0, 6)
+        setSimilar(scored as SimNovel[])
+      } catch { /* ignore */ }
+    })()
   }, [meta.slug, meta.genres])
 
   const chFiltered = useMemo(() => {

@@ -17,6 +17,38 @@ async function qreq(path: string, body: unknown): Promise<any> {
   return r.json()
 }
 
+// ── Novel-level similarity (collection 'novel_meta': one vector per novel) ─────
+const META_COLL = 'novel_meta'
+export interface SimNovelRow { slug: string; title: string; cover_url: string; genres: string[]; score: number }
+
+async function metaReq(path: string, body: unknown): Promise<any> {
+  const r = await fetch(`${Q}/collections/${META_COLL}${path}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  })
+  if (!r.ok) throw new Error(`qdrant meta ${path} ${r.status}`)
+  return r.json()
+}
+
+// Nearest novels to `slug` by description/genre embedding (semantic "more like this").
+export async function similarNovels(slug: string, limit = 6): Promise<SimNovelRow[]> {
+  // 1) fetch this novel's stored vector
+  const sc = await metaReq('/points/scroll', {
+    filter: { must: [{ key: 'slug', match: { value: slug } }] },
+    limit: 1, with_vector: true, with_payload: false,
+  })
+  const vec = sc.result?.points?.[0]?.vector
+  if (!Array.isArray(vec)) return []
+  // 2) nearest neighbours, excluding itself
+  const j = await metaReq('/points/search', {
+    vector: vec, limit: limit + 1, with_payload: true,
+    filter: { must_not: [{ key: 'slug', match: { value: slug } }] },
+  })
+  return (j.result ?? [])
+    .map((p: any) => ({ slug: p.payload.slug, title: p.payload.title, cover_url: p.payload.cover_url, genres: p.payload.genres ?? [], score: p.score }))
+    .filter((n: SimNovelRow) => n.slug && n.slug !== slug)
+    .slice(0, limit)
+}
+
 const bySlug = (slug: string) => ({ key: 'slug', match: { value: slug } })
 const chCeil = (ch: number) => ({ key: 'chapter_number', range: { lte: ch } })
 
