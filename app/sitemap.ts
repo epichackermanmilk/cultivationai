@@ -20,7 +20,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]
 
   try {
-    const res = await fetch(`${BASE_URL}/api/novels`, {
+    // /api/novels returns only the featured few; /api/novels/all is the full catalogue.
+    const res = await fetch(`${BASE_URL}/api/novels/all`, {
       next: { revalidate: 86400 }, // cache for 24h
     })
     if (!res.ok) return staticPages
