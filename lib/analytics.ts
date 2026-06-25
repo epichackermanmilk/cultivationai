@@ -13,6 +13,16 @@ export function track(event: string, params: Params = {}) {
   }
 }
 
+// Google Ads conversion (signups from the ad campaign). Fire on successful signup,
+// alongside the GA4 `sign_up` event. send_to = conversion action from Google Ads.
+export function trackSignupConversion() {
+  if (typeof window === 'undefined') return
+  const w = window as unknown as { gtag?: (...args: unknown[]) => void }
+  try {
+    w.gtag?.('event', 'conversion', { send_to: 'AW-18266949256/Q72ACPug38UcEIiNroZE' })
+  } catch { /* never break signup */ }
+}
+
 // ── Named helpers ─────────────────────────────────────────────────────────────
 // Consistent event names + params so GA reports stay clean. See ANALYTICS.md for
 // the full catalogue and the business question each event answers.

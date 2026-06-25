@@ -8,7 +8,7 @@ import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import { track } from '@/lib/analytics'
+import { track, trackSignupConversion } from '@/lib/analytics'
 import { TestStyles } from '@/components/TestUI'
 
 function validatePassword(pw: string): string | null {
@@ -76,6 +76,7 @@ function LoginInner() {
       const d = await r.json()
       if (!r.ok) { setError(d.error || 'Could not create account'); return }
       track('sign_up', { method: 'email' })
+      trackSignupConversion()
       await refresh()
       router.replace(returnTo)
     } catch {

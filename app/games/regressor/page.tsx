@@ -5,7 +5,6 @@ import Link        from 'next/link'
 import TestHeader from '@/components/TestHeader'
 import GameAd from '@/components/GameAd'
 import TestFooter from '@/components/TestFooter'
-import AdSlot      from '@/components/AdSlot'
 import { track }   from '@/lib/analytics'
 import { useAuth } from '@/lib/auth-context'
 
@@ -176,9 +175,7 @@ export default function RegressorPage() {
       <TestHeader />
       <GameAd />
 
-      <div className="mx-auto flex w-full max-w-6xl flex-1 gap-6 px-4 py-8">
-        <aside className="hidden xl:block w-40 shrink-0"><AdSlot variant="side" /></aside>
-        <main className="min-w-0 flex-1 max-w-3xl mx-auto">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
 
         {/* ── LOBBY ─────────────────────────────────────────────────────────── */}
         {phase === 'lobby' && (
@@ -456,9 +453,7 @@ export default function RegressorPage() {
           </div>
         )}
 
-        </main>
-        <aside className="hidden xl:block w-40 shrink-0"><AdSlot variant="side" /></aside>
-      </div>
+      </main>
       <TestFooter />
     </div>
   )

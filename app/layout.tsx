@@ -116,7 +116,7 @@ export default function RootLayout({
         crossOrigin="anonymous"
         strategy="afterInteractive"
       />
-      {/* Google Analytics */}
+      {/* Google Analytics (GA4) + Google Ads (AW) — share one gtag.js */}
       <Script
         src="https://www.googletagmanager.com/gtag/js?id=G-RN9SR0DZ6R"
         strategy="afterInteractive"
@@ -125,6 +125,7 @@ export default function RootLayout({
         {`
           gtag('js', new Date());
           gtag('config', 'G-RN9SR0DZ6R');
+          gtag('config', 'AW-18266949256');
         `}
       </Script>
       <body className="min-h-full">

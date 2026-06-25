@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '@/lib/auth-context'
-import { track } from '@/lib/analytics'
+import { track, trackSignupConversion } from '@/lib/analytics'
 
 type Step = 'email' | 'login' | 'signup'
 
@@ -116,6 +116,7 @@ export default function AuthPanel({ onClose, rightOffset = 16, topOffset = 64, f
       const d = await r.json()
       if (!r.ok) { setError(d.error || 'Could not create account'); return }
       track('sign_up', { method: 'email' })
+      trackSignupConversion()
       await refresh()
       onClose()
     } finally {
