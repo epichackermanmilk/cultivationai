@@ -70,7 +70,7 @@ export default function NovelTranslatePolicyPage() {
         </Section>
 
         <Section title="Contact">
-          <p>Questions: <a href="mailto:epichackermanmilk@gmail.com" className="underline hover:opacity-80" style={{ color: 'rgb(var(--v))' }}>epichackermanmilk@gmail.com</a></p>
+          <p>Questions: <a href="mailto:privacy@novelcodex.org" className="underline hover:opacity-80" style={{ color: 'rgb(var(--v))' }}>privacy@novelcodex.org</a></p>
         </Section>
       </div>
     </DocShell>
