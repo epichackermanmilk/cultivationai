@@ -3,40 +3,40 @@ import Link from 'next/link'
 export default function NotFound() {
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-6 text-center pb-16 sm:pb-0"
-      style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}
+      className="relative flex min-h-screen flex-col items-center justify-center px-6 pb-16 text-center text-white sm:pb-0"
+      style={{ ['--v' as string]: '124,58,237', background: '#07060d' }}
     >
-      <img src="/logo.png" alt="" className="h-20 w-20 object-contain mb-8 opacity-50" />
+      <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: 'radial-gradient(85% 50% at 50% -8%, rgba(var(--v),0.18) 0%, transparent 55%)' }} />
 
-      <p className="mb-2 text-xs font-bold uppercase tracking-widest text-amber-500/70">404</p>
-      <h1 className="mb-3 text-3xl font-bold tracking-tight text-amber-400">
-        Page not found
-      </h1>
-      <p className="mb-8 max-w-sm text-sm leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
-        This chapter doesn&apos;t exist in the Codex. The page you&apos;re looking for may have been
-        moved or removed.
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/logo.png" alt="" className="mb-8 h-20 w-20 object-contain opacity-60" />
+
+      <p className="mb-2 text-xs font-bold uppercase tracking-widest" style={{ color: 'rgb(var(--v))' }}>404</p>
+      <h1 className="mb-3 text-3xl font-black tracking-tight">Page not found</h1>
+      <p className="mb-8 max-w-sm text-sm leading-relaxed text-white/55">
+        This page doesn&apos;t exist on NovelCodex. It may have been moved or removed.
       </p>
 
       <div className="flex flex-wrap items-center justify-center gap-3">
         <Link
-          href="/library"
-          className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-2.5 text-sm font-semibold text-black hover:bg-amber-400 transition"
+          href="/"
+          className="inline-flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
+          style={{ background: 'rgb(var(--v))' }}
         >
-          ← Back to Library
+          ← Back home
         </Link>
         <Link
-          href="/support"
-          className="inline-flex items-center gap-2 rounded-xl border border-[var(--nc-border)] px-6 py-2.5 text-sm font-medium transition hover:border-amber-500/40"
-          style={{ color: 'var(--nc-text2)' }}
+          href="/browse"
+          className="inline-flex items-center gap-2 rounded-xl border border-white/15 px-6 py-2.5 text-sm font-medium text-white/70 transition hover:text-white"
         >
-          Report an issue
+          Browse novels
         </Link>
       </div>
 
-      <div className="mt-12 flex gap-4 text-xs" style={{ color: 'var(--nc-text2)' }}>
-        <Link href="/about"   className="hover:text-amber-400 transition">About</Link>
-        <Link href="/privacy" className="hover:text-amber-400 transition">Privacy</Link>
-        <Link href="/terms"   className="hover:text-amber-400 transition">Terms</Link>
+      <div className="mt-12 flex gap-4 text-xs text-white/45">
+        <Link href="/about"   className="transition hover:text-white">About</Link>
+        <Link href="/support" className="transition hover:text-white">Support</Link>
+        <Link href="/privacy" className="transition hover:text-white">Privacy</Link>
       </div>
     </div>
   )
