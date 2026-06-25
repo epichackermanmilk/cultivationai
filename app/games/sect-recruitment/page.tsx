@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import TestHeader from '@/components/TestHeader'
+import GameAd from '@/components/GameAd'
 import TestFooter from '@/components/TestFooter'
 import LoadingFacts from '@/components/LoadingFacts'
 import { useAuth } from '@/lib/auth-context'
@@ -243,6 +244,7 @@ export default function SectRecruitmentPage() {
 
       {/* Header */}
       <TestHeader />
+      <GameAd />
 
       {/* ── PREPARING (generating applicants) ────────────────────────────────── */}
       {phase === 'lobby' && loading && (

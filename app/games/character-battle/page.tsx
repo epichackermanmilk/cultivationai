@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link   from 'next/link'
 import TestHeader from '@/components/TestHeader'
+import GameAd from '@/components/GameAd'
 import TestFooter from '@/components/TestFooter'
 import { useAuth } from '@/lib/auth-context'
 import { matchesSearch } from '@/lib/search'
@@ -303,6 +304,7 @@ export default function CharacterBattlePage() {
 
       {/* Header */}
       <TestHeader />
+      <GameAd />
 
       <main className="flex-1 mx-auto w-full max-w-3xl px-4 py-10">
 
@@ -355,7 +357,7 @@ export default function CharacterBattlePage() {
 
             <div className="text-center">
               {!user ? (
-                <Link href="/library"
+                <Link href="/login?return=/games/character-battle"
                   className="inline-flex items-center gap-2 rounded-xl border border-orange-500/40 bg-orange-500/10 px-8 py-3 text-sm font-bold text-orange-300 hover:bg-orange-500/20 transition">
                   Sign in to play
                 </Link>

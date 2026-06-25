@@ -13,8 +13,8 @@ export default function GameAd() {
   if (user?.ads_disabled || user?.subscription_active) return null
   if (path === '/games') return null // the listing has its own footer/layout
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 pt-3">
-      <AdUnit placement="gameBanner" className="min-h-[90px]" />
+    <div className="mx-auto w-full max-w-3xl px-4 pt-4">
+      <AdUnit placement="gameBanner" forceNetwork className="min-h-[90px]" />
     </div>
   )
 }

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import TestHeader from '@/components/TestHeader'
+import GameAd from '@/components/GameAd'
 import TestFooter from '@/components/TestFooter'
 import { useAuth } from '@/lib/auth-context'
 
@@ -260,6 +261,7 @@ export default function DefectiveSystemPage() {
 
       {/* Header */}
       <TestHeader />
+      <GameAd />
 
       <main className="flex-1 mx-auto w-full max-w-2xl px-4 py-10">
 
@@ -296,7 +298,7 @@ export default function DefectiveSystemPage() {
             )}
 
             {!user ? (
-              <Link href="/library"
+              <Link href="/login?return=/games/defective-system"
                 className="inline-flex items-center gap-2 rounded-xl bg-rose-500/20 border border-rose-500/40 px-8 py-3 text-sm font-bold text-rose-300 hover:bg-rose-500/30 transition">
                 Sign in to play
               </Link>

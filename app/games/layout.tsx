@@ -1,12 +1,6 @@
-// Wraps every /games route. Renders the (gated) in-game banner ad above each game's
-// own page. The ad hides itself for ad-free users and on the /games listing.
-import GameAd from '@/components/GameAd'
-
+// Wraps every /games route. The in-game banner ad is rendered inside each game page
+// (below the shared header) rather than here, so the header sits flush at the top like
+// every other page.
 export default function GamesLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <GameAd />
-      {children}
-    </>
-  )
+  return <>{children}</>
 }

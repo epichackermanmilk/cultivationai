@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Link        from 'next/link'
 import TestHeader from '@/components/TestHeader'
+import GameAd from '@/components/GameAd'
 import TestFooter from '@/components/TestFooter'
 import AdSlot      from '@/components/AdSlot'
 import { track }   from '@/lib/analytics'
@@ -173,6 +174,7 @@ export default function RegressorPage() {
 
       {/* Header */}
       <TestHeader />
+      <GameAd />
 
       <div className="mx-auto flex w-full max-w-6xl flex-1 gap-6 px-4 py-8">
         <aside className="hidden xl:block w-40 shrink-0"><AdSlot variant="side" /></aside>
@@ -216,7 +218,7 @@ export default function RegressorPage() {
               {error && <p className="text-sm text-rose-400">{error}</p>}
 
               {!user ? (
-                <Link href="/library" className="flex w-full items-center justify-center gap-2 rounded-xl border border-violet-500/40 bg-violet-500/10 px-8 py-3 text-sm font-bold text-violet-300 hover:bg-violet-500/20 transition">
+                <Link href="/login?return=/games/regressor" className="flex w-full items-center justify-center gap-2 rounded-xl border border-violet-500/40 bg-violet-500/10 px-8 py-3 text-sm font-bold text-violet-300 hover:bg-violet-500/20 transition">
                   Sign in to play
                 </Link>
               ) : (

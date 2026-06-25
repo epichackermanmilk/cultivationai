@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link        from 'next/link'
 import TestHeader from '@/components/TestHeader'
+import GameAd from '@/components/GameAd'
 import TestFooter from '@/components/TestFooter'
 import { useAuth } from '@/lib/auth-context'
 import { matchesSearch } from '@/lib/search'
@@ -160,6 +161,7 @@ export default function TriviaPage() {
     <div className="tnl-root relative flex min-h-screen flex-col text-white" style={{ ["--v" as string]: "124,58,237" }}>
       <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: "#07060d" }}><div className="absolute inset-0" style={{ background: "radial-gradient(85% 50% at 50% -8%, rgba(var(--v),0.18) 0%, transparent 55%)" }} /></div>
       <TestHeader />
+      <GameAd />
 
       <main className="flex-1 mx-auto w-full max-w-2xl px-4 py-8">
 
@@ -240,7 +242,7 @@ export default function TriviaPage() {
               {error && <p className="text-sm text-rose-400 text-center">{error}</p>}
 
               {!user ? (
-                <Link href="/library" className="block text-center rounded-xl border border-sky-500/40 bg-sky-500/10 px-8 py-3 text-sm font-bold text-sky-300 hover:bg-sky-500/20 transition">Sign in to play</Link>
+                <Link href="/login?return=/games/trivia" className="block text-center rounded-xl border border-sky-500/40 bg-sky-500/10 px-8 py-3 text-sm font-bold text-sky-300 hover:bg-sky-500/20 transition">Sign in to play</Link>
               ) : (
                 <button onClick={start} disabled={picked.length === 0 || starting}
                   className="w-full rounded-xl px-8 py-3.5 text-sm font-bold text-white transition hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0"
