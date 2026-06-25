@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link        from 'next/link'
-import TokenWidget from '@/components/TokenWidget'
-import Footer      from '@/components/Footer'
+import TestHeader from '@/components/TestHeader'
+import TestFooter from '@/components/TestFooter'
 import { useAuth } from '@/lib/auth-context'
 import { matchesSearch } from '@/lib/search'
 
@@ -208,29 +208,11 @@ export default function SurvivalPage() {
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
+    <div className="tnl-root relative flex min-h-screen flex-col text-white" style={{ ["--v" as string]: "124,58,237" }}>
+      <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: "#07060d" }}><div className="absolute inset-0" style={{ background: "radial-gradient(85% 50% at 50% -8%, rgba(var(--v),0.18) 0%, transparent 55%)" }} /></div>
 
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-[var(--nc-border)] bg-[var(--nc-bg)]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Link href="/games" className="text-zinc-400 hover:text-zinc-200 transition text-sm">← Games</Link>
-            <div className="h-4 w-px bg-zinc-700" />
-            <div className="flex items-center gap-2">
-              <span className="text-base">📖</span>
-              <span className="font-bold text-emerald-400 text-sm">Survival in the Novel</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            {(phase === 'active' || phase === 'dead') && (
-              <span className="text-xs text-zinc-500">
-                Attempt {runNumber}/{MAX_ATTEMPTS} · Turn {Math.min(currentTurn, MAX_TURNS)}/{MAX_TURNS}
-              </span>
-            )}
-            <TokenWidget />
-          </div>
-        </div>
-      </header>
+      <TestHeader />
 
       <main className="flex-1 mx-auto w-full max-w-3xl px-4 py-8">
 
@@ -239,10 +221,10 @@ export default function SurvivalPage() {
           <div className="max-w-xl mx-auto">
             <div className="mb-8 text-center">
               <p className="mb-2 text-xs font-bold uppercase tracking-widest text-emerald-500/70">📖 Transmigrate</p>
-              <h1 className="text-3xl font-bold tracking-tight mb-3" style={{ color: 'var(--nc-text)' }}>
+              <h1 className="text-3xl font-bold tracking-tight mb-3" style={{ color: 'rgba(255,255,255,0.92)' }}>
                 Survival in the Novel
               </h1>
-              <p className="text-sm leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
+              <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
                 Pick a novel from our library. Pick an arc. Wake up inside it as a side character.
                 Survive 50 turns using your knowledge of the story.
                 The more you know the plot, the longer you live.
@@ -312,8 +294,8 @@ export default function SurvivalPage() {
               </div>
 
               {/* Info box */}
-              <div className="rounded-xl border border-zinc-800 p-4" style={{ background: 'var(--nc-bg2)' }}>
-                <ul className="space-y-1.5 text-xs" style={{ color: 'var(--nc-text2)' }}>
+              <div className="rounded-xl border border-zinc-800 p-4" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                <ul className="space-y-1.5 text-xs" style={{ color: 'rgba(255,255,255,0.55)' }}>
                   <li className="flex gap-2"><span className="text-emerald-400 shrink-0">▸</span>You wake up as a side character — present in the story, not the MC.</li>
                   <li className="flex gap-2"><span className="text-emerald-400 shrink-0">▸</span>Survive 50 turns to win. Death lets you try again — up to {MAX_ATTEMPTS} attempts per session.</li>
                   <li className="flex gap-2"><span className="text-emerald-400 shrink-0">▸</span>The AI pulls real chapter context to keep events lore-accurate.</li>
@@ -329,7 +311,7 @@ export default function SurvivalPage() {
                 </Link>
               ) : (
                 <button onClick={startGame} disabled={!canStart || starting}
-                  className="w-full rounded-xl px-8 py-3.5 text-sm font-bold text-black transition hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0"
+                  className="w-full rounded-xl px-8 py-3.5 text-sm font-bold text-white transition hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0"
                   style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', boxShadow: canStart ? '0 6px 20px rgba(16,185,129,0.25)' : 'none' }}>
                   {starting ? (
                     <><span className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent inline-block mr-2" />Generating your character…</>
@@ -368,14 +350,14 @@ export default function SurvivalPage() {
               <div className="rounded-xl border border-zinc-800 overflow-hidden">
                 <button onClick={() => setMemOpen(o => !o)}
                   className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold hover:bg-zinc-800/50 transition"
-                  style={{ background: 'var(--nc-bg2)', color: 'var(--nc-text)' }}>
+                  style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.92)' }}>
                   <span>📚 Previous Attempts ({pastRuns.length})</span>
                   <span className="text-zinc-500 text-xs">{memOpen ? '▲' : '▼'}</span>
                 </button>
                 {memOpen && (
                   <div className="divide-y divide-zinc-800">
                     {pastRuns.map(r => (
-                      <div key={r.runNumber} className="px-4 py-3" style={{ background: 'var(--nc-bg2)' }}>
+                      <div key={r.runNumber} className="px-4 py-3" style={{ background: 'rgba(255,255,255,0.05)' }}>
                         <p className="text-xs font-semibold text-emerald-400 mb-1">Attempt {r.runNumber} — survived {r.turnsReached} turns</p>
                         <p className="text-xs text-zinc-500">Died: {r.deathReason}</p>
                       </div>
@@ -387,11 +369,11 @@ export default function SurvivalPage() {
 
             {/* Opening text */}
             {openingText && turns.length === 0 && !streaming && (
-              <div className="rounded-xl border border-zinc-800 p-4" style={{ background: 'var(--nc-bg2)' }}>
+              <div className="rounded-xl border border-zinc-800 p-4" style={{ background: 'rgba(255,255,255,0.05)' }}>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 mb-2">
                   {runNumber > 1 ? `Attempt ${runNumber} — New Awakening` : 'You Wake Up'}
                 </p>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--nc-text)' }}>{openingText}</p>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'rgba(255,255,255,0.92)' }}>{openingText}</p>
                 {challenge && <p className="mt-3 text-xs italic text-emerald-400/70">{challenge}</p>}
               </div>
             )}
@@ -401,12 +383,12 @@ export default function SurvivalPage() {
               <div className="space-y-4">
                 {turns.map(t => (
                   <div key={t.turn} className="rounded-xl border border-zinc-800 overflow-hidden">
-                    <div className="px-4 py-2 border-b border-zinc-800 flex items-center gap-2" style={{ background: 'var(--nc-bg2)' }}>
+                    <div className="px-4 py-2 border-b border-zinc-800 flex items-center gap-2" style={{ background: 'rgba(255,255,255,0.05)' }}>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-500/70">Turn {t.turn}</span>
                       <span className="text-xs text-zinc-500 truncate">↳ {t.action}</span>
                     </div>
-                    <div className="px-4 py-3" style={{ background: 'var(--nc-bg2)' }}>
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--nc-text)' }}>{t.narration}</p>
+                    <div className="px-4 py-3" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'rgba(255,255,255,0.92)' }}>{t.narration}</p>
                     </div>
                   </div>
                 ))}
@@ -415,9 +397,9 @@ export default function SurvivalPage() {
 
             {/* Streaming */}
             {streaming && (
-              <div className="rounded-xl border border-emerald-500/20 p-4" style={{ background: 'var(--nc-bg2)' }}>
+              <div className="rounded-xl border border-emerald-500/20 p-4" style={{ background: 'rgba(255,255,255,0.05)' }}>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500/70 mb-2">Turn {currentTurn}</p>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--nc-text)' }}>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'rgba(255,255,255,0.92)' }}>
                   {narration}<span className="animate-pulse ml-0.5">▋</span>
                 </p>
               </div>
@@ -431,13 +413,13 @@ export default function SurvivalPage() {
                 <div className="rounded-2xl border border-zinc-700 bg-zinc-900/50 p-5 text-center">
                   <div className="mb-3 text-4xl select-none">☠️</div>
                   <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">Out of Attempts</p>
-                  <p className="text-sm mb-4" style={{ color: 'var(--nc-text2)' }}>
+                  <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.55)' }}>
                     You used all {MAX_ATTEMPTS} attempts and couldn&apos;t survive this arc. The novel&apos;s world
                     is unforgiving — try a different novel or an earlier arc where you know the plot better.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <button onClick={() => { setPhase('select'); setSessionId(null); setTurns([]); setPlayer(null); setSelectedNovel(null); setNovelQuery('') }}
-                      className="rounded-xl px-8 py-3 text-sm font-bold text-black transition hover:-translate-y-0.5"
+                      className="rounded-xl px-8 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5"
                       style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
                       Enter Another Novel — {GAME_COST} tokens
                     </button>
@@ -449,13 +431,13 @@ export default function SurvivalPage() {
               ) : (
                 <div className="rounded-2xl border border-rose-500/30 bg-rose-500/5 p-5 text-center">
                   <p className="text-xs font-bold uppercase tracking-wider text-rose-400 mb-2">You Died</p>
-                  {deathReason && <p className="text-sm mb-2" style={{ color: 'var(--nc-text2)' }}>Cause: {deathReason}</p>}
+                  {deathReason && <p className="text-sm mb-2" style={{ color: 'rgba(255,255,255,0.55)' }}>Cause: {deathReason}</p>}
                   <p className="text-xs mb-1 text-zinc-600">You survived {turns.length} of {MAX_TURNS} turns.</p>
                   <p className="text-xs mb-4 text-emerald-400/80">
                     {MAX_ATTEMPTS - runNumber} {MAX_ATTEMPTS - runNumber === 1 ? 'attempt' : 'attempts'} remaining
                   </p>
                   <button onClick={tryAgain} disabled={restarting}
-                    className="rounded-xl px-8 py-3 text-sm font-bold text-black transition hover:-translate-y-0.5 disabled:opacity-50"
+                    className="rounded-xl px-8 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 disabled:opacity-50"
                     style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
                     {restarting ? '…' : `📖 Try Again — Attempt ${runNumber + 1}`}
                   </button>
@@ -466,7 +448,7 @@ export default function SurvivalPage() {
             {/* Action input */}
             {phase === 'active' && !streaming && (
               <div className="sticky bottom-4">
-                <div className="rounded-2xl border border-zinc-700 bg-[var(--nc-bg)] p-4 shadow-xl">
+                <div className="rounded-2xl border border-zinc-700 bg-[#0c0a14] p-4 shadow-xl">
                   <label className="block text-xs font-semibold text-zinc-500 mb-2 uppercase tracking-wider">
                     Turn {currentTurn} — What do you do?
                   </label>
@@ -478,7 +460,7 @@ export default function SurvivalPage() {
                   <div className="mt-2 flex items-center justify-between">
                     <span className="text-xs text-zinc-600">{action.length}/800 · Ctrl+Enter</span>
                     <button onClick={submitAction} disabled={!action.trim()}
-                      className="rounded-xl px-5 py-2 text-sm font-bold text-black transition hover:opacity-90 disabled:opacity-40"
+                      className="rounded-xl px-5 py-2 text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-40"
                       style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
                       Act
                     </button>
@@ -496,14 +478,14 @@ export default function SurvivalPage() {
           <div className="text-center py-10 max-w-xl mx-auto">
             <div className="mb-6 text-6xl select-none">🏆</div>
             <p className="mb-2 text-xs font-bold uppercase tracking-widest text-emerald-500/70">ARC COMPLETE</p>
-            <h2 className="text-3xl font-bold mb-3" style={{ color: 'var(--nc-text)' }}>You Survived.</h2>
-            <p className="text-sm mb-8 leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
+            <h2 className="text-3xl font-bold mb-3" style={{ color: 'rgba(255,255,255,0.92)' }}>You Survived.</h2>
+            <p className="text-sm mb-8 leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
               You navigated {turns.length} turns inside <strong>{selectedNovel?.title}</strong> as {player?.name} and made it out alive.
               {runNumber > 1 && ` It took ${runNumber} attempts.`}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button onClick={() => { setPhase('select'); setSessionId(null); setTurns([]); setPlayer(null); setSelectedNovel(null); setNovelQuery('') }}
-                className="rounded-xl px-8 py-3 text-sm font-bold text-black transition hover:-translate-y-0.5"
+                className="rounded-xl px-8 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5"
                 style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
                 Enter Another Novel — {GAME_COST} tokens
               </button>
@@ -515,7 +497,7 @@ export default function SurvivalPage() {
         )}
 
       </main>
-      <Footer />
+      <TestFooter />
     </div>
   )
 }

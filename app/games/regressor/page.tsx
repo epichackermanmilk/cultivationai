@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link        from 'next/link'
-import TokenWidget from '@/components/TokenWidget'
-import Footer      from '@/components/Footer'
+import TestHeader from '@/components/TestHeader'
+import TestFooter from '@/components/TestFooter'
 import AdSlot      from '@/components/AdSlot'
 import { track }   from '@/lib/analytics'
 import { useAuth } from '@/lib/auth-context'
@@ -168,29 +168,11 @@ export default function RegressorPage() {
 
   // ─── RENDER ─────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
+    <div className="tnl-root relative flex min-h-screen flex-col text-white" style={{ ["--v" as string]: "124,58,237" }}>
+      <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: "#07060d" }}><div className="absolute inset-0" style={{ background: "radial-gradient(85% 50% at 50% -8%, rgba(var(--v),0.18) 0%, transparent 55%)" }} /></div>
 
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-[var(--nc-border)] bg-[var(--nc-bg)]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Link href="/games" className="text-zinc-400 hover:text-zinc-200 transition text-sm">← Games</Link>
-            <div className="h-4 w-px bg-zinc-700" />
-            <div className="flex items-center gap-2">
-              <span className="text-base">⚔️</span>
-              <span className="font-bold text-violet-400 text-sm">Regressor Challenge</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            {(phase === 'active' || phase === 'run_end') && (
-              <span className="text-xs text-zinc-500">
-                Life {currentRun}/{MAX_RUNS} · Day {Math.min(currentTurn, MAX_TURNS)}/{MAX_TURNS}
-              </span>
-            )}
-            <TokenWidget />
-          </div>
-        </div>
-      </header>
+      <TestHeader />
 
       <div className="mx-auto flex w-full max-w-6xl flex-1 gap-6 px-4 py-8">
         <aside className="hidden xl:block w-40 shrink-0"><AdSlot variant="side" /></aside>
@@ -201,10 +183,10 @@ export default function RegressorPage() {
           <div className="text-center max-w-xl mx-auto">
             <div className="mb-6 text-5xl select-none">⚔️</div>
             <p className="mb-2 text-xs font-bold uppercase tracking-widest text-violet-500/70">THE REGRESSION</p>
-            <h1 className="text-3xl font-bold tracking-tight mb-3" style={{ color: 'var(--nc-text)' }}>
+            <h1 className="text-3xl font-bold tracking-tight mb-3" style={{ color: 'rgba(255,255,255,0.92)' }}>
               Regressor Challenge
             </h1>
-            <p className="text-sm mb-8 leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
+            <p className="text-sm mb-8 leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
               You will die. Over and over. The Great Disaster claims everything in 30 days —
               unless you figure out how to stop it. Each death carries memories into the next life.
               Eventually, you will know enough to win.
@@ -219,7 +201,7 @@ export default function RegressorPage() {
                 `You get ${MAX_RUNS} lives. Memories carry forward — each life you know more.`,
                 'Figure out the root cause. Stop the disaster before your lives run out.',
               ].map(s => (
-                <div key={s} className="flex items-start gap-2 text-xs" style={{ color: 'var(--nc-text2)' }}>
+                <div key={s} className="flex items-start gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.55)' }}>
                   <span className="text-violet-400 shrink-0 mt-0.5">▸</span>{s}
                 </div>
               ))}
@@ -260,7 +242,7 @@ export default function RegressorPage() {
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-widest text-violet-500/70 mb-1">The Great Disaster</p>
                   <p className="text-lg font-bold text-violet-300">{disaster.name}</p>
-                  <p className="text-sm mt-1.5 leading-relaxed" style={{ color: 'var(--nc-text2)' }}>{disaster.description}</p>
+                  <p className="text-sm mt-1.5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>{disaster.description}</p>
                 </div>
                 {/* Countdown */}
                 <div className="text-right shrink-0">
@@ -285,21 +267,21 @@ export default function RegressorPage() {
                 <button
                   onClick={() => setMemoryOpen(o => !o)}
                   className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold hover:bg-zinc-800/50 transition"
-                  style={{ background: 'var(--nc-bg2)', color: 'var(--nc-text)' }}>
+                  style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.92)' }}>
                   <span>⚡ Memories from Past Lives ({pastRuns.length})</span>
                   <span className="text-zinc-500 text-xs">{memoryOpen ? '▲' : '▼'}</span>
                 </button>
                 {memoryOpen && (
                   <div className="border-t border-zinc-800 divide-y divide-zinc-800">
                     {pastRuns.map(r => (
-                      <div key={r.runNumber} className="px-4 py-3" style={{ background: 'var(--nc-bg2)' }}>
+                      <div key={r.runNumber} className="px-4 py-3" style={{ background: 'rgba(255,255,255,0.05)' }}>
                         <p className="text-xs font-semibold text-violet-400 mb-1">
                           Life {r.runNumber} — reached Day {r.turnsReached}
                           <span className="ml-2 text-zinc-600 font-normal">
                             ({r.endReason === 'death' ? 'died' : r.endReason === 'disaster' ? 'disaster struck' : 'time expired'})
                           </span>
                         </p>
-                        <p className="text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>{r.lessonsLearned}</p>
+                        <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>{r.lessonsLearned}</p>
                       </div>
                     ))}
                   </div>
@@ -309,18 +291,18 @@ export default function RegressorPage() {
 
             {/* Opening text (first turn of new run) */}
             {openingText && turns.length === 0 && !streaming && (
-              <div className="rounded-xl border border-zinc-800 p-4" style={{ background: 'var(--nc-bg2)' }}>
+              <div className="rounded-xl border border-zinc-800 p-4" style={{ background: 'rgba(255,255,255,0.05)' }}>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 mb-2">
                   Life {currentRun} Begins
                 </p>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--nc-text)' }}>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'rgba(255,255,255,0.92)' }}>
                   {openingText}
                 </p>
                 <p className="mt-3 text-xs italic text-zinc-600">
                   Hint from your last memory: &ldquo;{disaster.hint}&rdquo;
                 </p>
                 {abilityHint && (
-                  <p className="mt-1.5 text-xs italic text-amber-400/45">
+                  <p className="mt-1.5 text-xs italic text-[#a78bfa]/45">
                     A fragment of intuition: &ldquo;{abilityHint}&rdquo;
                   </p>
                 )}
@@ -332,12 +314,12 @@ export default function RegressorPage() {
               <div className="space-y-4" ref={narrativeRef}>
                 {turns.map(t => (
                   <div key={t.turn} className="rounded-xl border border-zinc-800 overflow-hidden">
-                    <div className="px-4 py-2 border-b border-zinc-800 flex items-center gap-2" style={{ background: 'var(--nc-bg2)' }}>
+                    <div className="px-4 py-2 border-b border-zinc-800 flex items-center gap-2" style={{ background: 'rgba(255,255,255,0.05)' }}>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-violet-500/70">Day {t.turn}</span>
                       <span className="text-xs text-zinc-500 truncate">↳ {t.action}</span>
                     </div>
-                    <div className="px-4 py-3" style={{ background: 'var(--nc-bg2)' }}>
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--nc-text)' }}>
+                    <div className="px-4 py-3" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'rgba(255,255,255,0.92)' }}>
                         {t.narration}
                       </p>
                     </div>
@@ -348,11 +330,11 @@ export default function RegressorPage() {
 
             {/* Streaming narration */}
             {streaming && (
-              <div className="rounded-xl border border-violet-500/20 p-4" style={{ background: 'var(--nc-bg2)' }}>
+              <div className="rounded-xl border border-violet-500/20 p-4" style={{ background: 'rgba(255,255,255,0.05)' }}>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-violet-500/70 mb-2">
                   Day {currentTurn} — Unfolding…
                 </p>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--nc-text)' }}>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'rgba(255,255,255,0.92)' }}>
                   {currentNarration}
                   <span className="animate-pulse ml-0.5">▋</span>
                 </p>
@@ -367,7 +349,7 @@ export default function RegressorPage() {
                 <div className="rounded-2xl border border-zinc-700 bg-zinc-900/50 p-5 text-center">
                   <div className="mb-3 text-4xl select-none">⏳</div>
                   <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">The Cycle Ends</p>
-                  <p className="text-sm mb-4" style={{ color: 'var(--nc-text2)' }}>
+                  <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.55)' }}>
                     You&apos;ve lived all {MAX_RUNS} lives. The heavens grant no more regressions —
                     the disaster claims this timeline. Begin a new cycle to try a fresh disaster.
                   </p>
@@ -385,7 +367,7 @@ export default function RegressorPage() {
               ) : (
                 <div className="rounded-2xl border border-rose-500/30 bg-rose-500/5 p-5 text-center">
                   <p className="text-xs font-bold uppercase tracking-wider text-rose-400 mb-2">Life {currentRun} Ended</p>
-                  <p className="text-sm mb-1" style={{ color: 'var(--nc-text2)' }}>
+                  <p className="text-sm mb-1" style={{ color: 'rgba(255,255,255,0.55)' }}>
                     You reached Day {currentTurn}. These memories will follow you into your next life.
                   </p>
                   <p className="text-xs mb-4 text-violet-400/80">
@@ -405,7 +387,7 @@ export default function RegressorPage() {
             {/* Action input */}
             {phase === 'active' && !streaming && (
               <div className="sticky bottom-4">
-                <div className="rounded-2xl border border-zinc-700 bg-[var(--nc-bg)] p-4 shadow-xl">
+                <div className="rounded-2xl border border-zinc-700 bg-[#0c0a14] p-4 shadow-xl">
                   <label className="block text-xs font-semibold text-zinc-500 mb-2 uppercase tracking-wider">
                     Day {currentTurn} — What do you do?
                   </label>
@@ -439,11 +421,11 @@ export default function RegressorPage() {
         {phase === 'victory' && disaster && (
           <div className="text-center max-w-xl mx-auto py-10">
             <div className="mb-6 text-6xl select-none">🏆</div>
-            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-amber-500/70">DISASTER PREVENTED</p>
-            <h2 className="text-3xl font-bold mb-3" style={{ color: 'var(--nc-text)' }}>
+            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-[#a78bfa]/70">DISASTER PREVENTED</p>
+            <h2 className="text-3xl font-bold mb-3" style={{ color: 'rgba(255,255,255,0.92)' }}>
               You Won.
             </h2>
-            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
+            <p className="text-sm mb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
               In Life {currentRun}, you stopped <strong>{disaster.name}</strong>.
               After {turns.length} days of struggle, the future changed.
             </p>
@@ -454,9 +436,9 @@ export default function RegressorPage() {
             )}
             {/* Recent turns */}
             {turns.slice(-3).map(t => (
-              <div key={t.turn} className="mb-3 rounded-xl border border-zinc-800 p-4 text-left" style={{ background: 'var(--nc-bg2)' }}>
+              <div key={t.turn} className="mb-3 rounded-xl border border-zinc-800 p-4 text-left" style={{ background: 'rgba(255,255,255,0.05)' }}>
                 <p className="text-[10px] font-bold text-violet-400 mb-1">Day {t.turn}</p>
-                <p className="text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>{t.narration.slice(0, 300)}{t.narration.length > 300 ? '…' : ''}</p>
+                <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>{t.narration.slice(0, 300)}{t.narration.length > 300 ? '…' : ''}</p>
               </div>
             ))}
             <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
@@ -475,7 +457,7 @@ export default function RegressorPage() {
         </main>
         <aside className="hidden xl:block w-40 shrink-0"><AdSlot variant="side" /></aside>
       </div>
-      <Footer />
+      <TestFooter />
     </div>
   )
 }

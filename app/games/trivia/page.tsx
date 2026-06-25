@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link        from 'next/link'
-import TokenWidget from '@/components/TokenWidget'
-import Footer      from '@/components/Footer'
+import TestHeader from '@/components/TestHeader'
+import TestFooter from '@/components/TestFooter'
 import { useAuth } from '@/lib/auth-context'
 import { matchesSearch } from '@/lib/search'
 
@@ -17,7 +17,7 @@ const TOKENS_PER_Q = 2
 const COUNTS = [5, 10, 15, 20]
 
 const GRADE_COLOR: Record<string, string> = {
-  S: 'text-amber-300', A: 'text-emerald-400', B: 'text-sky-400',
+  S: 'text-[#c4b5fd]', A: 'text-emerald-400', B: 'text-sky-400',
   C: 'text-yellow-400', D: 'text-orange-400', F: 'text-rose-400',
 }
 
@@ -157,21 +157,9 @@ export default function TriviaPage() {
 
   // ─── RENDER ─────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
-      <header className="sticky top-0 z-50 border-b border-[var(--nc-border)] bg-[var(--nc-bg)]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Link href="/games" className="text-zinc-400 hover:text-zinc-200 transition text-sm">← Games</Link>
-            <div className="h-4 w-px bg-zinc-700" />
-            <div className="flex items-center gap-2"><span className="text-base">🧠</span>
-              <span className="font-bold text-sky-400 text-sm">Trivia Gauntlet</span></div>
-          </div>
-          <div className="flex items-center gap-3">
-            {phase === 'playing' && <span className="text-xs text-zinc-500">Q {qIndex + 1}/{total} · {correctSoFar} correct</span>}
-            <TokenWidget />
-          </div>
-        </div>
-      </header>
+    <div className="tnl-root relative flex min-h-screen flex-col text-white" style={{ ["--v" as string]: "124,58,237" }}>
+      <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: "#07060d" }}><div className="absolute inset-0" style={{ background: "radial-gradient(85% 50% at 50% -8%, rgba(var(--v),0.18) 0%, transparent 55%)" }} /></div>
+      <TestHeader />
 
       <main className="flex-1 mx-auto w-full max-w-2xl px-4 py-8">
 
@@ -182,7 +170,7 @@ export default function TriviaPage() {
               <div className="mb-4 text-5xl">🧠</div>
               <p className="mb-2 text-xs font-bold uppercase tracking-widest text-sky-500/70">Test Your Knowledge</p>
               <h1 className="text-3xl font-bold tracking-tight mb-3">Trivia Gauntlet</h1>
-              <p className="text-sm leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
+              <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
                 Pick up to 10 novels. We&apos;ll ask random questions pulled from across them —
                 we won&apos;t tell you which novel each one is from. Close answers count (typos forgiven);
                 wild guesses don&apos;t. How well do you really know your stories?
@@ -255,7 +243,7 @@ export default function TriviaPage() {
                 <Link href="/library" className="block text-center rounded-xl border border-sky-500/40 bg-sky-500/10 px-8 py-3 text-sm font-bold text-sky-300 hover:bg-sky-500/20 transition">Sign in to play</Link>
               ) : (
                 <button onClick={start} disabled={picked.length === 0 || starting}
-                  className="w-full rounded-xl px-8 py-3.5 text-sm font-bold text-black transition hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0"
+                  className="w-full rounded-xl px-8 py-3.5 text-sm font-bold text-white transition hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0"
                   style={{ background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)', boxShadow: picked.length ? '0 6px 20px rgba(14,165,233,0.25)' : 'none' }}>
                   {starting ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent inline-block mr-2" />Writing your quiz…</> : `🧠 Start Quiz — ${cost} tokens`}
                 </button>
@@ -278,7 +266,7 @@ export default function TriviaPage() {
 
             <div className="rounded-2xl border border-sky-500/20 bg-sky-500/5 p-6 mb-5">
               <p className="text-[10px] font-bold uppercase tracking-widest text-sky-500/70 mb-2">Question {qIndex + 1}</p>
-              <p className="text-lg leading-relaxed" style={{ color: 'var(--nc-text)' }}>{question}</p>
+              <p className="text-lg leading-relaxed" style={{ color: 'rgba(255,255,255,0.92)' }}>{question}</p>
             </div>
 
             {!lastResult ? (
@@ -292,7 +280,7 @@ export default function TriviaPage() {
                   <button onClick={() => { setAnswer(''); submit() }} disabled={submitting}
                     className="text-xs text-zinc-600 hover:text-zinc-400 transition">Skip / I don&apos;t know</button>
                   <button onClick={submit} disabled={submitting || !answer.trim()}
-                    className="rounded-xl px-6 py-2.5 text-sm font-bold text-black transition hover:opacity-90 disabled:opacity-40"
+                    className="rounded-xl px-6 py-2.5 text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-40"
                     style={{ background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' }}>
                     {submitting ? 'Checking…' : 'Submit'}
                   </button>
@@ -305,18 +293,18 @@ export default function TriviaPage() {
                   <p className={`text-sm font-bold mb-1 ${lastResult.correct ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {lastResult.correct ? '✓ Correct' : '✗ Not quite'}
                   </p>
-                  {lastResult.feedback && <p className="text-sm" style={{ color: 'var(--nc-text2)' }}>{lastResult.feedback}</p>}
+                  {lastResult.feedback && <p className="text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>{lastResult.feedback}</p>}
                   {!lastResult.correct && (
                     <p className="text-xs mt-1 text-zinc-500">Answer: <span className="text-zinc-300">{lastResult.correctAnswer}</span></p>
                   )}
                   {lastResult.answerContext && (
-                    <p className="mt-2.5 border-t border-white/10 pt-2.5 text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
-                      <span className="text-amber-400/80">💡 </span>{lastResult.answerContext}
+                    <p className="mt-2.5 border-t border-white/10 pt-2.5 text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                      <span className="text-[#a78bfa]/80">💡 </span>{lastResult.answerContext}
                     </p>
                   )}
                 </div>
                 <button onClick={isLastQuestion ? finishToComplete : next}
-                  className="mt-4 w-full rounded-xl px-6 py-3 text-sm font-bold text-black transition hover:opacity-90"
+                  className="mt-4 w-full rounded-xl px-6 py-3 text-sm font-bold text-white transition hover:opacity-90"
                   style={{ background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' }}>
                   {isLastQuestion ? 'See My Grade →' : 'Next Question →'}
                 </button>
@@ -332,7 +320,7 @@ export default function TriviaPage() {
             <p className="mb-2 text-xs font-bold uppercase tracking-widest text-sky-500/70">Quiz Complete</p>
             <div className={`my-4 text-7xl font-black ${GRADE_COLOR[finalGrade] ?? 'text-zinc-300'}`}>{finalGrade}</div>
             <p className="text-lg font-bold mb-1">{finalScore} / {review.length} correct</p>
-            <p className="text-sm mb-8" style={{ color: 'var(--nc-text2)' }}>
+            <p className="text-sm mb-8" style={{ color: 'rgba(255,255,255,0.55)' }}>
               {finalGrade === 'S' ? 'Flawless. You truly know these stories.' :
                finalGrade === 'A' ? 'Excellent — a true connoisseur.' :
                finalGrade === 'B' ? 'Solid. You know your stuff.' :
@@ -346,7 +334,7 @@ export default function TriviaPage() {
               {review.map((q, i) => (
                 <div key={i} className={`rounded-xl border p-3 ${q.correct ? 'border-emerald-500/25 bg-emerald-500/5' : 'border-rose-500/25 bg-rose-500/5'}`}>
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
+                    <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
                       <span className={q.correct ? 'text-emerald-400' : 'text-rose-400'}>{q.correct ? '✓' : '✗'}</span> {q.q}
                     </p>
                   </div>
@@ -361,7 +349,7 @@ export default function TriviaPage() {
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button onClick={reset}
-                className="rounded-xl px-8 py-3 text-sm font-bold text-black transition hover:-translate-y-0.5"
+                className="rounded-xl px-8 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5"
                 style={{ background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' }}>
                 New Quiz
               </button>
@@ -372,7 +360,7 @@ export default function TriviaPage() {
           </div>
         )}
       </main>
-      <Footer />
+      <TestFooter />
     </div>
   )
 }

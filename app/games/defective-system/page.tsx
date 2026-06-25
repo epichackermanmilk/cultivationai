@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import TokenWidget from '@/components/TokenWidget'
-import Footer      from '@/components/Footer'
+import TestHeader from '@/components/TestHeader'
+import TestFooter from '@/components/TestFooter'
 import { useAuth } from '@/lib/auth-context'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -30,7 +30,7 @@ const DIFFICULTY_LABELS: Record<string, string> = {
 
 const DIFFICULTY_COLORS: Record<string, string> = {
   mildly_embarrassing:   'text-emerald-400 border-emerald-500/30 bg-emerald-500/10',
-  socially_catastrophic: 'text-amber-400 border-amber-500/30 bg-amber-500/10',
+  socially_catastrophic: 'text-[#a78bfa] border-[rgb(124,58,237)]/30 bg-[rgb(124,58,237)]/10',
   physically_risky:      'text-orange-400 border-orange-500/30 bg-orange-500/10',
   diplomatically_ruinous:'text-rose-400 border-rose-500/30 bg-rose-500/10',
   reality_breaking:      'text-violet-400 border-violet-500/30 bg-violet-500/10',
@@ -255,31 +255,11 @@ export default function DefectiveSystemPage() {
   // Render
   // ─────────────────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
+    <div className="tnl-root relative flex min-h-screen flex-col text-white" style={{ ["--v" as string]: "124,58,237" }}>
+      <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: "#07060d" }}><div className="absolute inset-0" style={{ background: "radial-gradient(85% 50% at 50% -8%, rgba(var(--v),0.18) 0%, transparent 55%)" }} /></div>
 
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-[var(--nc-border)] bg-[var(--nc-bg)]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Link href="/games" className="text-zinc-400 hover:text-zinc-200 transition text-sm">
-              ← Games
-            </Link>
-            <div className="h-4 w-px bg-zinc-700" />
-            <div className="flex items-center gap-2">
-              <span className="text-base">⚠️</span>
-              <span className="font-bold text-rose-400 text-sm">The Defective System</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            {(phase === 'quest' || phase === 'judging' || phase === 'complete') && (
-              <span className="text-xs text-zinc-500">
-                Quest {Math.min(currentIndex + 1, 5)}/5
-              </span>
-            )}
-            <TokenWidget />
-          </div>
-        </div>
-      </header>
+      <TestHeader />
 
       <main className="flex-1 mx-auto w-full max-w-2xl px-4 py-10">
 
@@ -290,10 +270,10 @@ export default function DefectiveSystemPage() {
             <p className="mb-2 text-xs font-bold uppercase tracking-widest text-rose-500/70">
               THE SYSTEM
             </p>
-            <h1 className="text-3xl font-bold tracking-tight mb-3" style={{ color: 'var(--nc-text)' }}>
+            <h1 className="text-3xl font-bold tracking-tight mb-3" style={{ color: 'rgba(255,255,255,0.92)' }}>
               The Defective System
             </h1>
-            <p className="text-sm mb-8 max-w-md mx-auto leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
+            <p className="text-sm mb-8 max-w-md mx-auto leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
               Congratulations. You have been selected by The System to complete five quests of escalating inadvisability.
               Compliance is mandatory. Refusal is not recognized as a valid input.
               Survival is not guaranteed. Point values are non-negotiable.
@@ -302,7 +282,7 @@ export default function DefectiveSystemPage() {
             {/* System warning box */}
             <div className="mb-8 rounded-xl border border-rose-500/30 bg-rose-500/5 p-5 text-left max-w-md mx-auto">
               <p className="text-xs font-bold text-rose-400 mb-3 uppercase tracking-wider">⚠ System Notice</p>
-              <ul className="space-y-2 text-xs" style={{ color: 'var(--nc-text2)' }}>
+              <ul className="space-y-2 text-xs" style={{ color: 'rgba(255,255,255,0.55)' }}>
                 <li>• Five quests will be assigned in order of increasing severity.</li>
                 <li>• You may submit any response. The System does not care if it is good.</li>
                 <li>• Judgment is final. Appeals are not a supported feature.</li>
@@ -324,7 +304,7 @@ export default function DefectiveSystemPage() {
               <button
                 onClick={startGame}
                 disabled={starting}
-                className="inline-flex items-center gap-2 rounded-xl px-8 py-3 text-sm font-bold text-black transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0"
+                className="inline-flex items-center gap-2 rounded-xl px-8 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0"
                 style={{ background: 'linear-gradient(135deg, #f43f5e 0%, #be185d 100%)', boxShadow: '0 6px 20px rgba(244,63,94,0.25)' }}
               >
                 {starting ? (
@@ -380,7 +360,7 @@ export default function DefectiveSystemPage() {
             </div>
 
             {/* Quest card */}
-            <div className="rounded-2xl border border-[var(--nc-border)] p-6 mb-6" style={{ background: 'var(--nc-bg2)' }}>
+            <div className="rounded-2xl border border-[rgba(255,255,255,0.12)] p-6 mb-6" style={{ background: 'rgba(255,255,255,0.05)' }}>
               <div className="flex items-center justify-between gap-3 mb-4">
                 <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${DIFFICULTY_COLORS[currentQuest.difficulty] ?? 'text-zinc-400 border-zinc-700 bg-zinc-800'}`}>
                   {DIFFICULTY_LABELS[currentQuest.difficulty] ?? currentQuest.difficulty}
@@ -390,18 +370,18 @@ export default function DefectiveSystemPage() {
                 </span>
               </div>
 
-              <p className="text-sm leading-relaxed font-mono whitespace-pre-wrap" style={{ color: 'var(--nc-text)' }}>
+              <p className="text-sm leading-relaxed font-mono whitespace-pre-wrap" style={{ color: 'rgba(255,255,255,0.92)' }}>
                 {currentQuest.text}
               </p>
             </div>
 
             {/* Judgment */}
             {(phase === 'judging' || judgment) && (
-              <div ref={judgmentRef} className="rounded-2xl border border-zinc-700 p-5 mb-6" style={{ background: 'var(--nc-bg2)' }}>
+              <div ref={judgmentRef} className="rounded-2xl border border-zinc-700 p-5 mb-6" style={{ background: 'rgba(255,255,255,0.05)' }}>
                 <p className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">
                   SYSTEM JUDGMENT
                 </p>
-                <p className="text-sm leading-relaxed font-mono whitespace-pre-wrap" style={{ color: 'var(--nc-text)' }}>
+                <p className="text-sm leading-relaxed font-mono whitespace-pre-wrap" style={{ color: 'rgba(255,255,255,0.92)' }}>
                   {judgment}
                   {phase === 'judging' && !judgment && (
                     <span className="animate-pulse">▋</span>
@@ -440,7 +420,7 @@ export default function DefectiveSystemPage() {
                   <button
                     onClick={submitResponse}
                     disabled={!response.trim()}
-                    className="rounded-xl px-5 py-2 text-sm font-bold text-black transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="rounded-xl px-5 py-2 text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                     style={{ background: 'linear-gradient(135deg, #f43f5e 0%, #be185d 100%)' }}
                   >
                     Submit to The System
@@ -477,13 +457,13 @@ export default function DefectiveSystemPage() {
             <p className="mb-2 text-xs font-bold uppercase tracking-widest text-rose-500/70">
               SESSION TERMINATED
             </p>
-            <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--nc-text)' }}>
+            <h2 className="text-2xl font-bold mb-2" style={{ color: 'rgba(255,255,255,0.92)' }}>
               {survivedCount === 5 ? 'Somehow, You Survived.' :
                survivedCount >= 3 ? 'A Respectable Failure.' :
                survivedCount >= 1 ? 'The System Is Disappointed.' :
                'Compliance Rating: 0%'}
             </h2>
-            <p className="text-sm mb-8" style={{ color: 'var(--nc-text2)' }}>
+            <p className="text-sm mb-8" style={{ color: 'rgba(255,255,255,0.55)' }}>
               {survivedCount === 5 ? 'You completed all five quests. The System has noted this anomaly for investigation.' :
                survivedCount >= 3 ? `You survived ${survivedCount} of 5 quests. This is above the 23rd percentile.` :
                survivedCount >= 1 ? `You survived ${survivedCount} of 5 quests. The System expected as much.` :
@@ -511,7 +491,7 @@ export default function DefectiveSystemPage() {
                       {q.survived === true ? '✓ Survived' : q.survived === false ? '✗ Failed' : '— Skipped'}
                     </span>
                   </div>
-                  <p className="text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
+                  <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
                     {q.text.slice(0, 120)}{q.text.length > 120 ? '…' : ''}
                   </p>
                 </div>
@@ -528,7 +508,7 @@ export default function DefectiveSystemPage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={playAgain}
-                className="rounded-xl px-8 py-3 text-sm font-bold text-black transition hover:-translate-y-0.5"
+                className="rounded-xl px-8 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5"
                 style={{ background: 'linear-gradient(135deg, #f43f5e 0%, #be185d 100%)' }}
               >
                 Accept New Assignment — 25 tokens
@@ -555,7 +535,7 @@ export default function DefectiveSystemPage() {
 
       </main>
 
-      <Footer />
+      <TestFooter />
     </div>
   )
 }

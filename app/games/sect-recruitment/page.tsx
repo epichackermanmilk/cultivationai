@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import TokenWidget from '@/components/TokenWidget'
+import TestHeader from '@/components/TestHeader'
+import TestFooter from '@/components/TestFooter'
 import LoadingFacts from '@/components/LoadingFacts'
 import { useAuth } from '@/lib/auth-context'
 import { SECT_PRESETS } from '@/lib/games/archetypes'
@@ -40,14 +41,14 @@ const METRIC_LABELS: Record<string, string> = {
 
 // ── Stat bar ───────────────────────────────────────────────────────────────────
 function StatBar({ label, value }: { label: string; value: number }) {
-  const color = value >= 60 ? 'bg-emerald-500' : value >= 35 ? 'bg-amber-500' : 'bg-rose-500'
+  const color = value >= 60 ? 'bg-emerald-500' : value >= 35 ? 'bg-[rgb(124,58,237)]' : 'bg-rose-500'
   return (
     <div>
       <div className="flex justify-between text-xs mb-1">
-        <span style={{ color: 'var(--nc-text2)' }}>{label}</span>
-        <span className="font-semibold" style={{ color: 'var(--nc-text)' }}>{value}</span>
+        <span style={{ color: 'rgba(255,255,255,0.55)' }}>{label}</span>
+        <span className="font-semibold" style={{ color: 'rgba(255,255,255,0.92)' }}>{value}</span>
       </div>
-      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--nc-bg3)' }}>
+      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
         <div className={`h-full rounded-full transition-all duration-700 ${color}`} style={{ width: `${value}%` }} />
       </div>
     </div>
@@ -237,21 +238,11 @@ export default function SectRecruitmentPage() {
   // ═══════════════════════════════════════════════════════════════════════════════
 
   return (
-    <div className="min-h-screen flex flex-col pb-16 sm:pb-0" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
+    <div className="tnl-root relative flex min-h-screen flex-col text-white" style={{ ["--v" as string]: "124,58,237" }}>
+      <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: "#07060d" }}><div className="absolute inset-0" style={{ background: "radial-gradient(85% 50% at 50% -8%, rgba(var(--v),0.18) 0%, transparent 55%)" }} /></div>
 
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-[var(--nc-border)] bg-[var(--nc-bg)]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Link href="/games" className="text-zinc-400 hover:text-zinc-100 transition text-sm">
-              ← Games
-            </Link>
-            <div className="h-4 w-px bg-zinc-700" />
-            <span className="text-sm font-semibold text-amber-400">📜 Sect Recruitment</span>
-          </div>
-          <TokenWidget />
-        </div>
-      </header>
+      <TestHeader />
 
       {/* ── PREPARING (generating applicants) ────────────────────────────────── */}
       {phase === 'lobby' && loading && (
@@ -266,8 +257,8 @@ export default function SectRecruitmentPage() {
           <div className="w-full max-w-xl">
             <div className="text-center mb-8">
               <p className="text-4xl mb-3">📜</p>
-              <h1 className="text-3xl font-bold text-amber-400 mb-2">Sect Recruitment</h1>
-              <p className="text-sm leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
+              <h1 className="text-3xl font-bold text-[#a78bfa] mb-2">Sect Recruitment</h1>
+              <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
                 Eight applicants will arrive. Each one hides a secret you cannot see.
                 Your decisions shape the sect&apos;s next thousand years.
               </p>
@@ -283,29 +274,29 @@ export default function SectRecruitmentPage() {
                     onClick={() => setPresetId(p.id)}
                     className={`rounded-xl border p-4 text-left transition-all ${
                       presetId === p.id
-                        ? 'border-amber-500/60 bg-amber-500/10'
-                        : 'border-[var(--nc-border)] hover:border-amber-500/30'
+                        ? 'border-[rgb(124,58,237)]/60 bg-[rgb(124,58,237)]/10'
+                        : 'border-[rgba(255,255,255,0.12)] hover:border-[rgb(124,58,237)]/30'
                     }`}
-                    style={{ background: presetId === p.id ? undefined : 'var(--nc-bg2)' }}
+                    style={{ background: presetId === p.id ? undefined : 'rgba(255,255,255,0.05)' }}
                   >
-                    <p className={`text-sm font-bold mb-0.5 ${presetId === p.id ? 'text-amber-400' : ''}`}
-                      style={presetId !== p.id ? { color: 'var(--nc-text)' } : {}}>
+                    <p className={`text-sm font-bold mb-0.5 ${presetId === p.id ? 'text-[#a78bfa]' : ''}`}
+                      style={presetId !== p.id ? { color: 'rgba(255,255,255,0.92)' } : {}}>
                       {p.name}
                     </p>
-                    <p className="text-xs" style={{ color: 'var(--nc-text2)' }}>{p.tagline}</p>
-                    <p className="mt-2 text-[11px] leading-relaxed" style={{ color: 'var(--nc-text2)' }}>{p.description}</p>
+                    <p className="text-xs" style={{ color: 'rgba(255,255,255,0.55)' }}>{p.tagline}</p>
+                    <p className="mt-2 text-[11px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>{p.description}</p>
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Cost + CTA */}
-            <div className="rounded-xl border border-[var(--nc-border)] p-4 mb-4"
-              style={{ background: 'var(--nc-bg2)' }}>
+            <div className="rounded-xl border border-[rgba(255,255,255,0.12)] p-4 mb-4"
+              style={{ background: 'rgba(255,255,255,0.05)' }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold" style={{ color: 'var(--nc-text)' }}>One session — 25 tokens</p>
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--nc-text2)' }}>
+                  <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.92)' }}>One session — 25 tokens</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>
                     8 applicants · 3 questions each · ~15 minutes · No per-turn charges
                   </p>
                 </div>
@@ -321,9 +312,9 @@ export default function SectRecruitmentPage() {
 
             {!user ? (
               <div className="text-center">
-                <p className="mb-3 text-sm" style={{ color: 'var(--nc-text2)' }}>Sign in to begin recruitment</p>
+                <p className="mb-3 text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>Sign in to begin recruitment</p>
                 <Link href="/auth"
-                  className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-3 text-sm font-bold text-black hover:bg-amber-400 transition">
+                  className="inline-flex items-center gap-2 rounded-xl bg-[rgb(124,58,237)] px-6 py-3 text-sm font-bold text-white hover:bg-[rgb(139,92,246)] transition">
                   Sign In →
                 </Link>
               </div>
@@ -331,7 +322,7 @@ export default function SectRecruitmentPage() {
               <button
                 onClick={startGame}
                 disabled={loading}
-                className="w-full rounded-xl bg-amber-500 py-3.5 text-sm font-bold text-black hover:bg-amber-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full rounded-xl bg-[rgb(124,58,237)] py-3.5 text-sm font-bold text-white hover:bg-[rgb(139,92,246)] transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Preparing the hall…' : 'Begin Recruitment — 25 tokens'}
               </button>
@@ -345,42 +336,42 @@ export default function SectRecruitmentPage() {
         <main className="flex-1 flex flex-col lg:flex-row overflow-hidden max-h-[calc(100dvh-57px)]">
 
           {/* Left panel — applicant profile */}
-          <aside className="shrink-0 lg:w-72 overflow-y-auto border-b lg:border-b-0 lg:border-r border-[var(--nc-border)] p-4"
-            style={{ background: 'var(--nc-bg2)' }}>
+          <aside className="shrink-0 lg:w-72 overflow-y-auto border-b lg:border-b-0 lg:border-r border-[rgba(255,255,255,0.12)] p-4"
+            style={{ background: 'rgba(255,255,255,0.05)' }}>
 
             {/* Progress */}
             <div className="mb-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-amber-400">
+                <span className="text-xs font-semibold text-[#a78bfa]">
                   Applicant {currentIndex + 1} of {totalApplicants}
                 </span>
-                <span className="text-xs" style={{ color: 'var(--nc-text2)' }}>
+                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.55)' }}>
                   {questionsLeft} question{questionsLeft !== 1 ? 's' : ''} left
                 </span>
               </div>
               <div className="flex gap-1">
                 {Array.from({ length: totalApplicants }).map((_, i) => (
                   <div key={i} className={`flex-1 h-1 rounded-full transition-colors ${
-                    i < currentIndex ? 'bg-amber-500' : i === currentIndex ? 'bg-amber-500/60' : 'bg-zinc-700'
+                    i < currentIndex ? 'bg-[rgb(124,58,237)]' : i === currentIndex ? 'bg-[rgb(124,58,237)]/60' : 'bg-zinc-700'
                   }`} />
                 ))}
               </div>
             </div>
 
             {/* Profile card */}
-            <div className="rounded-xl border border-[var(--nc-border)] overflow-hidden mb-4"
-              style={{ background: 'var(--nc-bg3)' }}>
-              <div className="px-4 py-3 border-b border-[var(--nc-border)]"
+            <div className="rounded-xl border border-[rgba(255,255,255,0.12)] overflow-hidden mb-4"
+              style={{ background: 'rgba(255,255,255,0.08)' }}>
+              <div className="px-4 py-3 border-b border-[rgba(255,255,255,0.12)]"
                 style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, transparent 100%)' }}>
-                <p className="font-bold text-amber-400">{applicant.name}</p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--nc-text2)' }}>
+                <p className="font-bold text-[#a78bfa]">{applicant.name}</p>
+                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>
                   Age {applicant.age} · {applicant.hometown}
                 </p>
               </div>
               <div className="p-4 space-y-3">
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">Appearance</p>
-                  <p className="text-xs leading-relaxed" style={{ color: 'var(--nc-text2)' }}>{applicant.appearance}</p>
+                  <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>{applicant.appearance}</p>
                 </div>
                 {/* Background is hidden on purpose — interview them to uncover who they really are */}
                 <div className="rounded-lg border border-dashed border-zinc-700/70 px-3 py-2">
@@ -400,7 +391,7 @@ export default function SectRecruitmentPage() {
                     const t = TREATMENT_LABELS[d.decision]
                     return (
                       <div key={i} className="flex items-center gap-2 text-xs">
-                        <span style={{ color: 'var(--nc-text2)' }} className="truncate flex-1">{d.name}</span>
+                        <span style={{ color: 'rgba(255,255,255,0.55)' }} className="truncate flex-1">{d.name}</span>
                         <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${t.color}`}>{t.label}</span>
                       </div>
                     )
@@ -416,8 +407,8 @@ export default function SectRecruitmentPage() {
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               <div className="mb-2 text-center">
-                <span className="text-xs px-3 py-1 rounded-full border border-[var(--nc-border)]"
-                  style={{ color: 'var(--nc-text2)', background: 'var(--nc-bg2)' }}>
+                <span className="text-xs px-3 py-1 rounded-full border border-[rgba(255,255,255,0.12)]"
+                  style={{ color: 'rgba(255,255,255,0.55)', background: 'rgba(255,255,255,0.05)' }}>
                   {preset.name} · Elder Interview
                 </span>
               </div>
@@ -426,14 +417,14 @@ export default function SectRecruitmentPage() {
                   <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed border ${
                     msg.role === 'user'
                       ? 'rounded-br-sm border-violet-500/30'
-                      : 'rounded-bl-sm border-amber-500/20'
+                      : 'rounded-bl-sm border-[rgb(124,58,237)]/20'
                   }`}
                     style={msg.role === 'user'
-                      ? { background: 'linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(99,102,241,0.10) 100%)', color: 'var(--nc-text)' }
-                      : { background: 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(180,83,9,0.06) 100%)', color: 'var(--nc-text)' }
+                      ? { background: 'linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(99,102,241,0.10) 100%)', color: 'rgba(255,255,255,0.92)' }
+                      : { background: 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(180,83,9,0.06) 100%)', color: 'rgba(255,255,255,0.92)' }
                     }>
                     {msg.role === 'assistant' && (
-                      <p className="text-[10px] font-semibold text-amber-500/70 mb-1">{applicant.name}</p>
+                      <p className="text-[10px] font-semibold text-[#a78bfa]/70 mb-1">{applicant.name}</p>
                     )}
                     {msg.content}
                   </div>
@@ -443,8 +434,8 @@ export default function SectRecruitmentPage() {
             </div>
 
             {/* Decision buttons */}
-            <div className="shrink-0 border-t border-[var(--nc-border)] p-3 space-y-3"
-              style={{ background: 'var(--nc-bg)' }}>
+            <div className="shrink-0 border-t border-[rgba(255,255,255,0.12)] p-3 space-y-3"
+              style={{ background: '#0c0a14' }}>
               {/* Decision row */}
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {(Object.keys(TREATMENT_LABELS) as Treatment[]).map(t => {
@@ -476,13 +467,13 @@ export default function SectRecruitmentPage() {
                       : `Ask ${applicant.name} a question… (${questionsLeft} left)`
                   }
                   rows={1}
-                  className="flex-1 resize-none rounded-xl border border-[var(--nc-border)] px-3 py-2.5 text-sm placeholder-zinc-500 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition max-h-24 overflow-y-auto disabled:opacity-50"
-                  style={{ background: 'var(--nc-bg2)', color: 'var(--nc-text)', fieldSizing: 'content' } as React.CSSProperties}
+                  className="flex-1 resize-none rounded-xl border border-[rgba(255,255,255,0.12)] px-3 py-2.5 text-sm placeholder-zinc-500 outline-none focus:border-[rgb(124,58,237)] focus:ring-1 focus:ring-[rgb(124,58,237)] transition max-h-24 overflow-y-auto disabled:opacity-50"
+                  style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.92)', fieldSizing: 'content' } as React.CSSProperties}
                 />
                 <button
                   onClick={sendMessage}
                   disabled={!input.trim() || questionsLeft <= 0 || streaming}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-black transition hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[rgb(124,58,237)] text-white transition hover:bg-[rgb(139,92,246)] disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
@@ -512,26 +503,26 @@ export default function SectRecruitmentPage() {
         return (
           <main className="flex-1 overflow-y-auto px-4 py-8 max-w-2xl mx-auto w-full">
             <div className="text-center mb-6">
-              <p className="text-xs font-bold uppercase tracking-widest text-amber-500/70 mb-2">✦ The Truth Revealed</p>
-              <h2 className="text-2xl font-bold" style={{ color: 'var(--nc-text)' }}>Who Were They, Really?</h2>
+              <p className="text-xs font-bold uppercase tracking-widest text-[#a78bfa]/70 mb-2">✦ The Truth Revealed</p>
+              <h2 className="text-2xl font-bold" style={{ color: 'rgba(255,255,255,0.92)' }}>Who Were They, Really?</h2>
               <p className="mt-2 text-xs text-zinc-500">Applicant {revealIndex + 1} of {reveals.length}</p>
             </div>
 
             {/* progress dots */}
             <div className="flex justify-center gap-1.5 mb-6">
               {reveals.map((_, i) => (
-                <span key={i} className={`h-1.5 rounded-full transition-all ${i <= revealIndex ? 'w-6 bg-amber-500' : 'w-1.5 bg-zinc-700'}`} />
+                <span key={i} className={`h-1.5 rounded-full transition-all ${i <= revealIndex ? 'w-6 bg-[rgb(124,58,237)]' : 'w-1.5 bg-zinc-700'}`} />
               ))}
             </div>
 
-            <div key={revealIndex} className="rounded-2xl border border-amber-500/30 overflow-hidden animate-[fadeIn_0.4s_ease]"
-              style={{ background: 'var(--nc-bg2)' }}>
-              <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--nc-border)]"
+            <div key={revealIndex} className="rounded-2xl border border-[rgb(124,58,237)]/30 overflow-hidden animate-[fadeIn_0.4s_ease]"
+              style={{ background: 'rgba(255,255,255,0.05)' }}>
+              <div className="flex items-center justify-between px-5 py-3 border-b border-[rgba(255,255,255,0.12)]"
                 style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, transparent 100%)' }}>
                 <div>
-                  <p className="font-bold text-amber-400">{r.displayName}</p>
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--nc-text2)' }}>
-                    was the <span className="font-semibold" style={{ color: 'var(--nc-text)' }}>{r.archetypeName}</span>
+                  <p className="font-bold text-[#a78bfa]">{r.displayName}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                    was the <span className="font-semibold" style={{ color: 'rgba(255,255,255,0.92)' }}>{r.archetypeName}</span>
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -541,14 +532,14 @@ export default function SectRecruitmentPage() {
               </div>
 
               <div className="px-5 py-4 space-y-3">
-                <p className="text-sm leading-relaxed" style={{ color: 'var(--nc-text)' }}>{r.narrative}</p>
+                <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.92)' }}>{r.narrative}</p>
                 {r.tells.length > 0 && (
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">The tells you may have missed</p>
                     <ul className="space-y-1">
                       {r.tells.map((tell, ti) => (
-                        <li key={ti} className="text-xs flex items-start gap-2" style={{ color: 'var(--nc-text2)' }}>
-                          <span className="text-amber-500/60 mt-0.5 shrink-0">›</span>{tell}
+                        <li key={ti} className="text-xs flex items-start gap-2" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                          <span className="text-[#a78bfa]/60 mt-0.5 shrink-0">›</span>{tell}
                         </li>
                       ))}
                     </ul>
@@ -570,7 +561,7 @@ export default function SectRecruitmentPage() {
             </div>
 
             <button onClick={advanceReveal}
-              className="mt-6 w-full rounded-xl px-8 py-3 text-sm font-bold text-black transition hover:-translate-y-0.5"
+              className="mt-6 w-full rounded-xl px-8 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5"
               style={{ background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)' }}>
               {isLast ? 'See Your Sect’s Fate →' : 'Next Applicant →'}
             </button>
@@ -582,14 +573,14 @@ export default function SectRecruitmentPage() {
       {phase === 'complete' && sectOutcome && (
         <main className="flex-1 overflow-y-auto px-4 py-8 max-w-2xl mx-auto w-full">
           <div className="text-center mb-8">
-            <p className="text-xs font-bold uppercase tracking-widest text-amber-500/70 mb-2">✦ Judgement Complete</p>
-            <h2 className="text-3xl font-bold text-amber-400 mb-1">{sectOutcome.title}</h2>
-            <p className="text-sm" style={{ color: 'var(--nc-text2)' }}>{sectOutcome.summary}</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-[#a78bfa]/70 mb-2">✦ Judgement Complete</p>
+            <h2 className="text-3xl font-bold text-[#a78bfa] mb-1">{sectOutcome.title}</h2>
+            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>{sectOutcome.summary}</p>
           </div>
 
           {/* Stat bars */}
-          <div className="rounded-2xl border border-[var(--nc-border)] p-6 mb-6 space-y-4"
-            style={{ background: 'var(--nc-bg2)' }}>
+          <div className="rounded-2xl border border-[rgba(255,255,255,0.12)] p-6 mb-6 space-y-4"
+            style={{ background: 'rgba(255,255,255,0.05)' }}>
             <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Sect State — 1,000 Years Hence</p>
             <StatBar label="Power"      value={sectOutcome.power}      />
             <StatBar label="Wealth"     value={sectOutcome.wealth}     />
@@ -598,15 +589,15 @@ export default function SectRecruitmentPage() {
           </div>
 
           {/* Summary of decisions */}
-          <div className="rounded-2xl border border-[var(--nc-border)] p-5 mb-8"
-            style={{ background: 'var(--nc-bg2)' }}>
+          <div className="rounded-2xl border border-[rgba(255,255,255,0.12)] p-5 mb-8"
+            style={{ background: 'rgba(255,255,255,0.05)' }}>
             <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">Your Choices</p>
             <div className="space-y-2">
               {reveals.map((r, i) => {
                 const t = TREATMENT_LABELS[r.treatment]
                 return (
                   <div key={i} className="flex items-center justify-between gap-3 text-sm">
-                    <span style={{ color: 'var(--nc-text2)' }} className="truncate">
+                    <span style={{ color: 'rgba(255,255,255,0.55)' }} className="truncate">
                       {r.displayName} <span className="text-xs text-zinc-500">({r.archetypeName})</span>
                     </span>
                     <span className={`shrink-0 rounded px-2 py-0.5 text-xs font-semibold border ${t.color}`}>{t.label}</span>
@@ -628,19 +619,20 @@ export default function SectRecruitmentPage() {
                 setReveals([])
                 setSectOutcome(null)
               }}
-              className="flex-1 rounded-xl bg-amber-500 py-3 text-sm font-bold text-black hover:bg-amber-400 transition"
+              className="flex-1 rounded-xl bg-[rgb(124,58,237)] py-3 text-sm font-bold text-white hover:bg-[rgb(139,92,246)] transition"
             >
               Play Again
             </button>
             <Link href="/games"
-              className="flex-1 rounded-xl border border-[var(--nc-border)] py-3 text-sm font-semibold text-center transition hover:border-amber-500/40"
-              style={{ color: 'var(--nc-text2)' }}>
+              className="flex-1 rounded-xl border border-[rgba(255,255,255,0.12)] py-3 text-sm font-semibold text-center transition hover:border-[rgb(124,58,237)]/40"
+              style={{ color: 'rgba(255,255,255,0.55)' }}>
               Back to Games
             </Link>
           </div>
         </main>
       )}
 
+      <TestFooter />
     </div>
   )
 }

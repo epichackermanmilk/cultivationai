@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link   from 'next/link'
-import TokenWidget from '@/components/TokenWidget'
-import Footer      from '@/components/Footer'
+import TestHeader from '@/components/TestHeader'
+import TestFooter from '@/components/TestFooter'
 import { useAuth } from '@/lib/auth-context'
 import { matchesSearch } from '@/lib/search'
 
@@ -129,12 +129,12 @@ function FighterPanel({
     setShowCharDrop(false)
   }
 
-  const accentBorder = label === 'A' ? 'border-amber-500/40' : 'border-violet-500/40'
-  const accentText   = label === 'A' ? 'text-amber-400'      : 'text-violet-400'
-  const accentBg     = label === 'A' ? 'bg-amber-500/10'     : 'bg-violet-500/10'
+  const accentBorder = label === 'A' ? 'border-[rgb(124,58,237)]/40' : 'border-violet-500/40'
+  const accentText   = label === 'A' ? 'text-[#a78bfa]'      : 'text-violet-400'
+  const accentBg     = label === 'A' ? 'bg-[rgb(124,58,237)]/10'     : 'bg-violet-500/10'
 
   return (
-    <div className={`rounded-2xl border p-5 flex flex-col gap-4 ${accentBorder}`} style={{ background: 'var(--nc-bg2)' }}>
+    <div className={`rounded-2xl border p-5 flex flex-col gap-4 ${accentBorder}`} style={{ background: 'rgba(255,255,255,0.05)' }}>
       <div className="flex items-center gap-2">
         <span className={`text-xs font-black uppercase tracking-widest ${accentText}`}>Fighter {label}</span>
         {fighter.name && fighter.novelSlug && (
@@ -151,7 +151,7 @@ function FighterPanel({
           value={novelQuery}
           onChange={e => { setNovelQuery(e.target.value); setShowNovelDrop(true); onChange({ novelSlug: '', novelTitle: '', name: '' }); setCharQuery('') }}
           onFocus={() => setShowNovelDrop(true)}
-          className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500/50 transition"
+          className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-[rgb(124,58,237)]/50 transition"
         />
         {showNovelDrop && novelResults.length > 0 && (
           <div className="absolute z-50 top-full left-0 right-0 mt-1 rounded-xl border border-zinc-700 bg-zinc-900 shadow-xl overflow-hidden">
@@ -185,7 +185,7 @@ function FighterPanel({
               onChange={e => { setCharQuery(e.target.value); setShowCharDrop(true); onChange({ name: e.target.value }) }}
               onFocus={() => { setShowCharDrop(true); if (!charQuery) setCharResults(characters.slice(0, 8)) }}
               disabled={loadingChars}
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500/50 transition disabled:opacity-50"
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-[rgb(124,58,237)]/50 transition disabled:opacity-50"
             />
             {showCharDrop && charResults.length > 0 && (
               <div className="absolute z-50 top-full left-0 right-0 mt-1 rounded-xl border border-zinc-700 bg-zinc-900 shadow-xl overflow-hidden">
@@ -215,7 +215,7 @@ function FighterPanel({
           placeholder="e.g. 150"
           value={fighter.maxChapter}
           onChange={e => onChange({ maxChapter: e.target.value })}
-          className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500/50 transition"
+          className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-[rgb(124,58,237)]/50 transition"
         />
       </div>
 
@@ -298,24 +298,11 @@ export default function CharacterBattlePage() {
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}>
+    <div className="tnl-root relative flex min-h-screen flex-col text-white" style={{ ["--v" as string]: "124,58,237" }}>
+      <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: "#07060d" }}><div className="absolute inset-0" style={{ background: "radial-gradient(85% 50% at 50% -8%, rgba(var(--v),0.18) 0%, transparent 55%)" }} /></div>
 
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-[var(--nc-border)] bg-[var(--nc-bg)]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Link href="/games" className="text-zinc-400 hover:text-zinc-200 transition text-sm">
-              ← Games
-            </Link>
-            <div className="h-4 w-px bg-zinc-700" />
-            <div className="flex items-center gap-2">
-              <span className="text-base">⚡</span>
-              <span className="font-bold text-orange-400 text-sm">Character Battle Debate</span>
-            </div>
-          </div>
-          <TokenWidget />
-        </div>
-      </header>
+      <TestHeader />
 
       <main className="flex-1 mx-auto w-full max-w-3xl px-4 py-10">
 
@@ -324,10 +311,10 @@ export default function CharacterBattlePage() {
           <div>
             <div className="mb-8 text-center">
               <p className="mb-2 text-xs font-bold uppercase tracking-widest text-orange-500/70">⚡ Battle Arena</p>
-              <h1 className="text-3xl font-bold tracking-tight mb-3" style={{ color: 'var(--nc-text)' }}>
+              <h1 className="text-3xl font-bold tracking-tight mb-3" style={{ color: 'rgba(255,255,255,0.92)' }}>
                 Character Battle Debate
               </h1>
-              <p className="text-sm max-w-md mx-auto leading-relaxed" style={{ color: 'var(--nc-text2)' }}>
+              <p className="text-sm max-w-md mx-auto leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
                 Pick two characters. Set a chapter range for each. The battle will be simulated
                 using real lore from the novels — power levels, techniques, and all.
                 Cross-novel matchups are chaotic and we love them.
@@ -376,7 +363,7 @@ export default function CharacterBattlePage() {
                 <button
                   onClick={startBattle}
                   disabled={!bothReady}
-                  className="inline-flex items-center gap-2 rounded-xl px-8 py-3 text-sm font-bold text-black transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0"
+                  className="inline-flex items-center gap-2 rounded-xl px-8 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0"
                   style={{ background: 'linear-gradient(135deg, #f97316 0%, #c2410c 100%)', boxShadow: bothReady ? '0 6px 20px rgba(249,115,22,0.25)' : 'none' }}
                 >
                   ⚡ Begin Battle — 20 tokens
@@ -394,7 +381,7 @@ export default function CharacterBattlePage() {
           <div className="text-center py-20">
             <div className="mb-8 flex items-center justify-center gap-6">
               <div className="text-center">
-                <p className="text-lg font-bold text-amber-400">{fighterA.name}</p>
+                <p className="text-lg font-bold text-[#a78bfa]">{fighterA.name}</p>
                 <p className="text-xs text-zinc-500">{fighterA.novelTitle}</p>
               </div>
               <div className="text-3xl font-black text-zinc-500 animate-pulse">⚡</div>
@@ -421,7 +408,7 @@ export default function CharacterBattlePage() {
                 <p className="text-xs font-bold uppercase tracking-widest text-orange-500/70 mb-2">
                   {CLOSENESS_LABEL[result.closeness] ?? 'Battle Complete'}
                 </p>
-                <p className="text-4xl font-black mb-1" style={{ color: 'var(--nc-text)' }}>
+                <p className="text-4xl font-black mb-1" style={{ color: 'rgba(255,255,255,0.92)' }}>
                   {result.winner === 'draw' ? 'Draw' : result.winnerName}
                 </p>
                 {result.winner !== 'draw' && (
@@ -434,15 +421,15 @@ export default function CharacterBattlePage() {
                       ? ` (ch. ${result.winner === 'A' ? fighterA.maxChapter : fighterB.maxChapter})` : ''}
                   </p>
                 )}
-                <p className="text-sm leading-relaxed max-w-lg mx-auto" style={{ color: 'var(--nc-text2)' }}>
+                <p className="text-sm leading-relaxed max-w-lg mx-auto" style={{ color: 'rgba(255,255,255,0.55)' }}>
                   {result.reasoning}
                 </p>
               </div>
 
               {/* Fighter badges */}
               <div className="border-t border-orange-500/20 grid grid-cols-2">
-                <div className={`p-4 text-center ${result.winner === 'A' ? 'bg-amber-500/10' : ''}`}>
-                  <p className={`font-bold text-sm ${result.winner === 'A' ? 'text-amber-400' : 'text-zinc-500'}`}>
+                <div className={`p-4 text-center ${result.winner === 'A' ? 'bg-[rgb(124,58,237)]/10' : ''}`}>
+                  <p className={`font-bold text-sm ${result.winner === 'A' ? 'text-[#a78bfa]' : 'text-zinc-500'}`}>
                     {result.winner === 'A' ? '🏆 ' : ''}{fighterA.name}
                   </p>
                   <p className="text-xs text-zinc-600 truncate">{fighterA.novelTitle}</p>
@@ -459,10 +446,10 @@ export default function CharacterBattlePage() {
             </div>
 
             {/* Battle narrative */}
-            <div className="rounded-2xl border border-[var(--nc-border)] p-6 mb-8" style={{ background: 'var(--nc-bg2)' }}>
+            <div className="rounded-2xl border border-[rgba(255,255,255,0.12)] p-6 mb-8" style={{ background: 'rgba(255,255,255,0.05)' }}>
               <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4">⚡ Battle Narrative</p>
               {result.narrative.split('\n').filter(Boolean).map((para, i) => (
-                <p key={i} className="text-sm leading-relaxed mb-4 last:mb-0" style={{ color: 'var(--nc-text)' }}>
+                <p key={i} className="text-sm leading-relaxed mb-4 last:mb-0" style={{ color: 'rgba(255,255,255,0.92)' }}>
                   {para}
                 </p>
               ))}
@@ -472,7 +459,7 @@ export default function CharacterBattlePage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={newBattle}
-                className="rounded-xl px-8 py-3 text-sm font-bold text-black transition hover:-translate-y-0.5"
+                className="rounded-xl px-8 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5"
                 style={{ background: 'linear-gradient(135deg, #f97316 0%, #c2410c 100%)' }}
               >
                 New Battle — 20 tokens
@@ -499,7 +486,7 @@ export default function CharacterBattlePage() {
 
       </main>
 
-      <Footer />
+      <TestFooter />
     </div>
   )
 }
