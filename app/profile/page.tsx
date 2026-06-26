@@ -40,13 +40,36 @@ export default function TestProfilePage() {
   const [avatarBusy, setAvatarBusy] = useState(false)
   const [avatarErr, setAvatarErr] = useState<string | null>(null)
 
+  // Downscale + center-crop to a square 512px JPEG in the browser, so the upload is
+  // tiny (no proxy/body-size failures) and auto-fits any photo. Falls back to the raw
+  // file if the browser can't decode it (e.g. some HEIC), letting the server respond.
+  async function downscaleImage(file: File, size = 512): Promise<Blob> {
+    const url = URL.createObjectURL(file)
+    try {
+      const img = await new Promise<HTMLImageElement>((res, rej) => {
+        const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error('decode')); im.src = url
+      })
+      const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size
+      const ctx = canvas.getContext('2d')!
+      const scale = Math.max(size / img.width, size / img.height)
+      const w = img.width * scale, h = img.height * scale
+      ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h)
+      return await new Promise<Blob>((res, rej) => canvas.toBlob(b => b ? res(b) : rej(new Error('encode')), 'image/jpeg', 0.9))
+    } finally { URL.revokeObjectURL(url) }
+  }
+
   async function uploadAvatar(file: File) {
     setAvatarErr(null); setAvatarBusy(true)
     try {
-      const fd = new FormData(); fd.append('file', file)
+      let upload: File = file
+      try {
+        const blob = await downscaleImage(file)
+        upload = new File([blob], 'avatar.jpg', { type: 'image/jpeg' })
+      } catch { /* couldn't decode client-side — send raw, server will process or explain */ }
+      const fd = new FormData(); fd.append('file', upload)
       const r = await fetch('/api/profile/avatar', { method: 'POST', body: fd })
-      const d = await r.json()
-      if (!r.ok) { setAvatarErr(d.error || 'Upload failed'); return }
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) { setAvatarErr((d as { error?: string }).error || 'Upload failed — try a JPG or PNG'); return }
       track('avatar_upload', {})
       await refresh()
     } catch { setAvatarErr('Upload failed — try again') } finally { setAvatarBusy(false) }
@@ -139,7 +162,7 @@ export default function TestProfilePage() {
         {/* Header card */}
         <div className="tnl-panel mb-5 flex items-center gap-4 p-5">
           <div className="shrink-0">
-            <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden"
+            <input ref={fileRef} type="file" accept="image/*" className="hidden"
               onChange={e => { const f = e.target.files?.[0]; if (f) uploadAvatar(f); e.target.value = '' }} />
             <button onClick={() => fileRef.current?.click()} disabled={avatarBusy} title="Change profile picture"
               className="group relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl text-2xl font-black ring-1 ring-white/15 transition hover:ring-[rgba(var(--v),0.7)]"

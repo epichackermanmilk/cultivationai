@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { parseJsonBody, isValidEmail, isValidPassword } from '@/lib/sanitize'
 import { REFRESH_COOKIE, REFRESH_COOKIE_OPTS } from '@/lib/auth-server'
+import { renderEmail } from '@/lib/email'
 
 const COOKIE      = 'nc_session'
 const COOKIE_OPTS = {
@@ -104,62 +105,19 @@ export async function POST(req: Request) {
         from: 'NovelCodex <noreply@novelcodex.org>',
         to: email,
         subject: 'Welcome to NovelCodex — your free tokens are ready',
-        html: `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Welcome to NovelCodex</title></head>
-<body style="margin:0;padding:0;background:#09090b;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#e4e4e7;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#09090b;padding:40px 20px;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
-
-        <!-- Header -->
-        <tr><td style="padding:0 0 32px;">
-          <span style="font-size:22px;font-weight:800;color:#f59e0b;letter-spacing:-0.5px;">NovelCodex</span>
-        </td></tr>
-
-        <!-- Hero -->
-        <tr><td style="background:#18181b;border:1px solid #27272a;border-radius:16px;padding:40px 36px;">
-          <h1 style="margin:0 0 12px;font-size:28px;font-weight:800;color:#fafafa;line-height:1.2;">
-            Your ${WELCOME_TOKENS} free tokens<br/>are waiting.
-          </h1>
-          <p style="margin:0 0 28px;font-size:15px;line-height:1.6;color:#a1a1aa;">
-            Welcome to NovelCodex — the AI reading companion for web novel fans.
-            Ask anything about characters, plot, cultivation systems, and lore across thousands of novels.
-          </p>
-
-          <!-- Steps -->
-          <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
-            ${[
-              ['Browse', 'Search thousands of web novels across every genre'],
-              ['Pick',   'Choose any novel — every one is ready instantly, free'],
-              ['Ask',    'Chat with the book — characters, lore, spoilers'],
-            ].map(([title, desc]) => `
-            <tr><td style="padding:8px 0;border-bottom:1px solid #27272a;">
-              <span style="color:#f59e0b;font-weight:700;font-size:13px;">${title}</span>
-              <span style="color:#a1a1aa;font-size:13px;"> — ${desc}</span>
-            </td></tr>`).join('')}
-          </table>
-
-          <a href="https://novelcodex.org/library"
-            style="display:inline-block;background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 50%,#d97706 100%);color:#000;font-weight:800;font-size:15px;text-decoration:none;padding:14px 32px;border-radius:100px;">
-            Go to Library
-          </a>
-        </td></tr>
-
-        <!-- Footer -->
-        <tr><td style="padding:24px 0 0;text-align:center;">
-          <p style="margin:0;font-size:12px;color:#52525b;">
-            You received this because you signed up at novelcodex.org.<br/>
-            <a href="https://novelcodex.org/unsubscribe?email=${encodeURIComponent(email)}"
-              style="color:#52525b;text-decoration:underline;">Unsubscribe</a>
-          </p>
-        </td></tr>
-
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`,
+        html: renderEmail({
+          heading: `Your ${WELCOME_TOKENS} free tokens<br/>are waiting.`,
+          intro: 'Welcome to NovelCodex — read thousands of cultivation, xianxia and fantasy web novels, free. Your tokens unlock the extras: AI chat, character roleplay, recommendations, and EPUB downloads.',
+          rows: [
+            ['Browse', 'Thousands of web novels across every genre'],
+            ['Read', 'Open any novel — free, instantly, on any device'],
+            ['Go deeper', 'Optional AI chat, character roleplay & recommendations'],
+          ],
+          ctaText: 'Start reading',
+          ctaUrl: 'https://novelcodex.org/browse',
+          footerNote: 'You received this because you signed up at novelcodex.org.',
+          unsubscribeEmail: email,
+        }),
       })
 
       // Add to the marketing audience (newsletter list) so account-holders

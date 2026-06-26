@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { admin, SESSION_COOKIE, COOKIE_OPTS, REFRESH_COOKIE, REFRESH_COOKIE_OPTS } from '@/lib/auth-server'
 import { parseJsonBody, isValidEmail, isValidPassword } from '@/lib/sanitize'
+import { renderEmail } from '@/lib/email'
 
 // ── Per-account lockout policy ────────────────────────────────────────────────
 // After MAX_ATTEMPTS consecutive failures, the account is locked for LOCK_MS.
@@ -20,47 +21,14 @@ function clientIp(req: Request): string {
 }
 
 function alertEmailHtml(ip: string, whenUTC: string): string {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NovelCodex security alert</title></head>
-<body style="margin:0;padding:0;background:#09090b;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#e4e4e7;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#09090b;padding:40px 20px;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
-        <tr><td style="padding:0 0 32px;">
-          <span style="font-size:22px;font-weight:800;color:#f59e0b;letter-spacing:-0.5px;">NovelCodex</span>
-        </td></tr>
-        <tr><td style="background:#18181b;border:1px solid #3f1d1d;border-radius:16px;padding:40px 36px;">
-          <h1 style="margin:0 0 12px;font-size:24px;font-weight:800;color:#fafafa;line-height:1.2;">
-            ⚠️ Unusual sign-in activity
-          </h1>
-          <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#a1a1aa;">
-            We detected several failed sign-in attempts on your NovelCodex account, so we&apos;ve temporarily
-            locked it for 15 minutes to keep it safe.
-          </p>
-          <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;border:1px solid #27272a;border-radius:10px;">
-            <tr><td style="padding:12px 16px;border-bottom:1px solid #27272a;font-size:13px;color:#a1a1aa;">Approx. time: <span style="color:#e4e4e7;">${whenUTC}</span></td></tr>
-            <tr><td style="padding:12px 16px;font-size:13px;color:#a1a1aa;">From IP: <span style="color:#e4e4e7;">${ip}</span></td></tr>
-          </table>
-          <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#a1a1aa;">
-            <strong style="color:#fafafa;">Was this you?</strong> Just wait 15 minutes and try again, or reset your
-            password to get back in right away.<br/><br/>
-            <strong style="color:#fafafa;">Don&apos;t recognise this?</strong> Your password may be guessed at — we
-            strongly recommend resetting it now.
-          </p>
-          <a href="https://novelcodex.org/forgot-password"
-            style="display:inline-block;background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 50%,#d97706 100%);color:#000;font-weight:800;font-size:15px;text-decoration:none;padding:14px 32px;border-radius:100px;">
-            Reset Password
-          </a>
-        </td></tr>
-        <tr><td style="padding:24px 0 0;text-align:center;">
-          <p style="margin:0;font-size:12px;color:#52525b;">Sent by NovelCodex security · novelcodex.org</p>
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`
+  return renderEmail({
+    heading: '⚠️ Unusual sign-in activity',
+    intro: 'We detected several failed sign-in attempts on your NovelCodex account, so we\'ve temporarily locked it for 15 minutes to keep it safe. If this was you, just wait 15 minutes and try again — or reset your password to get back in right away. If you don\'t recognise this, reset your password now.',
+    rows: [['Approx. time', whenUTC], ['From IP', ip]],
+    ctaText: 'Reset password',
+    ctaUrl: 'https://novelcodex.org/forgot-password',
+    footerNote: 'Sent by NovelCodex security · novelcodex.org',
+  })
 }
 
 // Sends the owner a lockout alert — only for real accounts, throttled, non-fatal.
