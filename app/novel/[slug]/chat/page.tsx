@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { getNovelMeta } from '@/lib/vps'
 import { coverSrc } from '@/lib/cover'
 import TestChat from '@/components/TestChat'
+import ChatViewport from '@/components/ChatViewport'
 
 interface Props { params: Promise<{ slug: string }> }
 
@@ -19,7 +20,8 @@ export default async function TestNovelChat({ params }: Props) {
   const author = meta?.author ?? ''
 
   return (
-    <div className="relative flex h-screen flex-col overflow-hidden text-white" style={{ ['--v' as string]: '124,58,237' }}>
+    <div className="relative flex flex-col overflow-hidden text-white" style={{ height: 'var(--chat-vh, 100dvh)', ['--v' as string]: '124,58,237' }}>
+      <ChatViewport />
       {/* Living background */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" style={{ background: '#07060d' }}>
         {meta?.cover_url && (

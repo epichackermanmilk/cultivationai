@@ -232,7 +232,7 @@ function WelcomeDeal({ createdAt, loading, onBuy }: { createdAt: string; loading
       <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="mb-1 text-2xl font-extrabold">500 tokens for <span style={{ color: 'rgb(var(--v))' }}>$1.00</span></h2>
-          <p className="mb-3 text-sm text-white/60">That&apos;s <span className="font-bold" style={{ color: 'rgb(var(--v))' }}>5× the normal value</span> — enough for 50 chats or recommendations.</p>
+          <p className="mb-3 text-sm text-white/60">That&apos;s <span className="font-bold" style={{ color: 'rgb(var(--v))' }}>5× the normal value</span> — enough for 50 chats, 250 locked chapters, or 10 full EPUB downloads (500 chapters each).</p>
           <div className="flex flex-wrap gap-2 text-xs">
             <span className="rounded-full border border-white/20 px-2.5 py-1 text-white/40 line-through">Normal: 100 / $1</span>
             <span className="rounded-full border border-[rgba(var(--v),0.5)] bg-[rgba(var(--v),0.12)] px-2.5 py-1 font-semibold" style={{ color: 'rgb(var(--v))' }}>Deal: 500 / $1 ✦ 500% value</span>

@@ -63,9 +63,10 @@ const TABS = [
 export default function MobileNav() {
   const pathname = usePathname()
 
-  // Hide on full-screen experiences (reader + game play) — no bottom chrome needed.
-  if (pathname.startsWith('/novel/')) return null
-  if (pathname.startsWith('/games/')) return null
+  // Hide inside immersive surfaces (chapter reader + chat); everywhere else
+  // (incl. games and novel detail) keeps the bottom nav for consistent navigation.
+  if (pathname.includes('/read/')) return null
+  if (pathname.includes('/chat') || pathname === '/chat') return null
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 md:hidden"

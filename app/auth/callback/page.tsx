@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
+import { track, trackSignupConversion } from '@/lib/analytics'
 
 /**
  * Google OAuth callback page.
@@ -62,11 +63,17 @@ export default function AuthCallbackPage() {
           return
         }
 
+        // New Google account → count it as a signup + Google Ads conversion (once).
+        try {
+          const d = await res.json().catch(() => ({})) as { isNew?: boolean }
+          if (d.isNew) { track('sign_up', { method: 'google' }); trackSignupConversion() }
+        } catch { /* ignore */ }
+
         await refresh()
-        // Return to the page the user was on before Google OAuth, default to library
+        // Return to the page the user was on before Google OAuth, default to home
         let returnTo = '/'
         try {
-          returnTo = sessionStorage.getItem('nc_return_to') ?? '/library'
+          returnTo = sessionStorage.getItem('nc_return_to') ?? '/'
           sessionStorage.removeItem('nc_return_to')
         } catch { /* ignore */ }
         router.replace(returnTo)
@@ -78,22 +85,20 @@ export default function AuthCallbackPage() {
   }, [refresh, router])
 
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ background: 'var(--nc-bg)', color: 'var(--nc-text)' }}
-    >
-      <div className="text-center space-y-4 px-6">
+    <div className="flex min-h-screen items-center justify-center text-white" style={{ background: '#07060d' }}>
+      <div className="space-y-4 px-6 text-center">
         {status === 'loading' ? (
           <>
-            <div className="mx-auto h-10 w-10 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
-            <p className="text-sm text-zinc-400">{message}</p>
+            <div className="mx-auto h-10 w-10 rounded-full border-2 border-[rgb(124,58,237)] border-t-transparent animate-spin" />
+            <p className="text-sm text-white/50">{message}</p>
           </>
         ) : (
           <>
             <p className="text-sm text-red-400">{message}</p>
             <button
               onClick={() => router.replace('/')}
-              className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-black hover:bg-amber-400 transition"
+              className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110"
+              style={{ background: 'rgb(124,58,237)' }}
             >
               Back to home
             </button>

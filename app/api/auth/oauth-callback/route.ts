@@ -43,7 +43,12 @@ export async function POST(req: Request) {
     )
   } catch { /* non-fatal — profile row may already exist */ }
 
-  const res = NextResponse.json({ ok: true, email: user.email })
+  // New account if the auth user was created in the last 2 minutes (vs. a returning
+  // OAuth login). Lets the client fire the sign_up + Google Ads conversion once.
+  const createdMs = user.created_at ? Date.parse(user.created_at) : 0
+  const isNew = !!createdMs && (Date.now() - createdMs) < 120_000
+
+  const res = NextResponse.json({ ok: true, email: user.email, isNew })
   res.cookies.set(COOKIE, access_token, COOKIE_OPTS)
   if (typeof refresh_token === 'string' && refresh_token.length > 20) {
     res.cookies.set(REFRESH_COOKIE, refresh_token, REFRESH_COOKIE_OPTS)

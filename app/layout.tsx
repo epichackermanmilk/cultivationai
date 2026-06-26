@@ -6,6 +6,7 @@ import { AuthProvider }  from "@/lib/auth-context";
 import MobileNav        from "@/components/MobileNav";
 import ExtensionBanner  from "@/components/ExtensionBanner";
 import FeedbackWidget   from "@/components/FeedbackWidget";
+import { TestStyles }   from "@/components/TestUI";
 import CookieConsent    from "@/components/CookieConsent";
 import MobileAuthGate   from "@/components/MobileAuthGate";
 import NativeAuthBridge from "@/components/NativeAuthBridge";
@@ -166,6 +167,7 @@ export default function RootLayout({
             {children}
             <FeedbackWidget />
             <MobileNav />
+            <TestStyles />
             <CookieConsent />
             <MobileAuthGate />
             <NativeAuthBridge />
