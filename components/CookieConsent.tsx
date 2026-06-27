@@ -10,8 +10,6 @@ declare global {
   }
 }
 
-const GRAD = 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)'
-
 export default function CookieConsent() {
   const [show, setShow] = useState(false)
 
@@ -44,24 +42,23 @@ export default function CookieConsent() {
   return (
     <div className="fixed inset-x-0 bottom-0 z-[9999] flex justify-center px-3 pb-20 pt-3 sm:p-4">
       <div
-        className="flex w-full max-w-2xl flex-col items-center gap-3 rounded-2xl border px-5 py-4 shadow-2xl sm:flex-row sm:gap-4"
-        style={{ background: 'var(--nc-bg2)', borderColor: 'var(--nc-border)' }}
+        className="flex w-full max-w-2xl flex-col items-center gap-3 rounded-2xl border border-white/12 px-5 py-4 text-white shadow-2xl sm:flex-row sm:gap-4"
+        style={{ background: 'rgba(18,15,30,0.95)', backdropFilter: 'blur(12px)' }}
       >
-        <p className="flex-1 text-center text-sm leading-snug sm:text-left" style={{ color: 'var(--nc-text2)' }}>
-          We use cookies to personalize your site experience and analyze the site traffic.
+        <p className="flex-1 text-center text-sm leading-snug text-white/65 sm:text-left">
+          We use cookies to personalize your experience and analyze site traffic.
         </p>
         <div className="flex shrink-0 gap-2">
           <button
             onClick={() => decide(false)}
-            className="rounded-xl px-5 py-2 text-sm font-bold text-black transition hover:opacity-90"
-            style={{ background: GRAD, opacity: 0.8 }}
+            className="rounded-xl border border-white/15 px-5 py-2 text-sm font-semibold text-white/65 transition hover:text-white"
           >
             Decline
           </button>
           <button
             onClick={() => decide(true)}
-            className="rounded-xl px-5 py-2 text-sm font-bold text-black transition hover:opacity-90"
-            style={{ background: GRAD }}
+            className="rounded-xl px-5 py-2 text-sm font-bold text-white transition hover:brightness-110"
+            style={{ background: 'rgb(124,58,237)' }}
           >
             Accept
           </button>
